@@ -2,7 +2,7 @@
 
 ## Live Demo
 
-- [devlopment](core-orbit-git-dev-geek-squad1.vercel.app)
+- [development](https://core-orbit-git-dev-geek-squad1.vercel.app)
 
 ## Getting Started
 
