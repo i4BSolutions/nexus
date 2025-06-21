@@ -83,5 +83,8 @@ create table audit_log (
 );
 ```
 
+## How to run new migration in local
+- Run "npx supabase db push"
+
 ## How to push new migration file to remote database
 - Run "npx supabase db push --db-url db_url"
