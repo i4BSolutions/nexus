@@ -1,9 +1,10 @@
 "use client";
 
+import { createClient } from "@/lib/supabase/client";
 import { Button, Flex, Input, Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { signInWithOtp } from "./actions";
+import { signInWithOtp } from "./action";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -20,6 +21,16 @@ export default function LoginPage() {
         .catch((error) => {
           console.error("Login failed:", error);
         });
+    });
+  };
+
+  const googleLoginHandler = async () => {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${location.origin}/api/auth/callback`,
+      },
     });
   };
 
@@ -43,10 +54,18 @@ export default function LoginPage() {
             }
           }}
         />
-        <Button type="primary" onClick={loginHandler} disabled={!email}>
+        <Button
+          type="primary"
+          onClick={loginHandler}
+          disabled={!email}
+          loading={pending}
+        >
           Login
         </Button>
       </Space>
+      <Button type="primary" onClick={googleLoginHandler} loading={pending}>
+        Login with google
+      </Button>
     </Flex>
   );
 }

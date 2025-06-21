@@ -34,10 +34,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const publicUrls = ["/login", "/verify-otp", "/api/auth/callback"];
+
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/verify-otp")
+    !publicUrls.some((url) => request.nextUrl.pathname.startsWith(url))
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
