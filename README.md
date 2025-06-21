@@ -44,13 +44,15 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## SUPABASE Local DB Setup
 - npx supabase login
 - npx supabase link --project-ref Project_ID
-- npx supabase db pull
+- npx supabase db pull (only while setup, don't need to run)
+- npx supabase init (only while setup, don't need to run)
 
-- npx supabase init
 - npx supabase start
+- npx supabase stop
+
 - npx supabase db reset
 
-- npx supabase stop
+*Note: need to change SUPABASE_URL and NEXT_PUBLIC_SUPABASE_URL to "http://localhost:54321" for local development*
 
 - Supabase GUI URL
 http://localhost:54323/
