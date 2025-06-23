@@ -6,8 +6,8 @@ create table "public"."product" (
     "unit_price" numeric(10,2) not null,
     "min_stock" integer default 0,
     "is_active" boolean default true,
-    "created_at" timestamp with time zone default now(),
-    "updated_at" timestamp with time zone default now()
+    "created_at" timestamp with time zone not null default timezone('utc':text, now()),
+    "updated_at" timestamp with time zone not null default timezone('utc':text, now())
 );
 
 
