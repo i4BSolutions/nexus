@@ -9,25 +9,29 @@ export async function PUT(
   const supabase = await createClient();
   const body = await req.json();
 
-  const { id, name, category, unit_price, min_stock, is_active } = body;
+  const { id, sku, name, category, unit_price, min_stock, is_active } = body;
+  if (!id)
+    return NextResponse.json(error("Missing product ID", 400), { status: 400 });
 
-  if (!id) {
-    return NextResponse.json(error("Missing product ID", 400), {
-      status: 400,
-    });
-  }
-
-  const { data: existing, error: fetchError } = await supabase
+  const { data: existing, error: fetchErr } = await supabase
     .from("product")
     .select("*")
     .eq("id", id)
     .maybeSingle();
 
-  if (fetchError || !existing) {
-    return NextResponse.json(error("Product not found", 404), {
-      status: 404,
-    });
+  if (!existing || fetchErr) {
+    return NextResponse.json(error("Product not found", 404), { status: 404 });
   }
+
+  if (sku && sku !== existing.sku) {
+    return NextResponse.json(
+      error("SKU cannot be changed after creation", 400),
+      { status: 400 }
+    );
+  }
+
+  const { data: userInfo } = await supabase.auth.getUser();
+  const updated_by = userInfo?.user?.email || "system";
 
   const { error: updateError } = await supabase
     .from("product")
@@ -47,14 +51,13 @@ export async function PUT(
     });
   }
 
-  // Log price change if applicable
   if (unit_price !== existing.unit_price) {
     await supabase.from("product_price_history").insert([
       {
         product_id: id,
         old_price: existing.unit_price,
         new_price: unit_price,
-        updated_by: "system", // Replace with session user ID if available
+        updated_by,
       },
     ]);
   }
@@ -72,9 +75,33 @@ export async function DELETE(
   const id = searchParams.get("id");
 
   if (!id) {
-    return NextResponse.json(error("Missing product ID", 400), {
-      status: 400,
-    });
+    return NextResponse.json(error("Missing product ID", 400), { status: 400 });
+  }
+
+  // Check if product is referenced elsewhere
+  const { data: po } = await supabase
+    .from("po_items")
+    .select("id")
+    .eq("product_id", id)
+    .limit(1);
+
+  const { data: invoice } = await supabase
+    .from("invoice_items")
+    .select("id")
+    .eq("product_id", id)
+    .limit(1);
+
+  const { data: stock } = await supabase
+    .from("stock_movements")
+    .select("id")
+    .eq("product_id", id)
+    .limit(1);
+
+  if (po?.length || invoice?.length || stock?.length) {
+    return NextResponse.json(
+      error("Cannot delete a product that is referenced."),
+      { status: 400 }
+    );
   }
 
   const { error: deleteError } = await supabase

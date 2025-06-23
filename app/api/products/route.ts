@@ -20,56 +20,49 @@ export async function GET(
 ): Promise<
   NextResponse<ApiResponse<PaginatedResponse<Product>> | ApiResponse<null>>
 > {
-  try {
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    const { searchParams } = new URL(req.url);
-    const name = searchParams.get("name") || "";
-    const category = searchParams.get("category") || "";
-    const isActive = searchParams.get("is_active");
-    const sort = searchParams.get("sort") || "name";
+  const { searchParams } = new URL(req.url);
+  const name = searchParams.get("name") || "";
+  const category = searchParams.get("category") || "";
+  const isActive = searchParams.get("is_active");
+  const sort = searchParams.get("sort") || "name";
 
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-    // Apply filters to the query
-    let query = supabase
-      .from("product")
-      .select("*", { count: "exact" })
-      .order(sort, { ascending: true });
+  // Apply filters to the query
+  let query = supabase
+    .from("product")
+    .select("*", { count: "exact" })
+    .order(sort, { ascending: true });
 
-    if (name) query = query.ilike("name", `%${name}%`);
-    if (category) query = query.eq("category", category);
-    if (isActive !== null) query = query.eq("is_active", isActive === "true");
+  if (name) query = query.ilike("name", `%${name}%`);
+  if (category) query = query.eq("category", category);
+  if (isActive !== null) query = query.eq("is_active", isActive === "true");
 
-    // Apply pagination
-    const { data: items, count, error: dbError } = await query.range(from, to);
+  // Apply pagination
+  const { data: items, count, error: dbError } = await query.range(from, to);
 
-    if (dbError) {
-      return NextResponse.json(error("Failed to fetch products", 500), {
-        status: 500,
-      });
-    }
-
-    const response: PaginatedResponse<Product> = {
-      items: items || [],
-      total: count || 0,
-      page,
-      pageSize,
-    };
-
-    return NextResponse.json(
-      success(response, "Products retrieved successfully"),
-      { status: 200 }
-    );
-  } catch (error: any) {
-    console.error(error.message);
-    return NextResponse.json(error("Internal server error", 500), {
+  if (dbError) {
+    return NextResponse.json(error("Failed to fetch products", 500), {
       status: 500,
     });
   }
+
+  const response: PaginatedResponse<Product> = {
+    items: items || [],
+    total: count || 0,
+    page,
+    pageSize,
+  };
+
+  return NextResponse.json(
+    success(response, "Products retrieved successfully"),
+    { status: 200 }
+  );
 }
 
 export async function POST(
@@ -86,7 +79,6 @@ export async function POST(
     });
   }
 
-  // Check uniqueness of SKU
   const { data: exists } = await supabase
     .from("product")
     .select("id")
@@ -94,9 +86,7 @@ export async function POST(
     .maybeSingle();
 
   if (exists) {
-    return NextResponse.json(error("SKU must be unique", 409), {
-      status: 409,
-    });
+    return NextResponse.json(error("SKU must be unique", 409), { status: 409 });
   }
 
   const { error: insertError } = await supabase
