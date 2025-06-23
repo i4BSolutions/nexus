@@ -1,24 +1,15 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { ApiResponse, PaginatedResponse } from "@/types/api-response-type";
+import { ProductInterface } from "@/types/product/product.type";
 import { NextRequest, NextResponse } from "next/server";
-
-type Product = {
-  id: number;
-  sku: string;
-  name: string;
-  category: string;
-  unit_price: number;
-  min_stock: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-};
 
 export async function GET(
   req: NextRequest
 ): Promise<
-  NextResponse<ApiResponse<PaginatedResponse<Product>> | ApiResponse<null>>
+  NextResponse<
+    ApiResponse<PaginatedResponse<ProductInterface>> | ApiResponse<null>
+  >
 > {
   const supabase = await createClient();
 
@@ -52,7 +43,7 @@ export async function GET(
     });
   }
 
-  const response: PaginatedResponse<Product> = {
+  const response: PaginatedResponse<ProductInterface> = {
     items: items || [],
     total: count || 0,
     page,
@@ -67,39 +58,73 @@ export async function GET(
 
 export async function POST(
   req: NextRequest
-): Promise<NextResponse<ApiResponse<null>>> {
+): Promise<NextResponse<ApiResponse<ProductInterface> | ApiResponse<null>>> {
   const supabase = await createClient();
-  const body = await req.json();
 
-  const { sku, name, category, unit_price, min_stock, is_active = true } = body;
+  try {
+    const body = await req.json();
+    const {
+      sku,
+      name,
+      category,
+      unit_price,
+      min_stock,
+      is_active = true,
+    } = body;
 
-  if (!sku || !name || !category || unit_price == null || min_stock == null) {
-    return NextResponse.json(error("Missing required fields", 400), {
+    // Validate required fields
+    if (!sku || !name || !category || unit_price == null || min_stock == null) {
+      return NextResponse.json(
+        error(
+          "SKU, name, category, unit_price, and min_stock are required",
+          400
+        ),
+        { status: 400 }
+      );
+    }
+
+    // Ensure SKU is unique
+    const { data: existing } = await supabase
+      .from("product")
+      .select("id")
+      .eq("sku", sku)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json(error("SKU must be unique", 409), {
+        status: 409,
+      });
+    }
+
+    // Create product
+    const { data, error: dbError } = await supabase
+      .from("product")
+      .insert([
+        {
+          sku,
+          name,
+          category,
+          unit_price,
+          min_stock,
+          is_active,
+        },
+      ])
+      .select()
+      .single();
+
+    if (dbError) {
+      return NextResponse.json(
+        error("Failed to create product: " + dbError.message, 500),
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(success(data, "Product created successfully"), {
+      status: 201,
+    });
+  } catch (e) {
+    return NextResponse.json(error("Invalid request body", 400), {
       status: 400,
     });
   }
-
-  const { data: exists } = await supabase
-    .from("product")
-    .select("id")
-    .eq("sku", sku)
-    .maybeSingle();
-
-  if (exists) {
-    return NextResponse.json(error("SKU must be unique", 409), { status: 409 });
-  }
-
-  const { error: insertError } = await supabase
-    .from("product")
-    .insert([{ sku, name, category, unit_price, min_stock, is_active }]);
-
-  if (insertError) {
-    return NextResponse.json(error("Failed to create product", 500), {
-      status: 500,
-    });
-  }
-
-  return NextResponse.json(success(null, "Product created successfully"), {
-    status: 201,
-  });
 }

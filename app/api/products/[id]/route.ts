@@ -1,84 +1,98 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { ApiResponse } from "@/types/api-response-type";
+import { ProductInterface } from "@/types/product/product.type";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
-  req: NextRequest
-): Promise<NextResponse<ApiResponse<null>>> {
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse<ApiResponse<ProductInterface | null>>> {
+  const { id: idStr } = await context.params;
+  const id = idStr;
+
   const supabase = await createClient();
-  const body = await req.json();
 
-  const { id, sku, name, category, unit_price, min_stock, is_active } = body;
-  if (!id)
-    return NextResponse.json(error("Missing product ID", 400), { status: 400 });
+  if (!id) {
+    return NextResponse.json(error("Invalid product ID", 400), { status: 400 });
+  }
 
-  const { data: existing, error: fetchErr } = await supabase
+  const { data: existing, error: fetchError } = await supabase
     .from("product")
     .select("*")
     .eq("id", id)
     .maybeSingle();
 
-  if (!existing || fetchErr) {
+  if (!existing || fetchError) {
     return NextResponse.json(error("Product not found", 404), { status: 404 });
   }
 
-  if (sku && sku !== existing.sku) {
-    return NextResponse.json(
-      error("SKU cannot be changed after creation", 400),
-      { status: 400 }
-    );
-  }
+  try {
+    const body = await req.json();
 
-  const { data: userInfo } = await supabase.auth.getUser();
-  const updated_by = userInfo?.user?.email || "system";
+    if (body.sku && body.sku !== existing.sku) {
+      return NextResponse.json(error("SKU cannot be changed", 400), {
+        status: 400,
+      });
+    }
 
-  const { error: updateError } = await supabase
-    .from("product")
-    .update({
-      name,
-      category,
-      unit_price,
-      min_stock,
-      is_active,
+    const updateData = {
+      ...body,
       updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
+    };
 
-  if (updateError) {
-    return NextResponse.json(error("Failed to update product", 500), {
-      status: 500,
+    const { data, error: dbError } = await supabase
+      .from("product")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (dbError) {
+      return NextResponse.json(error("Failed to update product", 500), {
+        status: 500,
+      });
+    }
+
+    // Track price changes
+    if (body.unit_price !== existing.unit_price) {
+      const { data: auth } = await supabase.auth.getUser();
+      const updated_by = auth?.user?.email || "system";
+
+      await supabase.from("product_price_history").insert([
+        {
+          product_id: id,
+          old_price: existing.unit_price,
+          new_price: body.unit_price,
+          updated_by,
+        },
+      ]);
+    }
+
+    return NextResponse.json(success(data, "Product updated successfully"), {
+      status: 200,
+    });
+  } catch (e) {
+    return NextResponse.json(error("Invalid request body", 400), {
+      status: 400,
     });
   }
-
-  if (unit_price !== existing.unit_price) {
-    await supabase.from("product_price_history").insert([
-      {
-        product_id: id,
-        old_price: existing.unit_price,
-        new_price: unit_price,
-        updated_by,
-      },
-    ]);
-  }
-
-  return NextResponse.json(success(null, "Product updated successfully"), {
-    status: 200,
-  });
 }
 
 export async function DELETE(
-  req: NextRequest
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse<null>>> {
+  const { id: idStr } = await context.params;
+  const id = idStr;
+
   const supabase = await createClient();
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
 
   if (!id) {
-    return NextResponse.json(error("Missing product ID", 400), { status: 400 });
+    return NextResponse.json(error("Invalid product ID", 400), { status: 400 });
   }
 
-  // Check if product is referenced elsewhere
+  // Prevent deletion if referenced in PO, invoice, or stock movement
   const { data: po } = await supabase
     .from("po_items")
     .select("id")
@@ -99,7 +113,7 @@ export async function DELETE(
 
   if (po?.length || invoice?.length || stock?.length) {
     return NextResponse.json(
-      error("Cannot delete a product that is referenced."),
+      error("Cannot delete a product that is referenced.", 400),
       { status: 400 }
     );
   }
