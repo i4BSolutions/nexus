@@ -15,3 +15,10 @@ values
   ('AA-100002', 'Reusable Water Bottle', 'Home & Kitchen', 12.50, 20, true),
   ('AA-100003', 'Notebook 200 Pages', 'Stationery', 3.25, 50, true),
   ('AA-100004', 'LED Desk Lamp', 'Home & Office', 24.95, 8, true);
+
+-- Seed data for the category table in Supabase
+insert into public.category (category_name)
+values
+  ('Electronics'),
+  ('Home & Kitchen'),
+  ('Stationery');

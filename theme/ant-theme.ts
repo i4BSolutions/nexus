@@ -19,6 +19,9 @@ const customAntTheme: ThemeConfig = {
       paddingBlock: 4,
       controlHeight: 32,
     },
+    Table: {
+      borderColor: "#F5F5F5",
+    },
   },
 };
 
