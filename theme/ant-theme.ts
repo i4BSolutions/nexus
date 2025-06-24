@@ -1,8 +1,6 @@
-import { theme } from "antd";
 import type { ThemeConfig } from "antd";
 
 const customAntTheme: ThemeConfig = {
-  algorithm: theme.defaultAlgorithm,
   token: {
     colorPrimary: "#722ED1",
     borderRadius: 8,
