@@ -7,6 +7,7 @@ import { Table, Button, message, Tag, Space, Divider, Breadcrumb } from "antd";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  PlusOutlined,
   ShopOutlined,
 } from "@ant-design/icons";
 
@@ -215,7 +216,8 @@ export default function SuppliersPage() {
           setEditingSupplier(null);
           setIsModalOpen(true);
         }}
-        buttonText="+ New Supplier"
+        buttonText="New Supplier"
+        buttonIcon={<PlusOutlined />}
       />
 
       {/* Statistics */}
