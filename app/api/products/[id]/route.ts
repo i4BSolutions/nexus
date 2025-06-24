@@ -49,11 +49,11 @@ export async function PUT(
   const { id: idStr } = await context.params;
   const id = parseInt(idStr);
 
-  const supabase = await createClient();
-
   if (!id) {
     return NextResponse.json(error("Invalid product ID", 400), { status: 400 });
   }
+
+  const supabase = await createClient();
 
   const { data: existing, error: fetchError } = await supabase
     .from("product")
@@ -76,6 +76,7 @@ export async function PUT(
 
     const updateData = {
       ...body,
+      sku: existing.sku,
       updated_at: new Date().toISOString(),
     };
 
@@ -93,7 +94,7 @@ export async function PUT(
     }
 
     // Track price changes
-    if (body.unit_price !== existing.unit_price) {
+    if (body.unit_price != null && body.unit_price !== existing.unit_price) {
       const { data: auth } = await supabase.auth.getUser();
       const updated_by = auth?.user?.email || "system";
 

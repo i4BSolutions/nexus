@@ -10,8 +10,8 @@ values
 -- Seed data for the product table in Supabase
 insert into public.product (sku, name, category, unit_price, min_stock, is_active)
 values 
-  ('SKU-1001-A', 'Wireless Mouse', 'Electronics', 19.99, 10, true),
-  ('SKU-1002-B', 'Mechanical Keyboard', 'Electronics', 49.99, 5, true),
-  ('SKU-1003-C', 'Reusable Water Bottle', 'Home & Kitchen', 12.50, 20, true),
-  ('SKU-1004-D', 'Notebook 200 Pages', 'Stationery', 3.25, 50, true),
-  ('SKU-1005-E', 'LED Desk Lamp', 'Home & Office', 24.95, 8, true);
+  ('AA-100000', 'Wireless Mouse', 'Electronics', 19.99, 10, true),
+  ('AA-100001', 'Mechanical Keyboard', 'Electronics', 49.99, 5, true),
+  ('AA-100002', 'Reusable Water Bottle', 'Home & Kitchen', 12.50, 20, true),
+  ('AA-100003', 'Notebook 200 Pages', 'Stationery', 3.25, 50, true),
+  ('AA-100004', 'LED Desk Lamp', 'Home & Office', 24.95, 8, true);
