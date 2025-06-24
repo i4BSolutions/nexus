@@ -209,7 +209,7 @@ export default function SuppliersPage() {
   ];
 
   return (
-    <Space direction="vertical" className="max-w-7xl mx-auto py-10 px-4">
+    <section className="max-w-7xl mx-auto py-10 px-4">
       {/* Breadcrumb */}
       <Breadcrumbs
         items={[{ title: "Home", href: "/" }, { title: "Suppliers" }]}
@@ -289,6 +289,6 @@ export default function SuppliersPage() {
         }}
         bordered
       />
-    </Space>
+    </section>
   );
 }
