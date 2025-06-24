@@ -2,6 +2,7 @@ import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { ApiResponse, PaginatedResponse } from "@/types/api-response-type";
 import { ProductInterface } from "@/types/product/product.type";
+import { generateSKU } from "@/utils/generateSKU";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -63,17 +64,10 @@ export async function POST(
 
   try {
     const body = await req.json();
-    const {
-      sku,
-      name,
-      category,
-      unit_price,
-      min_stock,
-      is_active = true,
-    } = body;
+    const { name, category, unit_price, min_stock, is_active = true } = body;
 
     // Validate required fields
-    if (!sku || !name || !category || unit_price == null || min_stock == null) {
+    if (!name || !category || unit_price == null || min_stock == null) {
       return NextResponse.json(
         error(
           "SKU, name, category, unit_price, and min_stock are required",
@@ -83,15 +77,30 @@ export async function POST(
       );
     }
 
+    const { data: latest, error: fetchError } = await supabase
+      .from("product")
+      .select("sku")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (fetchError) {
+      return NextResponse.json(error("Failed to fetch latest SKU", 500), {
+        status: 500,
+      });
+    }
+
+    const newSku = generateSKU(latest?.sku || null);
+
     // Ensure SKU is unique
-    const { data: existing } = await supabase
+    const { data: exists } = await supabase
       .from("product")
       .select("id")
-      .eq("sku", sku)
+      .eq("sku", newSku)
       .maybeSingle();
 
-    if (existing) {
-      return NextResponse.json(error("SKU must be unique", 409), {
+    if (exists) {
+      return NextResponse.json(error("SKU already exists. Retry again.", 409), {
         status: 409,
       });
     }
@@ -101,7 +110,7 @@ export async function POST(
       .from("product")
       .insert([
         {
-          sku,
+          sku: newSku,
           name,
           category,
           unit_price,
