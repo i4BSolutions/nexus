@@ -4,12 +4,50 @@ import { ApiResponse } from "@/types/api-response-type";
 import { ProductInterface } from "@/types/product/product.type";
 import { NextRequest, NextResponse } from "next/server";
 
+export async function GET(
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse<ApiResponse<ProductInterface | null>>> {
+  const { id: idStr } = await context.params;
+  const id = parseInt(idStr);
+
+  const supabase = await createClient();
+
+  if (!id) {
+    return NextResponse.json(error("Invalid product ID", 400), {
+      status: 400,
+    });
+  }
+
+  const { data, error: dbError } = await supabase
+    .from("product")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (dbError) {
+    return NextResponse.json(error("Failed to retrieve product", 500), {
+      status: 500,
+    });
+  }
+
+  if (!data) {
+    return NextResponse.json(error("Product not found", 404), {
+      status: 404,
+    });
+  }
+
+  return NextResponse.json(success(data, "Product retrieved successfully"), {
+    status: 200,
+  });
+}
+
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse<ProductInterface | null>>> {
   const { id: idStr } = await context.params;
-  const id = idStr;
+  const id = parseInt(idStr);
 
   const supabase = await createClient();
 
@@ -84,7 +122,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse<null>>> {
   const { id: idStr } = await context.params;
-  const id = idStr;
+  const id = parseInt(idStr);
 
   const supabase = await createClient();
 
