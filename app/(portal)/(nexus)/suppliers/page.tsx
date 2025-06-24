@@ -120,7 +120,7 @@ export default function SuppliersPage() {
 
   const columns = [
     {
-      title: "Supplier Name",
+      title: "SUPPLIER NAME",
       dataIndex: "name",
       onCell: () => ({
         style: {
@@ -130,7 +130,7 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "Contact Person",
+      title: "CONTACT PERSON",
       dataIndex: "contact_person",
       onCell: () => ({
         style: {
@@ -140,7 +140,7 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "Email",
+      title: "EMAIL",
       dataIndex: "email",
       onCell: () => ({
         style: {
@@ -150,7 +150,7 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "Phone",
+      title: "PHONE",
       dataIndex: "phone",
       onCell: () => ({
         style: {
@@ -160,7 +160,7 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "Status",
+      title: "STATUS",
       dataIndex: "status",
       onCell: () => ({
         style: {
@@ -171,7 +171,7 @@ export default function SuppliersPage() {
         record.status ? <Tag color="green">Active</Tag> : <Tag>Inactive</Tag>,
     },
     {
-      title: "Actions",
+      title: "ACTIONS",
       onCell: () => ({
         style: {
           borderRight: "none",
