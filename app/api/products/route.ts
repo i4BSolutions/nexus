@@ -137,14 +137,14 @@ export async function POST(
     }
 
     // Ensure SKU is unique
-    const { data: existing } = await supabase
+    const { data: exists } = await supabase
       .from("product")
       .select("id")
       .eq("sku", sku)
       .maybeSingle();
 
-    if (existing) {
-      return NextResponse.json(error("SKU must be unique", 409), {
+    if (exists) {
+      return NextResponse.json(error("SKU already exists. Retry again.", 409), {
         status: 409,
       });
     }
