@@ -15,26 +15,17 @@ import HeaderSection from "@/components/HeaderSection";
 import StatisticsCards from "@/components/StatisticsCards";
 import SearchAndFilters from "@/components/SearchAndFilters";
 
-type Supplier = {
-  id: number;
-  name: string;
-  contact_person: string;
-  email: string;
-  phone: string;
-  address: string;
-  status: boolean;
-  created_at: string;
-  updated_at: string;
-};
+import { SupplierInterface } from "@/types/supplier/supplier.type";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [suppliers, setSuppliers] = useState<SupplierInterface[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [editingSupplier, setEditingSupplier] =
+    useState<SupplierInterface | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
@@ -78,11 +69,11 @@ export default function SuppliersPage() {
     fetchSuppliers();
   }, [pagination.page, pagination.pageSize, statusFilter, searchText]);
 
-  const handleView = (supplier: Supplier) => {
+  const handleView = (supplier: SupplierInterface) => {
     router.push(`/suppliers/${supplier.id}`);
   };
 
-  const handleEdit = (supplier: Supplier) => {
+  const handleEdit = (supplier: SupplierInterface) => {
     setEditingSupplier(supplier);
     setIsModalOpen(true);
   };
@@ -176,7 +167,7 @@ export default function SuppliersPage() {
           borderRight: "none",
         },
       }),
-      render: (_: any, record: Supplier) =>
+      render: (_: any, record: SupplierInterface) =>
         record.status ? <Tag color="green">Active</Tag> : <Tag>Inactive</Tag>,
     },
     {
@@ -186,7 +177,7 @@ export default function SuppliersPage() {
           borderRight: "none",
         },
       }),
-      render: (_: any, record: Supplier) => (
+      render: (_: any, record: SupplierInterface) => (
         <Space style={{ display: "flex", gap: 0 }}>
           <Button
             type="link"
