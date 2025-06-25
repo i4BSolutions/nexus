@@ -1,5 +1,6 @@
 import AntDProvider from "@/components/shared/AntDProvider";
-import { App } from "antd";
+import customAntTheme from "@/theme/ant-theme";
+import { App, ConfigProvider } from "antd";
 import { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -30,7 +31,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AntDProvider>
-          <App>{children}</App>
+          <ConfigProvider theme={customAntTheme}>
+            <App>{children}</App>
+          </ConfigProvider>
         </AntDProvider>
       </body>
     </html>
