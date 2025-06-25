@@ -1,37 +1,63 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { Button, Flex, Input, Space, Typography } from "antd";
+import { App, Button, Flex, Input, Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { signInWithOtp } from "./action";
+import { useState } from "react";
+import { signInWithOtp } from "../actions";
 
 export default function LoginPage() {
+  const { message } = App.useApp();
   const [email, setEmail] = useState("");
-  const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const emailRegex = /\.(com|org|net|edu|gov|io|co)$/i;
 
   const loginHandler = async () => {
     if (!email) return;
-    startTransition(() => {
-      signInWithOtp(email)
-        .then(() => {
-          router.push("verify-otp?email=" + encodeURIComponent(email));
-        })
-        .catch((error) => {
-          console.error("Login failed:", error);
-        });
-    });
+    try {
+      await signInWithOtp(email);
+      router.push("verify-otp?email=" + encodeURIComponent(email));
+    } catch (error) {
+      message.error("Account not provisioned in system!");
+      await fetch("/api/auth/login-audit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          method: "OTP",
+        }),
+      });
+    }
   };
 
   const googleLoginHandler = async () => {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${location.origin}/api/auth/callback`,
-      },
-    });
+    const data = await fetch(
+      `/api/auth/check-user?email=${encodeURIComponent(email)}`
+    );
+    const { exists } = await data.json();
+    if (exists) {
+      const supabase = createClient();
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${location.origin}/api/auth/callback`,
+        },
+      });
+    } else {
+      message.error("Account not provisioned in system!");
+      await fetch("/api/auth/login-audit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          method: "Google SSO",
+        }),
+      });
+    }
   };
 
   return (
@@ -42,30 +68,32 @@ export default function LoginPage() {
       vertical
       className="!h-screen !pt-20"
     >
-      <Typography.Title>Welcome to Core Orbit</Typography.Title>
-      <Space direction="horizontal" size="large">
+      <Typography.Title>Welcome to Nexus</Typography.Title>
+      <div>
         <Input
           placeholder="yourmail@domain.com"
+          type="email"
+          size="large"
           onChange={(e) => setEmail(e.target.value)}
           value={email}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              loginHandler();
-            }
-          }}
         />
+      </div>
+      <Space direction="vertical" size="large">
         <Button
           type="primary"
           onClick={loginHandler}
-          disabled={!email}
-          loading={pending}
+          disabled={!emailRegex.test(email)}
         >
-          Login
+          Sign In with OTP
+        </Button>
+        <Button
+          type="primary"
+          onClick={googleLoginHandler}
+          disabled={!emailRegex.test(email)}
+        >
+          Continue with Google
         </Button>
       </Space>
-      <Button type="primary" onClick={googleLoginHandler} loading={pending}>
-        Login with google
-      </Button>
     </Flex>
   );
 }

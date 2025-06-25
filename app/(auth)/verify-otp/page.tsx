@@ -1,44 +1,78 @@
 "use client";
 
-import { Flex, Input, Space, Typography } from "antd";
+import { App, Flex, Input, Space, Spin, Typography } from "antd";
 import { OTPProps } from "antd/es/input/OTP";
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { verfiyOtp } from "./action";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
-export default function VerfiyOtpPage() {
-  const [pending, startTransition] = useTransition();
+export default function VerifyOtpPage() {
+  const { message } = App.useApp();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+  const token = searchParams.get("token");
 
-  const onChange: OTPProps["onChange"] = (text) => {
-    console.log("onChange:", text);
-    if (text && text.length === 6) {
-      console.log("All inputs are filled:", text);
-      // Perform your desired action here
-      startTransition(() => {
-        // Simulate an API call or any other action
-        verfiyOtp(
-          new URLSearchParams(window.location.search).get("email") || "",
-          text
-        )
-          .then((session) => {
-            console.log("OTP verified successfully:", session);
-            // Redirect or perform any other action after successful verification
-            router.push("/"); // Redirect to home or another page
-          })
-          .catch((error) => {
-            console.error("OTP verification failed:", error);
-            // Handle error, show notification, etc.
-            alert("OTP verification failed: " + error.message);
-            // You can replace this with your actual submission logic
-          });
+  const verifyOtp = async (
+    email: string,
+    token: string,
+    isAdmin: boolean = false
+  ) => {
+    if (!email || !token) {
+      message.error("Email and token are required for OTP verification");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/auth/verify-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, code: token, isAdmin }),
       });
+      const result = await res.json();
+      console.log("OTP verification result:", result);
+      if (res.ok) {
+        router.push("/");
+      }
+    } catch (error: any) {
+      message.error(
+        error.message || "An error occurred during OTP verification"
+      );
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    if (email && token) {
+      verifyOtp(email, token, true);
+    }
+  }, [email, token]);
+
+  const onChange: OTPProps["onChange"] = async (code) => {
+    if (code && code.length === 6 && email) {
+      await verifyOtp(email, code, false);
     }
   };
 
   const onInput: OTPProps["onInput"] = (value) => {
     console.log("onInput:", value);
   };
+
+  if (email && token) {
+    return (
+      <Flex
+        justify="start"
+        gap={20}
+        align="center"
+        vertical
+        className="!h-screen !pt-20"
+      >
+        <Typography.Title>Verifying {email}</Typography.Title>
+        <Spin size="large" />
+      </Flex>
+    );
+  }
 
   return (
     <Flex
@@ -48,7 +82,7 @@ export default function VerfiyOtpPage() {
       vertical
       className="!h-screen !pt-20"
     >
-      <Typography.Title>Check your mail for OTP</Typography.Title>
+      <Typography.Title>Check your email for the OTP</Typography.Title>
       <Space direction="horizontal" size="large">
         <Input.OTP onChange={onChange} onInput={onInput} />
       </Space>
