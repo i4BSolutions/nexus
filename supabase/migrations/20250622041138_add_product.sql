@@ -7,6 +7,7 @@ create table "public"."product" (
     "min_stock" integer default 0,
     "stock" integer default 0,
     "description" text,
+    "currency_code" text not null,
     "is_active" boolean default true,
     "created_at" timestamp with time zone not null default timezone('utc'::text, now()),
     "updated_at" timestamp with time zone not null default timezone('utc'::text, now())
