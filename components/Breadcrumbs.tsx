@@ -30,7 +30,7 @@ const Breadcrumbs: React.FC<Props> = ({ items }) => {
           item.title
         ),
       }))}
-      className="mb-2"
+      style={{ marginBottom: 16 }}
     />
   );
 };
