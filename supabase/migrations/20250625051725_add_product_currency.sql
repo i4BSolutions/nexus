@@ -8,6 +8,8 @@ create table "public"."product_currency" (
 );
 
 
+CREATE UNIQUE INDEX product_currency_currency_name_key ON public.product_currency USING btree (currency_name);
+
 CREATE UNIQUE INDEX currency_currency_code_key ON public.product_currency USING btree (currency_code);
 
 CREATE UNIQUE INDEX currency_pkey ON public.product_currency USING btree (id);
@@ -15,6 +17,12 @@ CREATE UNIQUE INDEX currency_pkey ON public.product_currency USING btree (id);
 alter table "public"."product_currency" add constraint "currency_pkey" PRIMARY KEY using index "currency_pkey";
 
 alter table "public"."product_currency" add constraint "currency_currency_code_key" UNIQUE using index "currency_currency_code_key";
+
+alter table "public"."product_currency" add constraint "product_currency_currency_name_key" UNIQUE using index "product_currency_currency_name_key";
+
+alter table "public"."product_currency" add constraint "product_currency_id_fkey" FOREIGN KEY (id) REFERENCES product(id) not valid;
+
+alter table "public"."product_currency" validate constraint "product_currency_id_fkey";
 
 grant delete on table "public"."product_currency" to "anon";
 
