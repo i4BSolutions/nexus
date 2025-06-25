@@ -34,6 +34,7 @@ interface ProductFormModalProps {
   mode: "create" | "edit";
   initialValues?: Partial<ProductFormSchema>;
   currencyOptions: {
+    id: string;
     currency_code: string;
     currency_name: string;
   }[];
@@ -206,21 +207,18 @@ export default function ProductFormModal({
           label="Unit Price"
           required
           validateStatus={
-            errors.unit_price || errors.currency_code ? "error" : ""
+            errors.unit_price || errors.currency_code_id ? "error" : ""
           }
-          help={errors.unit_price?.message || errors.currency_code?.message}
+          help={errors.unit_price?.message || errors.currency_code_id?.message}
         >
           <Space.Compact style={{ width: "100%" }}>
             <Controller
-              name="currency_code"
+              name="currency_code_id"
               control={control}
               render={({ field }) => (
                 <Select {...field} style={{ width: 100 }}>
                   {currencyOptions.map((cur) => (
-                    <Select.Option
-                      key={cur.currency_code}
-                      value={cur.currency_code}
-                    >
+                    <Select.Option key={cur.id} value={cur.id}>
                       {cur.currency_code}
                     </Select.Option>
                   ))}

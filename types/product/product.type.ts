@@ -6,7 +6,7 @@ export interface ProductInterface {
   unit_price: number;
   min_stock: number;
   stock: number;
-  currency_code: string;
+  currency_code_id: number;
   description: string;
   created_at: string;
   updated_at: string;

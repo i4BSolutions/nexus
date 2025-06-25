@@ -2,7 +2,7 @@
 
 import Breadcrumbs from "@/components/Breadcrumbs";
 import HeaderSection from "@/components/HeaderSection";
-import ProductFormModal from "@/components/ProductFormModal";
+import ProductFormModal from "@/app/(portal)/(nexus)/products/_components/ProductFormModal";
 import SearchAndFilters from "@/components/SearchAndFilters";
 import StatisticsCards from "@/components/StatisticsCards";
 import { ProductFormSchema } from "@/schemas/products/products.schemas";
@@ -52,6 +52,7 @@ export default function ProductsPage() {
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [currencyOptions, setCurrencyOptions] = useState<
     {
+      id: string;
       currency_code: string;
       currency_name: string;
     }[]
@@ -175,7 +176,6 @@ export default function ProductsPage() {
       if (res.ok) {
         message.success("Product created successfully");
         setIsOpenProductFormModal(false);
-        // Optionally: refresh data or list
       } else {
         message.error(result.message || "Failed to create product");
       }
@@ -259,7 +259,11 @@ export default function ProductsPage() {
           borderRight: "none",
         },
       }),
-      render: (v: number) => `${v} MMK`,
+      render: (v: number, record: ProductInterface) =>
+        `${v} ${
+          currencyOptions.find((c) => Number(c.id) === record.currency_code_id)
+            ?.currency_code ?? ""
+        }`,
     },
     {
       title: "Min Stock",
@@ -408,7 +412,7 @@ export default function ProductsPage() {
           sku: productSKU,
           name: "",
           category: "",
-          currency_code: "",
+          currency_code_id: 1,
           unit_price: 0,
           min_stock: 0,
           description: "",
