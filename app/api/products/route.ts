@@ -29,19 +29,26 @@ export async function GET(req: NextRequest): Promise<
   const to = from + pageSize - 1;
 
   try {
-    // Fetch all products (for filtering in JS)
-    const { data: allData, error: allError } = await supabase
+    // Fetch all products for lowStock & outOfStock
+    const { data: allProducts, error: allError } = await supabase
       .from("product")
       .select("*");
 
-    if (allError || !allData) {
+    if (allError || !allProducts) {
       return NextResponse.json(error("Failed to fetch products", 500), {
         status: 500,
       });
     }
 
-    // JS filtering for search, category
-    let filtered = allData;
+    // Compute global counts (unfiltered)
+    const lowStock = allProducts.filter(
+      (p) => p.stock <= p.min_stock && p.stock > 0
+    ).length;
+
+    const outOfStock = allProducts.filter((p) => p.stock === 0).length;
+
+    // Apply filters to compute `items` and `total`
+    let filtered = [...allProducts];
 
     if (search) {
       filtered = filtered.filter(
@@ -55,13 +62,6 @@ export async function GET(req: NextRequest): Promise<
       filtered = filtered.filter((p) => p.category === category);
     }
 
-    // Count stock status
-    const lowStock = filtered.filter(
-      (p) => p.stock <= p.min_stock && p.stock > 0
-    ).length;
-    const outOfStock = filtered.filter((p) => p.stock === 0).length;
-
-    // Apply stock_status filter
     if (stockStatus === "low_stock") {
       filtered = filtered.filter((p) => p.stock <= p.min_stock && p.stock > 0);
     } else if (stockStatus === "in_stock") {
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest): Promise<
       filtered = filtered.filter((p) => p.stock === 0);
     }
 
-    // Sort by field
+    // Sort
     filtered.sort((a, b) => {
       const valA = a[sort as keyof ProductInterface];
       const valB = b[sort as keyof ProductInterface];
@@ -79,6 +79,7 @@ export async function GET(req: NextRequest): Promise<
         : 0;
     });
 
+    // Paginate
     const paginated = filtered.slice(from, to + 1);
 
     const response: PaginatedResponse<ProductInterface> & {
@@ -86,7 +87,7 @@ export async function GET(req: NextRequest): Promise<
       outOfStock: number;
     } = {
       items: paginated,
-      total: filtered.length,
+      total: allProducts.length,
       page,
       pageSize,
       lowStock,
@@ -95,9 +96,7 @@ export async function GET(req: NextRequest): Promise<
 
     return NextResponse.json(
       success(response, "Products retrieved successfully"),
-      {
-        status: 200,
-      }
+      { status: 200 }
     );
   } catch (e) {
     console.error("Unexpected error:", e);
