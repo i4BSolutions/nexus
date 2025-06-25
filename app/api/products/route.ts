@@ -120,6 +120,7 @@ export async function POST(
       unit_price,
       min_stock,
       stock,
+      currency_code_id,
       is_active = true,
       description,
     } = body;
@@ -159,6 +160,7 @@ export async function POST(
           unit_price,
           min_stock,
           stock,
+          currency_code_id,
           is_active,
           description,
         },

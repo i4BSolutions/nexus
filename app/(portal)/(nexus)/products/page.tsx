@@ -2,8 +2,10 @@
 
 import Breadcrumbs from "@/components/Breadcrumbs";
 import HeaderSection from "@/components/HeaderSection";
+import ProductFormModal from "@/app/(portal)/(nexus)/products/_components/ProductFormModal";
 import SearchAndFilters from "@/components/SearchAndFilters";
 import StatisticsCards from "@/components/StatisticsCards";
+import { ProductFormSchema } from "@/schemas/products/products.schemas";
 import { ProductInterface } from "@/types/product/product.type";
 import {
   ExclamationCircleOutlined,
@@ -11,12 +13,19 @@ import {
   TagOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
-import { Button, Divider, Input, Select, Space, Table, Tag } from "antd";
+import {
+  Button,
+  Divider,
+  Input,
+  message,
+  Select,
+  Space,
+  Table,
+  Tag,
+} from "antd";
 import { SortOrder } from "antd/es/table/interface";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-const { Search } = Input;
-const { Option } = Select;
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
@@ -41,6 +50,16 @@ export default function ProductsPage() {
     string | undefined
   >();
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [currencyOptions, setCurrencyOptions] = useState<
+    {
+      id: string;
+      currency_code: string;
+      currency_name: string;
+    }[]
+  >([]);
+  const [productSKU, setProductSKU] = useState<string>("");
+
+  const [isOpenProductFormModal, setIsOpenProductFormModal] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -106,6 +125,64 @@ export default function ProductsPage() {
     };
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const fetchProductSKU = async () => {
+      try {
+        const res = await fetch("/api/products/get-product-sku");
+        const data = await res.json();
+        console.log(data);
+        if (data.status === "success") {
+          setProductSKU(data.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchProductSKU();
+  }, []);
+
+  useEffect(() => {
+    const fetchCurrencies = async () => {
+      try {
+        const res = await fetch("/api/products/get-product-currencies");
+        const data = await res.json();
+        console.log(data);
+        if (data.status === "success") {
+          setCurrencyOptions(data.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchCurrencies();
+  }, []);
+
+  const handleAddNewProduct = useCallback(() => {
+    setIsOpenProductFormModal(true);
+  }, []);
+
+  const handleSubmit = async (data: ProductFormSchema) => {
+    console.log(data);
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        message.success("Product created successfully");
+        setIsOpenProductFormModal(false);
+      } else {
+        message.error(result.message || "Failed to create product");
+      }
+    } catch {
+      message.error("Unexpected error creating product");
+    }
+  };
 
   const filters = [
     {
@@ -182,7 +259,11 @@ export default function ProductsPage() {
           borderRight: "none",
         },
       }),
-      render: (v: number) => `${v} MMK`,
+      render: (v: number, record: ProductInterface) =>
+        `${v} ${
+          currencyOptions.find((c) => Number(c.id) === record.currency_code_id)
+            ?.currency_code ?? ""
+        }`,
     },
     {
       title: "Min Stock",
@@ -202,7 +283,8 @@ export default function ProductsPage() {
         },
       }),
       render: (stock: number, record: ProductInterface) => {
-        if (stock === 0) return <Tag color="#F5222D">Out of Stock</Tag>;
+        if (record.min_stock === 0)
+          return <Tag color="#F5222D">Out of Stock</Tag>;
         if (stock <= record.min_stock)
           return <Tag color="#FA8C16">Low Stock</Tag>;
         return <Tag color="#52C41A">In Stock</Tag>;
@@ -249,7 +331,7 @@ export default function ProductsPage() {
         title="Products"
         description="Manage your product catalog"
         icon={<TagsOutlined />}
-        onAddNew={() => {}}
+        onAddNew={handleAddNewProduct}
         buttonText="New Product"
         buttonIcon={<PlusOutlined />}
       />
@@ -308,7 +390,7 @@ export default function ProductsPage() {
         pagination={{
           current: pagination.page,
           pageSize: pagination.pageSize,
-          total: pagination.total,
+          total: counts.total,
           onChange: (page, pageSize) => {
             setPagination({
               page,
@@ -318,6 +400,25 @@ export default function ProductsPage() {
           },
         }}
         bordered
+      />
+
+      <ProductFormModal
+        open={isOpenProductFormModal}
+        onClose={() => setIsOpenProductFormModal(false)}
+        onSubmit={handleSubmit}
+        onCreateCategory={() => {}}
+        mode="create"
+        initialValues={{
+          sku: productSKU,
+          name: "",
+          category: "",
+          currency_code_id: 1,
+          unit_price: 0,
+          min_stock: 0,
+          description: "",
+        }}
+        currencyOptions={currencyOptions}
+        categoryOptions={categoryOptions}
       />
     </section>
   );

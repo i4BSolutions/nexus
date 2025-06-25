@@ -20,10 +20,6 @@ alter table "public"."product_currency" add constraint "currency_currency_code_k
 
 alter table "public"."product_currency" add constraint "product_currency_currency_name_key" UNIQUE using index "product_currency_currency_name_key";
 
-alter table "public"."product_currency" add constraint "product_currency_id_fkey" FOREIGN KEY (id) REFERENCES product(id) not valid;
-
-alter table "public"."product_currency" validate constraint "product_currency_id_fkey";
-
 grant delete on table "public"."product_currency" to "anon";
 
 grant insert on table "public"."product_currency" to "anon";
