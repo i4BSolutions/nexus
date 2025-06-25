@@ -13,23 +13,16 @@ import {
   TagOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
-import {
-  Button,
-  Divider,
-  Input,
-  message,
-  Select,
-  Space,
-  Table,
-  Tag,
-} from "antd";
+import { Button, Divider, message, Space, Table, Tag } from "antd";
 import { SortOrder } from "antd/es/table/interface";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function ProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<ProductInterface[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -161,6 +154,13 @@ export default function ProductsPage() {
   const handleAddNewProduct = useCallback(() => {
     setIsOpenProductFormModal(true);
   }, []);
+
+  const handleView = useCallback(
+    (product: ProductInterface) => {
+      router.push(`/products/${product.id}`);
+    },
+    [router]
+  );
 
   const handleSubmit = async (data: ProductFormSchema) => {
     console.log(data);
@@ -297,11 +297,11 @@ export default function ProductsPage() {
           borderRight: "none",
         },
       }),
-      render: (_: any, record: ProductInterface) => (
+      render: (_: any, product: ProductInterface) => (
         <Space style={{ display: "flex", gap: 0 }}>
           <Button
             type="link"
-            onClick={() => console.log("view")}
+            onClick={() => handleView(product)}
             style={{ padding: 0 }}
           >
             View
