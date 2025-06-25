@@ -3,12 +3,13 @@
 import { App, Flex, Input, Space, Spin, Typography } from "antd";
 import { OTPProps } from "antd/es/input/OTP";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useTransition } from "react";
 
 export default function VerifyOtpClientPage() {
   const { message } = App.useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [verifying, startVerifying] = useTransition();
   const email = searchParams.get("email");
   const token = searchParams.get("token");
 
@@ -45,13 +46,17 @@ export default function VerifyOtpClientPage() {
 
   useEffect(() => {
     if (email && token) {
-      verifyOtp(email, token, true);
+      startVerifying(async () => {
+        verifyOtp(email, token, true);
+      });
     }
   }, [email, token]);
 
   const onChange: OTPProps["onChange"] = async (code) => {
     if (code && code.length === 6 && email) {
-      await verifyOtp(email, code, false);
+      startVerifying(async () => {
+        await verifyOtp(email, code, false);
+      });
     }
   };
 
@@ -59,7 +64,7 @@ export default function VerifyOtpClientPage() {
     console.log("onInput:", value);
   };
 
-  if (email && token) {
+  if ((email && token && verifying) || verifying) {
     return (
       <Suspense>
         <Flex
@@ -77,17 +82,11 @@ export default function VerifyOtpClientPage() {
   }
 
   return (
-    <Flex
-      justify="start"
-      gap={20}
-      align="center"
-      vertical
-      className="!h-screen !pt-20"
-    >
+    <section className="!h-screen bg-[url(/loginBg.jpg)] bg-cover flex flex-col items-center justify-start pt-20">
       <Typography.Title>Check your email for the OTP</Typography.Title>
       <Space direction="horizontal" size="large">
         <Input.OTP onChange={onChange} onInput={onInput} />
       </Space>
-    </Flex>
+    </section>
   );
 }
