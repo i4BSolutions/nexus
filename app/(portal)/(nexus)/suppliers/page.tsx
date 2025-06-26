@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Table, Button, message, Tag, Space, Divider, Breadcrumb } from "antd";
+import type { SortOrder } from "antd/es/table/interface";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -30,17 +31,26 @@ export default function SuppliersPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [total, setTotal] = useState(0);
   const [counts, setCounts] = useState({ total: 0, active: 0, inactive: 0 });
+  const [sortField, setSortField] = useState<string | undefined>();
+  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
 
   const router = useRouter();
 
   const fetchSuppliers = async () => {
     setLoading(true);
+
     try {
+      const sortParam =
+        sortField && sortOrder
+          ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
+          : "";
+
       const res = await fetch(
         `/api/suppliers?page=${pagination.page}&pageSize=${
           pagination.pageSize
-        }&status=${statusFilter || ""}&q=${searchText}`
+        }&status=${statusFilter || ""}&q=${searchText}&sort=${sortParam}`
       );
 
       const result = await res.json();
@@ -52,9 +62,14 @@ export default function SuppliersPage() {
           page: result.data.page,
           pageSize: result.data.pageSize,
         }));
+
+        setTotal(result.data.total);
+
         setCounts((prev) => ({
           ...prev,
-          total: result.data.total,
+          total: result.data.statistics?.total || 0,
+          active: result.data.statistics?.active || 0,
+          inactive: result.data.statistics?.inactive || 0,
         }));
       } else {
         message.error(result.message || "Failed to fetch suppliers");
@@ -68,7 +83,14 @@ export default function SuppliersPage() {
 
   useEffect(() => {
     fetchSuppliers();
-  }, [pagination.page, pagination.pageSize, statusFilter, searchText]);
+  }, [
+    pagination.page,
+    pagination.pageSize,
+    statusFilter,
+    searchText,
+    sortField,
+    sortOrder,
+  ]);
 
   const handleView = (supplier: SupplierInterface) => {
     router.push(`/suppliers/${supplier.id}`);
@@ -123,6 +145,9 @@ export default function SuppliersPage() {
     {
       title: "SUPPLIER NAME",
       dataIndex: "name",
+      key: "name",
+      sorter: true,
+      sortOrder: sortField === "name" ? (sortOrder as SortOrder) : undefined,
       onCell: () => ({
         style: {
           borderRight: "none",
@@ -253,18 +278,26 @@ export default function SuppliersPage() {
       {/* Search and Filter */}
       <SearchAndFilters
         searchPlaceholder="Search by name, contact or email"
-        onSearch={(text) => setSearchText(text)}
+        onSearch={(text) => {
+          setSearchText(text);
+          setPagination((prev) => ({ ...prev, page: 1 }));
+        }}
         filters={filters}
         onFilterChange={(key, value) => {
-          if (key === "status") setStatusFilter(value);
+          if (key === "status") {
+            setStatusFilter(value);
+            setPagination((prev) => ({ ...prev, page: 1 }));
+          }
         }}
         onClearFilters={() => {
           setStatusFilter(undefined);
+          setPagination((prev) => ({ ...prev, page: 1 }));
         }}
       />
 
       {/* Table */}
       <Table
+        bordered
         columns={columns}
         dataSource={suppliers}
         loading={loading}
@@ -272,15 +305,25 @@ export default function SuppliersPage() {
         pagination={{
           current: pagination.page,
           pageSize: pagination.pageSize,
-          total: counts.total,
+          total: total,
         }}
-        onChange={(paginationInfo) => {
+        onChange={(paginationInfo, filters, sorter) => {
+          // Handle pagination
           setPagination({
             page: paginationInfo.current ?? 1,
             pageSize: paginationInfo.pageSize ?? 10,
           });
+
+          // Handle sorting
+          if (Array.isArray(sorter)) {
+            const sortInfo = sorter[0];
+            setSortField(sortInfo?.field as string);
+            setSortOrder(sortInfo?.order);
+          } else {
+            setSortField(sorter?.field as string);
+            setSortOrder(sorter?.order);
+          }
         }}
-        bordered
       />
     </section>
   );
