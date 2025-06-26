@@ -64,7 +64,7 @@ export default function VerifyOtpClientPage() {
     console.log("onInput:", value);
   };
 
-  if ((email && token && verifying) || verifying) {
+  if ((email && token) || verifying) {
     return (
       <Suspense>
         <Flex
@@ -84,8 +84,8 @@ export default function VerifyOtpClientPage() {
   return (
     <section className="!h-screen bg-[url(/loginBg.jpg)] bg-cover flex flex-col items-center justify-start pt-20">
       <Typography.Title>Check your email for the OTP</Typography.Title>
-      <Space direction="horizontal" size="large">
-        <Input.OTP onChange={onChange} onInput={onInput} />
+      <Space direction="horizontal" size="large" className="mt-6">
+        <Input.OTP onChange={onChange} onInput={onInput} size="large" />
       </Space>
     </section>
   );
