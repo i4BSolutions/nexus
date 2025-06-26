@@ -22,6 +22,12 @@ const customAntTheme: ThemeConfig = {
     Table: {
       borderColor: "#F5F5F5",
     },
+    Form: {
+      verticalLabelPadding: 0,
+    },
+    Input: {
+      lineHeight: 3,
+    },
   },
 };
 
