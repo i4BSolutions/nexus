@@ -2,36 +2,29 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Typography,
-  Button,
-  Tag,
-  Tabs,
-  Card,
-  Row,
-  Col,
-  Space,
-  message,
-  Popconfirm,
-} from "antd";
+import { Typography, Button, Tag, Tabs, Space, message } from "antd";
 import {
   ArrowLeftOutlined,
   DeleteOutlined,
   EditOutlined,
-  ContactsOutlined,
 } from "@ant-design/icons";
 
 import Breadcrumbs from "@/components/Breadcrumbs";
-import DetailsCard from "../components/DetailsCard";
-import HistoryCard from "../components/HistoryCard";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
 import { SupplierInterface } from "@/types/supplier/supplier.type";
+
+import DetailsCard from "../components/DetailsCard";
+import HistoryCard from "../components/HistoryCard";
+import SupplierModal from "../components/SupplierModal";
 
 const SupplierPage = () => {
   const params = useParams();
   const id = params?.id;
 
   const [supplier, setSupplier] = useState<SupplierInterface | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const router = useRouter();
 
@@ -63,6 +56,26 @@ const SupplierPage = () => {
       }
     } catch {
       message.error("Delete error");
+    }
+  };
+
+  const handleEditSubmit = async (values: any) => {
+    try {
+      const res = await fetch(`/api/suppliers/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const result = await res.json();
+      if (res.ok && result.status === "success") {
+        message.success("Supplier updated");
+        setIsModalOpen(false);
+        fetchSupplier();
+      } else {
+        message.error(result.message || "Update failed");
+      }
+    } catch {
+      message.error("Update error");
     }
   };
 
@@ -112,16 +125,26 @@ const SupplierPage = () => {
         </Space>
 
         <Space>
-          <Popconfirm
-            title="Are you sure to delete this supplier?"
-            onConfirm={handleDelete}
-          >
-            <Button icon={<DeleteOutlined />} danger />
-          </Popconfirm>
+          <DeleteConfirmModal
+            open={isDeleteModalOpen}
+            title="Supplier"
+            onCancel={() => setIsDeleteModalOpen(false)}
+            onConfirm={async () => {
+              await handleDelete();
+              setIsDeleteModalOpen(false);
+            }}
+          />
+
+          <Button
+            icon={<DeleteOutlined />}
+            danger
+            onClick={() => setIsDeleteModalOpen(true)}
+          />
+
           <Button
             type="primary"
             icon={<EditOutlined />}
-            onClick={() => router.push(`/suppliers/edit/${id}`)}
+            onClick={() => setIsModalOpen(true)}
           >
             Edit Supplier
           </Button>
@@ -140,6 +163,7 @@ const SupplierPage = () => {
                 contact_person={supplier.contact_person}
                 email={supplier.email}
                 phone={supplier.phone}
+                address={supplier.address}
               />
             ),
           },
@@ -149,6 +173,14 @@ const SupplierPage = () => {
             children: <HistoryCard />,
           },
         ]}
+      />
+
+      <SupplierModal
+        open={isModalOpen}
+        isEdit={true}
+        initialValues={supplier}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleEditSubmit}
       />
     </section>
   );

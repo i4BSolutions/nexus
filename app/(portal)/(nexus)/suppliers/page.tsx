@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Table, Button, message, Tag, Space, Divider, Breadcrumb } from "antd";
+import { Table, Button, message, Tag, Space, Divider } from "antd";
 import type { SortOrder } from "antd/es/table/interface";
 import {
   CheckCircleOutlined,
@@ -15,6 +15,8 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import HeaderSection from "@/components/HeaderSection";
 import StatisticsCards from "@/components/StatisticsCards";
 import SearchAndFilters from "@/components/SearchAndFilters";
+
+import SupplierModal from "./components/SupplierModal";
 
 import { SupplierInterface } from "@/types/supplier/supplier.type";
 
@@ -175,8 +177,8 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "PHONE",
-      dataIndex: "phone",
+      title: "ADDRESS",
+      dataIndex: "address",
       onCell: () => ({
         style: {
           borderRight: "none",
@@ -197,11 +199,6 @@ export default function SuppliersPage() {
     },
     {
       title: "ACTIONS",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
       render: (_: any, record: SupplierInterface) => (
         <Space style={{ display: "flex", gap: 0 }}>
           <Button
@@ -322,6 +319,17 @@ export default function SuppliersPage() {
             setSortOrder(sorter?.order);
           }
         }}
+      />
+
+      <SupplierModal
+        open={isModalOpen}
+        isEdit={!!editingSupplier}
+        initialValues={editingSupplier ?? undefined}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingSupplier(null);
+        }}
+        onSubmit={handleSubmit}
       />
     </section>
   );
