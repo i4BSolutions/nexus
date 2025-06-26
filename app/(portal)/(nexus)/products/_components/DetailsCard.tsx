@@ -18,10 +18,12 @@ const DetailsCard = ({
 }: ProductDetailsCardProps) => {
   return (
     <Card
-      headStyle={{
-        background:
-          "linear-gradient(90deg, rgba(249, 240, 255, 1) 0%, rgba(255, 255, 255, 1) 100%)",
-        borderBottom: "1px solid #D3ADF7",
+      styles={{
+        header: {
+          background:
+            "linear-gradient(90deg, rgba(249, 240, 255, 1) 0%, rgba(255, 255, 255, 1) 100%)",
+          borderBottom: "1px solid #D3ADF7",
+        },
       }}
       title={
         <Space style={{ margin: "10px 0" }}>
