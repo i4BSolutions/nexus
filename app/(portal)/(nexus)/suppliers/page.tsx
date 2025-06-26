@@ -23,7 +23,10 @@ import {
   SuppliersResponse,
 } from "@/types/supplier/supplier.type";
 
-import { useCrudResource } from "@/hooks/useCrudResource";
+import { useList } from "@/hooks/react-query/useList";
+import { useCreate } from "@/hooks/react-query/useCreate";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { useDelete } from "@/hooks/react-query/useDelete";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
@@ -40,9 +43,6 @@ export default function SuppliersPage() {
 
   const router = useRouter();
 
-  const { useList, useCreate, useUpdate, useDelete } =
-    useCrudResource("suppliers");
-
   // React Query hooks
   const sortParam =
     sortField && sortOrder
@@ -53,7 +53,7 @@ export default function SuppliersPage() {
     data: suppliersData,
     isLoading: loading,
     error,
-  } = useList({
+  } = useList("suppliers", {
     page: pagination.page,
     pageSize: pagination.pageSize,
     q: searchText,
@@ -61,9 +61,9 @@ export default function SuppliersPage() {
     sort: sortParam,
   });
 
-  const create = useCreate();
-  const update = useUpdate();
-  const remove = useDelete();
+  const create = useCreate("suppliers");
+  const update = useUpdate("suppliers");
+  const remove = useDelete("suppliers");
 
   // Extract data from the query result
   const suppliers = (suppliersData as SuppliersResponse)?.items || [];

@@ -14,7 +14,9 @@ import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
 import { SupplierInterface } from "@/types/supplier/supplier.type";
 
-import { useCrudResource } from "@/hooks/useCrudResource";
+import { useGetById } from "@/hooks/react-query/useGetById";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { useDelete } from "@/hooks/react-query/useDelete";
 
 import DetailsCard from "../components/DetailsCard";
 import HistoryCard from "../components/HistoryCard";
@@ -29,10 +31,14 @@ const SupplierPage = () => {
 
   const router = useRouter();
 
-  const { useGetById, useUpdate, useDelete } = useCrudResource("suppliers");
-  const { data: supplierRaw, isLoading, error, refetch } = useGetById(id, !!id);
-  const update = useUpdate();
-  const remove = useDelete();
+  const {
+    data: supplierRaw,
+    isLoading,
+    error,
+    refetch,
+  } = useGetById("suppliers", id, !!id);
+  const update = useUpdate("suppliers");
+  const remove = useDelete("suppliers");
 
   const supplier = supplierRaw as SupplierInterface | undefined;
 
