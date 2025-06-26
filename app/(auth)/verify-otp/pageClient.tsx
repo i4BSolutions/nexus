@@ -1,9 +1,9 @@
 "use client";
 
-import { App, Flex, Input, Space, Spin, Typography } from "antd";
+import { App, Input, Space, Spin, Typography } from "antd";
 import { OTPProps } from "antd/es/input/OTP";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useTransition } from "react";
+import { useEffect, useTransition } from "react";
 
 export default function VerifyOtpClientPage() {
   const { message } = App.useApp();
@@ -66,18 +66,12 @@ export default function VerifyOtpClientPage() {
 
   if ((email && token) || verifying) {
     return (
-      <Suspense>
-        <Flex
-          justify="start"
-          gap={20}
-          align="center"
-          vertical
-          className="!h-screen !pt-20"
-        >
-          <Typography.Title>Verifying {email}</Typography.Title>
-          <Spin size="large" />
-        </Flex>
-      </Suspense>
+      <section className="!h-screen bg-[url(/loginBg.jpg)] bg-cover flex flex-col items-center justify-start pt-20">
+        <Typography.Title className="text-white">
+          Verifying {email}
+        </Typography.Title>
+        <Spin size="large" />
+      </section>
     );
   }
 
