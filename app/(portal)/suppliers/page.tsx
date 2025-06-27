@@ -1,96 +1,84 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { Table, Button, message, Tag, Space, Divider, Breadcrumb } from "antd";
-import type { SortOrder } from "antd/es/table/interface";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   PlusOutlined,
   ShopOutlined,
 } from "@ant-design/icons";
+import { Button, Divider, message, Space, Table, Tag } from "antd";
+import type { SortOrder } from "antd/es/table/interface";
 
-import Breadcrumbs from "@/components/Breadcrumbs";
-import HeaderSection from "@/components/HeaderSection";
-import StatisticsCards from "@/components/StatisticsCards";
-import SearchAndFilters from "@/components/SearchAndFilters";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import HeaderSection from "@/components/shared/HeaderSection";
+import SearchAndFilters from "@/components/shared/SearchAndFilters";
+import StatisticsCards from "@/components/shared/StatisticsCards";
 
-import { SupplierInterface } from "@/types/supplier/supplier.type";
+import SupplierModal from "../../../components/suppliers/SupplierModal";
+
+import {
+  SupplierInterface,
+  SuppliersResponse,
+} from "@/types/supplier/supplier.type";
+
+import { useCreate } from "@/hooks/react-query/useCreate";
+import { useDelete } from "@/hooks/react-query/useDelete";
+import { useList } from "@/hooks/react-query/useList";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<SupplierInterface[]>([]);
-  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] =
     useState<SupplierInterface | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
-  const [total, setTotal] = useState(0);
-  const [counts, setCounts] = useState({ total: 0, active: 0, inactive: 0 });
   const [sortField, setSortField] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
 
   const router = useRouter();
 
-  const fetchSuppliers = async () => {
-    setLoading(true);
+  // React Query hooks
+  const sortParam =
+    sortField && sortOrder
+      ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
+      : "";
 
-    try {
-      const sortParam =
-        sortField && sortOrder
-          ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
-          : "";
+  const {
+    data: suppliersData,
+    isLoading: loading,
+    error,
+  } = useList("suppliers", {
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    q: searchText,
+    status: statusFilter || "",
+    sort: sortParam,
+  });
 
-      const res = await fetch(
-        `/api/suppliers?page=${pagination.page}&pageSize=${
-          pagination.pageSize
-        }&status=${statusFilter || ""}&q=${searchText}&sort=${sortParam}`
-      );
+  const create = useCreate("suppliers");
+  const update = useUpdate("suppliers");
+  const remove = useDelete("suppliers");
 
-      const result = await res.json();
-
-      if (res.ok && result.status === "success") {
-        setSuppliers(result.data.items || []);
-        setPagination((prev) => ({
-          ...prev,
-          page: result.data.page,
-          pageSize: result.data.pageSize,
-        }));
-
-        setTotal(result.data.total);
-
-        setCounts((prev) => ({
-          ...prev,
-          total: result.data.statistics?.total || 0,
-          active: result.data.statistics?.active || 0,
-          inactive: result.data.statistics?.inactive || 0,
-        }));
-      } else {
-        message.error(result.message || "Failed to fetch suppliers");
-      }
-    } catch {
-      message.error("Error fetching suppliers");
-    } finally {
-      setLoading(false);
-    }
+  // Extract data from the query result
+  const suppliers = (suppliersData as SuppliersResponse)?.items || [];
+  const total = (suppliersData as SuppliersResponse)?.total || 0;
+  const counts = {
+    total: (suppliersData as SuppliersResponse)?.statistics?.total || 0,
+    active: (suppliersData as SuppliersResponse)?.statistics?.active || 0,
+    inactive: (suppliersData as SuppliersResponse)?.statistics?.inactive || 0,
   };
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, [
-    pagination.page,
-    pagination.pageSize,
-    statusFilter,
-    searchText,
-    sortField,
-    sortOrder,
-  ]);
+  // Handle errors
+  if (error) {
+    message.error("Error fetching suppliers");
+  }
 
   const handleView = (supplier: SupplierInterface) => {
     router.push(`/suppliers/${supplier.id}`);
@@ -103,28 +91,23 @@ export default function SuppliersPage() {
 
   const handleSubmit = async (values: any) => {
     const isEdit = Boolean(editingSupplier);
-    const url = isEdit
-      ? `/api/suppliers/${editingSupplier!.id}`
-      : `/api/suppliers`;
-    const method = isEdit ? "PUT" : "POST";
 
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const result = await res.json();
-      if (res.ok && result.status === "success") {
-        message.success(`${isEdit ? "Updated" : "Created"} successfully`);
-        fetchSuppliers();
-        setIsModalOpen(false);
-        setEditingSupplier(null);
+      if (isEdit) {
+        await update.mutateAsync({
+          id: editingSupplier!.id.toString(),
+          data: values,
+        });
+        message.success("Updated successfully");
       } else {
-        message.error(result.message || "Operation failed");
+        await create.mutateAsync(values);
+        message.success("Created successfully");
       }
-    } catch {
-      message.error("Something went wrong");
+
+      setIsModalOpen(false);
+      setEditingSupplier(null);
+    } catch (error: any) {
+      message.error(error?.message || "Operation failed");
     }
   };
 
@@ -176,8 +159,8 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "PHONE",
-      dataIndex: "phone",
+      title: "ADDRESS",
+      dataIndex: "address",
       onCell: () => ({
         style: {
           borderRight: "none",
@@ -198,11 +181,6 @@ export default function SuppliersPage() {
     },
     {
       title: "ACTIONS",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
       render: (_: any, record: SupplierInterface) => (
         <Space style={{ display: "flex", gap: 0 }}>
           <Button
@@ -324,6 +302,17 @@ export default function SuppliersPage() {
             setSortOrder(sorter?.order);
           }
         }}
+      />
+
+      <SupplierModal
+        open={isModalOpen}
+        isEdit={!!editingSupplier}
+        initialValues={editingSupplier ?? undefined}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingSupplier(null);
+        }}
+        onSubmit={handleSubmit}
       />
     </section>
   );

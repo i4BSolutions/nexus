@@ -1,10 +1,10 @@
 "use client";
 
-import Breadcrumbs from "@/components/Breadcrumbs";
-import HeaderSection from "@/components/HeaderSection";
-import ProductFormModal from "@/app/(portal)/(nexus)/products/_components/ProductFormModal";
-import SearchAndFilters from "@/components/SearchAndFilters";
-import StatisticsCards from "@/components/StatisticsCards";
+import ProductFormModal from "@/components/products/ProductFormModal";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import HeaderSection from "@/components/shared/HeaderSection";
+import SearchAndFilters from "@/components/shared/SearchAndFilters";
+import StatisticsCards from "@/components/shared/StatisticsCards";
 import { ProductFormSchema } from "@/schemas/products/products.schemas";
 import { ProductInterface } from "@/types/product/product.type";
 import {
