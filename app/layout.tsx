@@ -1,10 +1,10 @@
 import AntDProvider from "@/components/shared/AntDProvider";
+import ReactQueryProvider from "@/components/shared/ReactQueryProvider";
+import customAntTheme from "@/theme/ant-theme";
+import { App, ConfigProvider } from "antd";
 import { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ConfigProvider } from "antd";
-import customAntTheme from "@/theme/ant-theme";
-import ReactQueryProvider from "@/components/shared/ReactQueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +31,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ConfigProvider theme={customAntTheme}>
-          <ReactQueryProvider>
-            <AntDProvider>{children}</AntDProvider>
-          </ReactQueryProvider>
-        </ConfigProvider>
+        <AntDProvider>
+          <ConfigProvider theme={customAntTheme}>
+            <ReactQueryProvider>
+              <App>{children}</App>
+            </ReactQueryProvider>
+          </ConfigProvider>
+        </AntDProvider>
       </body>
     </html>
   );

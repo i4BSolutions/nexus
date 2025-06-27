@@ -1,26 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Typography, Button, Tag, Tabs, Space, message } from "antd";
 import {
   ArrowLeftOutlined,
   DeleteOutlined,
   EditOutlined,
 } from "@ant-design/icons";
+import { Button, Space, Tabs, Tag, Typography, message } from "antd";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 
-import Breadcrumbs from "@/components/Breadcrumbs";
-import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal";
 
 import { SupplierInterface } from "@/types/supplier/supplier.type";
 
+import { useDelete } from "@/hooks/react-query/useDelete";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
-import { useDelete } from "@/hooks/react-query/useDelete";
 
-import DetailsCard from "../components/DetailsCard";
-import HistoryCard from "../components/HistoryCard";
-import SupplierModal from "../components/SupplierModal";
+import DetailsCard from "../../../../components/suppliers/DetailsCard";
+import HistoryCard from "../../../../components/suppliers/HistoryCard";
+import SupplierModal from "../../../../components/suppliers/SupplierModal";
 
 const SupplierPage = () => {
   const params = useParams();

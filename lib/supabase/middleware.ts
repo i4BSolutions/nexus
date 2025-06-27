@@ -34,7 +34,14 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const publicUrls = ["/login", "/verify-otp", "/api/auth/callback"];
+  const publicUrls = [
+    "/login",
+    "/verify-otp",
+    "/api/auth/verify-otp",
+    "/api/auth/callback",
+    "/api/auth/check-user",
+    "/api/auth/login-audit",
+  ];
 
   if (
     !user &&

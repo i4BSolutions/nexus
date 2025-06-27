@@ -7,12 +7,14 @@ const HeaderSection = ({
   icon,
   onAddNew,
   buttonText,
+  buttonIcon,
 }: {
   title: string;
   description?: string;
   icon: React.ReactNode;
   onAddNew: () => void;
   buttonText?: string;
+  buttonIcon?: React.ReactNode;
 }) => (
   <Space
     size="small"
@@ -50,8 +52,8 @@ const HeaderSection = ({
         )}
       </Space>
     </Space>
-    <Button type="primary" onClick={onAddNew}>
-      {buttonText || `+ New ${title}`}
+    <Button type="primary" onClick={onAddNew} icon={buttonIcon}>
+      {buttonText || `New ${title}`}
     </Button>
   </Space>
 );
