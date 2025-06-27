@@ -7,9 +7,15 @@ export interface SupplierCardProps {
   contact_person: string;
   email: string;
   phone: string;
+  address: string;
 }
 
-const DetailsCard = ({ contact_person, email, phone }: SupplierCardProps) => {
+const DetailsCard = ({
+  contact_person,
+  email,
+  phone,
+  address,
+}: SupplierCardProps) => {
   return (
     <Card
       headStyle={{
@@ -64,6 +70,12 @@ const DetailsCard = ({ contact_person, email, phone }: SupplierCardProps) => {
           <Space direction="vertical" size={0}>
             <Typography.Text type="secondary">Phone</Typography.Text>
             <Typography.Title level={5}>{phone ?? "N/A"}</Typography.Title>
+          </Space>
+        </Col>
+        <Col span={12} style={{ marginTop: 16 }}>
+          <Space direction="vertical" size={0}>
+            <Typography.Text type="secondary">Address</Typography.Text>
+            <Typography.Title level={5}>{address ?? "N/A"}</Typography.Title>
           </Space>
         </Col>
       </Row>

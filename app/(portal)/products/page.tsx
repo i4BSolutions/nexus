@@ -1,10 +1,10 @@
 "use client";
 
-import Breadcrumbs from "@/components/Breadcrumbs";
-import HeaderSection from "@/components/HeaderSection";
-import ProductFormModal from "@/app/(portal)/(nexus)/products/_components/ProductFormModal";
-import SearchAndFilters from "@/components/SearchAndFilters";
-import StatisticsCards from "@/components/StatisticsCards";
+import ProductFormModal from "@/components/products/ProductFormModal";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import HeaderSection from "@/components/shared/HeaderSection";
+import SearchAndFilters from "@/components/shared/SearchAndFilters";
+import StatisticsCards from "@/components/shared/StatisticsCards";
 import { ProductFormSchema } from "@/schemas/products/products.schemas";
 import { ProductInterface } from "@/types/product/product.type";
 import {
@@ -13,25 +13,21 @@ import {
   TagOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
-import {
-  Button,
-  Divider,
-  Input,
-  message,
-  Select,
-  Space,
-  Table,
-  Tag,
-} from "antd";
+import { Button, Divider, message, Space, Table, Tag } from "antd";
 import { SortOrder } from "antd/es/table/interface";
 import { useCallback, useEffect, useState } from "react";
+<<<<<<< HEAD:app/(portal)/(nexus)/products/page.tsx
 import CreateCategoryModal from "./_components/CreateCategoryModal";
 import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
+=======
+import { useRouter } from "next/navigation";
+>>>>>>> dev:app/(portal)/products/page.tsx
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function ProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<ProductInterface[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -167,6 +163,13 @@ export default function ProductsPage() {
   const handleAddNewProduct = useCallback(() => {
     setIsOpenProductFormModal(true);
   }, []);
+
+  const handleView = useCallback(
+    (product: ProductInterface) => {
+      router.push(`/products/${product.id}`);
+    },
+    [router]
+  );
 
   const handleSubmit = async (data: ProductFormSchema) => {
     console.log(data);
@@ -325,11 +328,11 @@ export default function ProductsPage() {
           borderRight: "none",
         },
       }),
-      render: (_: any, record: ProductInterface) => (
+      render: (_: any, product: ProductInterface) => (
         <Space style={{ display: "flex", gap: 0 }}>
           <Button
             type="link"
-            onClick={() => console.log("view")}
+            onClick={() => handleView(product)}
             style={{ padding: 0 }}
           >
             View
