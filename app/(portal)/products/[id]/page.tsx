@@ -10,6 +10,7 @@ import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import PopConfirm from "../../../../components/products/PopConfirm";
 import DetailsCard from "../../../../components/products/DetailsCard";
 import ProductFormModal from "../../../../components/products/ProductFormModal";
+import ConfirmModal from "@/components/products/ConfirmModal";
 
 const ProductDetailPage = () => {
   const params = useParams() as { id: string };
@@ -29,6 +30,8 @@ const ProductDetailPage = () => {
   >([]);
   const [open, setOpen] = useState(false);
   const [openProductFormModal, setOpenProductFormModal] = useState(false);
+  const [openConfirmModal, setOpenConfirmModal] = useState(false);
+  const [type, setType] = useState<"deactivate" | "delete">("deactivate");
 
   const fetchProductDetail = async () => {
     try {
@@ -163,10 +166,12 @@ const ProductDetailPage = () => {
             open={open}
             setOpen={setOpen}
             onDeactivate={() => {
-              console.log("Deactivated");
+              setType("deactivate");
+              setOpenConfirmModal(true);
             }}
             onDelete={() => {
-              console.log("Deleted");
+              setType("delete");
+              setOpenConfirmModal(true);
             }}
           />
         </Space>
@@ -220,6 +225,28 @@ const ProductDetailPage = () => {
           }}
           currencyOptions={currencyOptions}
           categoryOptions={categoryOptions}
+        />
+      )}
+
+      {openConfirmModal && (
+        <ConfirmModal
+          open={openConfirmModal}
+          type={type}
+          onCancel={() => {
+            setOpenConfirmModal(false);
+          }}
+          onConfirm={() => {}}
+        />
+      )}
+
+      {openConfirmModal && (
+        <ConfirmModal
+          open={openConfirmModal}
+          type={type}
+          onCancel={() => {
+            setOpenConfirmModal(false);
+          }}
+          onConfirm={() => {}}
         />
       )}
     </section>
