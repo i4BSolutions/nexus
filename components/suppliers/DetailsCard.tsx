@@ -18,11 +18,12 @@ const DetailsCard = ({
 }: SupplierCardProps) => {
   return (
     <Card
-      style={{
+      styles={{
         header: {
           background:
             "linear-gradient(90deg, rgba(249, 240, 255, 1) 0%, rgba(255, 255, 255, 1) 100%)",
           borderBottom: "1px solid #D3ADF7",
+          borderRadius: 12,
         },
       }}
       title={
@@ -53,7 +54,6 @@ const DetailsCard = ({
         </Space>
       }
       variant="outlined"
-      style={{ borderRadius: 12 }}
     >
       <Row gutter={24} style={{ marginTop: 16 }}>
         <Col span={12}>
