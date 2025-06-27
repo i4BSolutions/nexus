@@ -21,6 +21,7 @@ interface SupplierModalProps {
   onSubmit: (values: any) => void;
   emailDuplicateError?: string;
   onEmailChange?: () => void;
+  loading?: boolean;
 }
 
 const SupplierModal: React.FC<SupplierModalProps> = ({
@@ -31,6 +32,7 @@ const SupplierModal: React.FC<SupplierModalProps> = ({
   onSubmit,
   emailDuplicateError,
   onEmailChange,
+  loading = false,
 }) => {
   const [form] = Form.useForm();
 
@@ -199,7 +201,12 @@ const SupplierModal: React.FC<SupplierModalProps> = ({
         <Form.Item>
           <Space className="flex justify-start w-full">
             <Button onClick={onClose}>Cancel</Button>
-            <Button type="primary" htmlType="submit">
+            <Button
+              type="primary"
+              htmlType="submit"
+              disabled={loading}
+              loading={loading}
+            >
               {isEdit ? "Save" : "Add Supplier"}
             </Button>
           </Space>

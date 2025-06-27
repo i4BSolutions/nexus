@@ -25,7 +25,6 @@ import {
 } from "@/types/supplier/supplier.type";
 
 import { useCreate } from "@/hooks/react-query/useCreate";
-import { useDelete } from "@/hooks/react-query/useDelete";
 import { useList } from "@/hooks/react-query/useList";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 
@@ -322,6 +321,7 @@ export default function SuppliersPage() {
         onSubmit={handleSubmit}
         emailDuplicateError={emailDuplicateError}
         onEmailChange={() => setEmailDuplicateError("")}
+        loading={editingSupplier ? update.isPending : create.isPending}
       />
     </section>
   );
