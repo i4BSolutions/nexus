@@ -1,33 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { Table, Button, message, Tag, Space, Divider } from "antd";
-import type { SortOrder } from "antd/es/table/interface";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   PlusOutlined,
   ShopOutlined,
 } from "@ant-design/icons";
+import { Button, Divider, message, Space, Table, Tag } from "antd";
+import type { SortOrder } from "antd/es/table/interface";
 
-import Breadcrumbs from "@/components/Breadcrumbs";
-import HeaderSection from "@/components/HeaderSection";
-import StatisticsCards from "@/components/StatisticsCards";
-import SearchAndFilters from "@/components/SearchAndFilters";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import HeaderSection from "@/components/shared/HeaderSection";
+import SearchAndFilters from "@/components/shared/SearchAndFilters";
+import StatisticsCards from "@/components/shared/StatisticsCards";
 
-import SupplierModal from "./components/SupplierModal";
+import SupplierModal from "../../../components/suppliers/SupplierModal";
 
 import {
   SupplierInterface,
   SuppliersResponse,
 } from "@/types/supplier/supplier.type";
 
-import { useList } from "@/hooks/react-query/useList";
 import { useCreate } from "@/hooks/react-query/useCreate";
-import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { useDelete } from "@/hooks/react-query/useDelete";
+import { useList } from "@/hooks/react-query/useList";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";

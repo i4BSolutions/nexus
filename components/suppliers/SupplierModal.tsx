@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { Form, Input, Radio, Button, Space, Typography, Divider } from "antd";
 import {
-  UserOutlined,
   MailOutlined,
   MobileOutlined,
   ShopOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
+import { Button, Form, Input, Radio, Space, Typography } from "antd";
+import React, { useEffect } from "react";
 
 import { SupplierInterface } from "@/types/supplier/supplier.type";
 
-import Modal from "@/components/Modal";
+import Modal from "@/components/shared/Modal";
 
 interface SupplierModalProps {
   open: boolean;

@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+.white-placeholder input::placeholder {
+  color: rgba(255, 255, 255, 0.25) !important;
+  opacity: 1;
+}
+
+.white-placeholder input {
+  color: #f0f0f0;
+  background-color: transparent;
+}
