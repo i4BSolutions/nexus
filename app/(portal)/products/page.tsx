@@ -17,6 +17,8 @@ import { Button, Divider, message, Space, Table, Tag } from "antd";
 import { SortOrder } from "antd/es/table/interface";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
+import CreateCategoryModal from "@/components/products/CreateCategoryModal";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
@@ -53,6 +55,8 @@ export default function ProductsPage() {
   const [productSKU, setProductSKU] = useState<string>("");
 
   const [isOpenProductFormModal, setIsOpenProductFormModal] = useState(false);
+  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] =
+    useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -105,19 +109,21 @@ export default function ProductsPage() {
     selectedCategory,
   ]);
 
+  const fetchCategories = async () => {
+    const res = await fetch("/api/categories");
+    const data = await res.json();
+    console.log("Data:", data);
+    if (data.status === "success") {
+      const cleaned = data.data
+        .map((cat: any) => cat.category_name)
+        .filter((c: string) => !!c && c.trim());
+      setCategoryOptions(cleaned);
+    }
+  };
+
   useEffect(() => {
-    const fetchCategories = async () => {
-      const res = await fetch("/api/categories");
-      const data = await res.json();
-      if (data.status === "success") {
-        const cleaned = data.data
-          .map((cat: any) => cat.category_name)
-          .filter((c: string) => !!c && c.trim());
-        setCategoryOptions(cleaned);
-      }
-    };
     fetchCategories();
-  }, []);
+  }, [categoryOptions]);
 
   useEffect(() => {
     const fetchProductSKU = async () => {
@@ -181,6 +187,28 @@ export default function ProductsPage() {
       }
     } catch {
       message.error("Unexpected error creating product");
+    }
+  };
+
+  const handleCreateCategory = async (data: CreateCategoryFormSchema) => {
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category_name: data.category_name }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        message.success("Category created successfully");
+        setIsCreateCategoryModalOpen(false);
+        // fetchCategories();
+      } else {
+        message.error(result.message || "Failed to create category");
+      }
+    } catch {
+      message.error("Unexpected error creating category");
     }
   };
 
@@ -406,7 +434,7 @@ export default function ProductsPage() {
         open={isOpenProductFormModal}
         onClose={() => setIsOpenProductFormModal(false)}
         onSubmit={handleSubmit}
-        onCreateCategory={() => {}}
+        onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
         mode="create"
         initialValues={{
           sku: productSKU,
@@ -419,6 +447,12 @@ export default function ProductsPage() {
         }}
         currencyOptions={currencyOptions}
         categoryOptions={categoryOptions}
+      />
+
+      <CreateCategoryModal
+        open={isCreateCategoryModalOpen}
+        onClose={() => setIsCreateCategoryModalOpen(false)}
+        onSubmit={handleCreateCategory}
       />
     </section>
   );
