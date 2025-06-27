@@ -16,12 +16,9 @@ import {
 import { Button, Divider, message, Space, Table, Tag } from "antd";
 import { SortOrder } from "antd/es/table/interface";
 import { useCallback, useEffect, useState } from "react";
-<<<<<<< HEAD:app/(portal)/(nexus)/products/page.tsx
-import CreateCategoryModal from "./_components/CreateCategoryModal";
-import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
-=======
 import { useRouter } from "next/navigation";
->>>>>>> dev:app/(portal)/products/page.tsx
+import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
+import CreateCategoryModal from "@/components/products/CreateCategoryModal";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
