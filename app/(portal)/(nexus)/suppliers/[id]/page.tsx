@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Typography, Button, Tag, Tabs, Space, message } from "antd";
 import {
@@ -14,76 +14,57 @@ import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
 import { SupplierInterface } from "@/types/supplier/supplier.type";
 
+import { useGetById } from "@/hooks/react-query/useGetById";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { useDelete } from "@/hooks/react-query/useDelete";
+
 import DetailsCard from "../components/DetailsCard";
 import HistoryCard from "../components/HistoryCard";
 import SupplierModal from "../components/SupplierModal";
 
 const SupplierPage = () => {
   const params = useParams();
-  const id = params?.id;
+  const id = params?.id as string;
 
-  const [supplier, setSupplier] = useState<SupplierInterface | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const router = useRouter();
 
-  const fetchSupplier = async () => {
-    try {
-      const res = await fetch(`/api/suppliers/${id}`);
-      const result = await res.json();
-      if (res.ok && result.status === "success") {
-        setSupplier(result.data);
-      } else {
-        message.error("Failed to fetch supplier");
-      }
-    } catch {
-      message.error("Error fetching supplier");
-    }
-  };
+  const {
+    data: supplierRaw,
+    isLoading,
+    error,
+    refetch,
+  } = useGetById("suppliers", id, !!id);
+  const update = useUpdate("suppliers");
+  const remove = useDelete("suppliers");
+
+  const supplier = supplierRaw as SupplierInterface | undefined;
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`/api/suppliers/${id}`, {
-        method: "DELETE",
-      });
-      const result = await res.json();
-      if (res.ok && result.status === "success") {
-        message.success("Supplier deleted");
-        router.push("/suppliers");
-      } else {
-        message.error("Delete failed");
-      }
-    } catch {
-      message.error("Delete error");
+      await remove.mutateAsync(id);
+      message.success("Supplier deleted");
+      router.push("/suppliers");
+    } catch (err: any) {
+      message.error(err?.message || "Delete failed");
     }
   };
 
   const handleEditSubmit = async (values: any) => {
     try {
-      const res = await fetch(`/api/suppliers/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const result = await res.json();
-      if (res.ok && result.status === "success") {
-        message.success("Supplier updated");
-        setIsModalOpen(false);
-        fetchSupplier();
-      } else {
-        message.error(result.message || "Update failed");
-      }
-    } catch {
-      message.error("Update error");
+      await update.mutateAsync({ id, data: values });
+      message.success("Supplier updated");
+      setIsModalOpen(false);
+      refetch();
+    } catch (err: any) {
+      message.error(err?.message || "Update failed");
     }
   };
 
-  useEffect(() => {
-    fetchSupplier();
-  }, []);
-
-  if (!supplier) return null;
+  if (isLoading) return null;
+  if (error || !supplier) return null;
 
   return (
     <section className="max-w-7xl mx-auto py-10 px-4">
