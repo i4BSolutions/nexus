@@ -25,9 +25,6 @@ const customAntTheme: ThemeConfig = {
     Form: {
       verticalLabelPadding: 0,
     },
-    Input: {
-      lineHeight: 3,
-    },
   },
 };
 

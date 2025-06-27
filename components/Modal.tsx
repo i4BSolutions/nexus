@@ -46,7 +46,7 @@ export default function Modal({
             )}
           </div>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="px-6 py-2">{children}</div>
       </div>
     </div>
   );
