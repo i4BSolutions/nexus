@@ -1,15 +1,15 @@
 "use client";
 
-import Breadcrumbs from "@/components/Breadcrumbs";
 import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
 import { Button, message, Space, Tabs, Tag, Typography } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import PopConfirm from "../_components/PopConfirm";
 import { ProductInterface } from "@/types/product/product.type";
-import DetailsCard from "../_components/DetailsCard";
-import ProductFormModal from "../_components/ProductFormModal";
 import { ProductFormSchema } from "@/schemas/products/products.schemas";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import PopConfirm from "../../../../components/products/PopConfirm";
+import DetailsCard from "../../../../components/products/DetailsCard";
+import ProductFormModal from "../../../../components/products/ProductFormModal";
 
 const ProductDetailPage = () => {
   const params = useParams() as { id: string };
