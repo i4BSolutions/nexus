@@ -35,9 +35,12 @@ export async function PUT(
       .single();
 
     if (dbError) {
-      return NextResponse.json(error("Failed to update supplier", 500), {
-        status: 500,
-      });
+      return NextResponse.json(
+        error("Failed to update supplier: " + dbError?.message, 500),
+        {
+          status: 500,
+        }
+      );
     }
 
     return NextResponse.json(success(data, "Supplier updated successfully"), {
