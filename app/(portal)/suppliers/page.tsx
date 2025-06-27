@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Table, Button, message, Tag, Space, Divider, Breadcrumb } from "antd";
+import { Table, Button, message, Tag, Space, Divider } from "antd";
+import type { SortOrder } from "antd/es/table/interface";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -16,59 +17,68 @@ import HeaderSection from "@/components/HeaderSection";
 import StatisticsCards from "@/components/StatisticsCards";
 import SearchAndFilters from "@/components/SearchAndFilters";
 
-import { SupplierInterface } from "@/types/supplier/supplier.type";
+import SupplierModal from "./components/SupplierModal";
+
+import {
+  SupplierInterface,
+  SuppliersResponse,
+} from "@/types/supplier/supplier.type";
+
+import { useList } from "@/hooks/react-query/useList";
+import { useCreate } from "@/hooks/react-query/useCreate";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { useDelete } from "@/hooks/react-query/useDelete";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<SupplierInterface[]>([]);
-  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] =
     useState<SupplierInterface | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
-  const [counts, setCounts] = useState({ total: 0, active: 0, inactive: 0 });
+  const [sortField, setSortField] = useState<string | undefined>();
+  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
 
   const router = useRouter();
 
-  const fetchSuppliers = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/suppliers?page=${pagination.page}&pageSize=${
-          pagination.pageSize
-        }&status=${statusFilter || ""}&q=${searchText}`
-      );
+  // React Query hooks
+  const sortParam =
+    sortField && sortOrder
+      ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
+      : "";
 
-      const result = await res.json();
+  const {
+    data: suppliersData,
+    isLoading: loading,
+    error,
+  } = useList("suppliers", {
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    q: searchText,
+    status: statusFilter || "",
+    sort: sortParam,
+  });
 
-      if (res.ok && result.status === "success") {
-        setSuppliers(result.data.items || []);
-        setPagination((prev) => ({
-          ...prev,
-          page: result.data.page,
-          pageSize: result.data.pageSize,
-        }));
-        setCounts((prev) => ({
-          ...prev,
-          total: result.data.total,
-        }));
-      } else {
-        message.error(result.message || "Failed to fetch suppliers");
-      }
-    } catch {
-      message.error("Error fetching suppliers");
-    } finally {
-      setLoading(false);
-    }
+  const create = useCreate("suppliers");
+  const update = useUpdate("suppliers");
+  const remove = useDelete("suppliers");
+
+  // Extract data from the query result
+  const suppliers = (suppliersData as SuppliersResponse)?.items || [];
+  const total = (suppliersData as SuppliersResponse)?.total || 0;
+  const counts = {
+    total: (suppliersData as SuppliersResponse)?.statistics?.total || 0,
+    active: (suppliersData as SuppliersResponse)?.statistics?.active || 0,
+    inactive: (suppliersData as SuppliersResponse)?.statistics?.inactive || 0,
   };
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, [pagination.page, pagination.pageSize, statusFilter, searchText]);
+  // Handle errors
+  if (error) {
+    message.error("Error fetching suppliers");
+  }
 
   const handleView = (supplier: SupplierInterface) => {
     router.push(`/suppliers/${supplier.id}`);
@@ -81,28 +91,23 @@ export default function SuppliersPage() {
 
   const handleSubmit = async (values: any) => {
     const isEdit = Boolean(editingSupplier);
-    const url = isEdit
-      ? `/api/suppliers/${editingSupplier!.id}`
-      : `/api/suppliers`;
-    const method = isEdit ? "PUT" : "POST";
 
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const result = await res.json();
-      if (res.ok && result.status === "success") {
-        message.success(`${isEdit ? "Updated" : "Created"} successfully`);
-        fetchSuppliers();
-        setIsModalOpen(false);
-        setEditingSupplier(null);
+      if (isEdit) {
+        await update.mutateAsync({
+          id: editingSupplier!.id.toString(),
+          data: values,
+        });
+        message.success("Updated successfully");
       } else {
-        message.error(result.message || "Operation failed");
+        await create.mutateAsync(values);
+        message.success("Created successfully");
       }
-    } catch {
-      message.error("Something went wrong");
+
+      setIsModalOpen(false);
+      setEditingSupplier(null);
+    } catch (error: any) {
+      message.error(error?.message || "Operation failed");
     }
   };
 
@@ -121,8 +126,11 @@ export default function SuppliersPage() {
 
   const columns = [
     {
-      title: "Supplier Name",
+      title: "SUPPLIER NAME",
       dataIndex: "name",
+      key: "name",
+      sorter: true,
+      sortOrder: sortField === "name" ? (sortOrder as SortOrder) : undefined,
       onCell: () => ({
         style: {
           borderRight: "none",
@@ -131,7 +139,7 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "Contact Person",
+      title: "CONTACT PERSON",
       dataIndex: "contact_person",
       onCell: () => ({
         style: {
@@ -141,7 +149,7 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "Email",
+      title: "EMAIL",
       dataIndex: "email",
       onCell: () => ({
         style: {
@@ -151,8 +159,8 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "Phone",
-      dataIndex: "phone",
+      title: "ADDRESS",
+      dataIndex: "address",
       onCell: () => ({
         style: {
           borderRight: "none",
@@ -161,7 +169,7 @@ export default function SuppliersPage() {
       render: formatField,
     },
     {
-      title: "Status",
+      title: "STATUS",
       dataIndex: "status",
       onCell: () => ({
         style: {
@@ -172,12 +180,7 @@ export default function SuppliersPage() {
         record.status ? <Tag color="green">Active</Tag> : <Tag>Inactive</Tag>,
     },
     {
-      title: "Actions",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
+      title: "ACTIONS",
       render: (_: any, record: SupplierInterface) => (
         <Space style={{ display: "flex", gap: 0 }}>
           <Button
@@ -253,18 +256,26 @@ export default function SuppliersPage() {
       {/* Search and Filter */}
       <SearchAndFilters
         searchPlaceholder="Search by name, contact or email"
-        onSearch={(text) => setSearchText(text)}
+        onSearch={(text) => {
+          setSearchText(text);
+          setPagination((prev) => ({ ...prev, page: 1 }));
+        }}
         filters={filters}
         onFilterChange={(key, value) => {
-          if (key === "status") setStatusFilter(value);
+          if (key === "status") {
+            setStatusFilter(value);
+            setPagination((prev) => ({ ...prev, page: 1 }));
+          }
         }}
         onClearFilters={() => {
           setStatusFilter(undefined);
+          setPagination((prev) => ({ ...prev, page: 1 }));
         }}
       />
 
       {/* Table */}
       <Table
+        bordered
         columns={columns}
         dataSource={suppliers}
         loading={loading}
@@ -272,15 +283,36 @@ export default function SuppliersPage() {
         pagination={{
           current: pagination.page,
           pageSize: pagination.pageSize,
-          total: counts.total,
+          total: total,
         }}
-        onChange={(paginationInfo) => {
+        onChange={(paginationInfo, filters, sorter) => {
+          // Handle pagination
           setPagination({
             page: paginationInfo.current ?? 1,
             pageSize: paginationInfo.pageSize ?? 10,
           });
+
+          // Handle sorting
+          if (Array.isArray(sorter)) {
+            const sortInfo = sorter[0];
+            setSortField(sortInfo?.field as string);
+            setSortOrder(sortInfo?.order);
+          } else {
+            setSortField(sorter?.field as string);
+            setSortOrder(sorter?.order);
+          }
         }}
-        bordered
+      />
+
+      <SupplierModal
+        open={isModalOpen}
+        isEdit={!!editingSupplier}
+        initialValues={editingSupplier ?? undefined}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingSupplier(null);
+        }}
+        onSubmit={handleSubmit}
       />
     </section>
   );

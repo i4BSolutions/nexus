@@ -2,7 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 import { success, error } from "@/lib/api-response";
 import { ApiResponse, PaginatedResponse } from "@/types/api-response-type";
-import { SupplierInterface } from "@/types/supplier/supplier.type";
+import {
+  SupplierInterface,
+  SuppliersResponse,
+} from "@/types/supplier/supplier.type";
 
 /**
  * This API route retrieves all suppliers from the database with
@@ -13,11 +16,7 @@ import { SupplierInterface } from "@/types/supplier/supplier.type";
  */
 export async function GET(
   req: NextRequest
-): Promise<
-  NextResponse<
-    ApiResponse<PaginatedResponse<SupplierInterface>> | ApiResponse<null>
-  >
-> {
+): Promise<NextResponse<ApiResponse<SuppliersResponse> | ApiResponse<null>>> {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
 
@@ -27,18 +26,27 @@ export async function GET(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  const search = searchParams.get("q") || "";
+
   // Optional filters
-  const statusParam = searchParams.get("status"); // "true" | "false" | null
-  const sortParam = searchParams.get("sort"); // "name_asc" | "name_desc"
+  const statusParam = searchParams.get("status");
+  const sortParam = searchParams.get("sort");
 
   let query = supabase.from("supplier").select("*", { count: "exact" });
 
-  // Filter by status (optional)
+  // Search functionality
+  if (search) {
+    query = query.or(
+      `name.ilike.%${search}%,contact_person.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,address.ilike.%${search}%`
+    );
+  }
+
+  // Filter by status
   if (statusParam === "true" || statusParam === "false") {
     query = query.eq("status", statusParam === "true");
   }
 
-  // Sort by name if requested
+  // Sort by name
   if (sortParam === "name_asc") {
     query = query.order("name", { ascending: true });
   } else if (sortParam === "name_desc") {
@@ -51,7 +59,7 @@ export async function GET(
   // Apply pagination
   query = query.range(from, to);
 
-  const { data: items, error: dbError } = await query;
+  const { data: items, error: dbError, count } = await query;
 
   if (dbError) {
     return NextResponse.json(error("Failed to fetch suppliers", 500), {
@@ -59,22 +67,29 @@ export async function GET(
     });
   }
 
-  // Get total count
-  const countQuery = supabase
-    .from("supplier")
-    .select("*", { count: "exact", head: true });
+  // Get statistics (total, active, inactive counts)
+  const [totalResult, activeResult, inactiveResult] = await Promise.all([
+    supabase.from("supplier").select("*", { count: "exact", head: true }),
+    supabase
+      .from("supplier")
+      .select("*", { count: "exact", head: true })
+      .eq("status", true),
+    supabase
+      .from("supplier")
+      .select("*", { count: "exact", head: true })
+      .eq("status", false),
+  ]);
 
-  if (statusParam === "true" || statusParam === "false") {
-    countQuery.eq("status", statusParam === "true");
-  }
-
-  const { count } = await countQuery;
-
-  const response: PaginatedResponse<SupplierInterface> = {
+  const response: SuppliersResponse = {
     items: items || [],
     total: count || 0,
     page,
     pageSize,
+    statistics: {
+      total: totalResult.count || 0,
+      active: activeResult.count || 0,
+      inactive: inactiveResult.count || 0,
+    },
   };
 
   return NextResponse.json(

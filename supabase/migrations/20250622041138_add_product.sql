@@ -5,6 +5,9 @@ create table "public"."product" (
     "category" text not null,
     "unit_price" numeric(10,2) not null,
     "min_stock" integer default 0,
+    "stock" integer default 0,
+    "description" text,
+    "currency_code_id" integer not null,
     "is_active" boolean default true,
     "created_at" timestamp with time zone not null default timezone('utc'::text, now()),
     "updated_at" timestamp with time zone not null default timezone('utc'::text, now())
@@ -18,6 +21,10 @@ CREATE UNIQUE INDEX product_sku_key ON public.product USING btree (sku);
 alter table "public"."product" add constraint "product_pkey" PRIMARY KEY using index "product_pkey";
 
 alter table "public"."product" add constraint "product_sku_key" UNIQUE using index "product_sku_key";
+
+alter table "public"."product" add constraint "product_currency_code_id_fkey" FOREIGN KEY (currency_code_id) REFERENCES product_currency(id) not valid;
+
+alter table "public"."product" validate constraint "product_currency_code_id_fkey";
 
 grant delete on table "public"."product" to "anon";
 

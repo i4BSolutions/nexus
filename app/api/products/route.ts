@@ -4,19 +4,23 @@ import { ApiResponse, PaginatedResponse } from "@/types/api-response-type";
 import { ProductInterface } from "@/types/product/product.type";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
-  req: NextRequest
-): Promise<
+export async function GET(req: NextRequest): Promise<
   NextResponse<
-    ApiResponse<PaginatedResponse<ProductInterface>> | ApiResponse<null>
+    | ApiResponse<
+        PaginatedResponse<ProductInterface> & {
+          lowStock: number;
+          outOfStock: number;
+        }
+      >
+    | ApiResponse<null>
   >
 > {
   const supabase = await createClient();
-
   const { searchParams } = new URL(req.url);
-  const name = searchParams.get("name") || "";
+
+  const search = searchParams.get("search")?.trim() || "";
   const category = searchParams.get("category") || "";
-  const isActive = searchParams.get("is_active");
+  const stockStatus = searchParams.get("stock_status");
   const sort = searchParams.get("sort") || "name";
 
   const page = parseInt(searchParams.get("page") || "1", 10);
@@ -24,36 +28,82 @@ export async function GET(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // Apply filters to the query
-  let query = supabase
-    .from("product")
-    .select("*", { count: "exact" })
-    .order(sort, { ascending: true });
+  try {
+    // Fetch all products for lowStock & outOfStock
+    const { data: allProducts, error: allError } = await supabase
+      .from("product")
+      .select("*");
 
-  if (name) query = query.ilike("name", `%${name}%`);
-  if (category) query = query.eq("category", category);
-  if (isActive !== null) query = query.eq("is_active", isActive === "true");
+    if (allError || !allProducts) {
+      return NextResponse.json(error("Failed to fetch products", 500), {
+        status: 500,
+      });
+    }
 
-  // Apply pagination
-  const { data: items, count, error: dbError } = await query.range(from, to);
+    // Compute global counts (unfiltered)
+    const lowStock = allProducts.filter(
+      (p) => p.stock <= p.min_stock && p.stock > 0
+    ).length;
 
-  if (dbError) {
-    return NextResponse.json(error("Failed to fetch products", 500), {
+    const outOfStock = allProducts.filter((p) => p.stock === 0).length;
+
+    // Apply filters to compute `items` and `total`
+    let filtered = [...allProducts];
+
+    if (search) {
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(search.toLowerCase()) ||
+          p.sku.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    if (category) {
+      filtered = filtered.filter((p) => p.category === category);
+    }
+
+    if (stockStatus === "low_stock") {
+      filtered = filtered.filter((p) => p.stock <= p.min_stock && p.stock > 0);
+    } else if (stockStatus === "in_stock") {
+      filtered = filtered.filter((p) => p.stock > p.min_stock);
+    } else if (stockStatus === "out_of_stock") {
+      filtered = filtered.filter((p) => p.stock === 0);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      const valA = a[sort as keyof ProductInterface];
+      const valB = b[sort as keyof ProductInterface];
+      return typeof valA === "string"
+        ? String(valA).localeCompare(String(valB))
+        : 0;
+    });
+
+    // Paginate
+    const paginated = filtered.slice(from, to + 1);
+
+    const response: PaginatedResponse<ProductInterface> & {
+      lowStock: number;
+      outOfStock: number;
+    } = {
+      items: paginated,
+      total: allProducts.length,
+      page,
+      pageSize,
+      lowStock,
+      outOfStock,
+    };
+
+    return NextResponse.json(
+      success(response, "Products retrieved successfully"),
+      { status: 200 }
+    );
+  } catch (e) {
+    console.error("Unexpected error:", e);
+    return NextResponse.json(error("Unexpected error occurred", 500), {
       status: 500,
     });
   }
-
-  const response: PaginatedResponse<ProductInterface> = {
-    items: items || [],
-    total: count || 0,
-    page,
-    pageSize,
-  };
-
-  return NextResponse.json(
-    success(response, "Products retrieved successfully"),
-    { status: 200 }
-  );
 }
 
 export async function POST(
@@ -69,7 +119,10 @@ export async function POST(
       category,
       unit_price,
       min_stock,
+      stock,
+      currency_code_id,
       is_active = true,
+      description,
     } = body;
 
     // Validate required fields
@@ -106,7 +159,10 @@ export async function POST(
           category,
           unit_price,
           min_stock,
+          stock,
+          currency_code_id,
           is_active,
+          description,
         },
       ])
       .select()

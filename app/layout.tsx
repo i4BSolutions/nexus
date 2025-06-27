@@ -1,4 +1,5 @@
 import AntDProvider from "@/components/shared/AntDProvider";
+import ReactQueryProvider from "@/components/shared/ReactQueryProvider";
 import customAntTheme from "@/theme/ant-theme";
 import { App, ConfigProvider } from "antd";
 import { Metadata } from "next";
@@ -32,7 +33,9 @@ export default function RootLayout({
       >
         <AntDProvider>
           <ConfigProvider theme={customAntTheme}>
-            <App>{children}</App>
+            <ReactQueryProvider>
+              <App>{children}</App>
+            </ReactQueryProvider>
           </ConfigProvider>
         </AntDProvider>
       </body>
