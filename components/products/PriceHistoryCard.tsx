@@ -2,7 +2,10 @@
 
 import React from "react";
 import { Card, Avatar, Typography, Space, Divider, Input } from "antd";
-import { ExclamationCircleFilled, DollarCircleFilled } from "@ant-design/icons";
+import {
+  DollarCircleFilled,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const { Title, Text, Paragraph } = Typography;
@@ -88,9 +91,21 @@ const PriceHistoryCard: React.FC<PriceHistoryCardProps> = ({
               }}
             >
               <Space align="start">
-                <ExclamationCircleFilled
-                  style={{ fontSize: 20, color: "#FAAD14", marginTop: 4 }}
-                />
+                <div
+                  style={{
+                    backgroundColor: "#FAAD14",
+                    borderRadius: "50%",
+                    width: 36,
+                    height: 36,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                    fontSize: 18,
+                  }}
+                >
+                  <ExclamationCircleOutlined />
+                </div>
                 <div>
                   <Text strong>Price Updated</Text>
                   <Paragraph style={{ margin: 0 }}>
@@ -108,12 +123,19 @@ const PriceHistoryCard: React.FC<PriceHistoryCardProps> = ({
                     <Text type="secondary">Updated by {change.updatedBy}</Text>
                   </Space>
                   {change.reason && (
-                    <Input
-                      value={change.reason}
-                      disabled
-                      readOnly
-                      style={{ backgroundColor: "#FAFAFA" }}
-                    />
+                    <div
+                      style={{
+                        backgroundColor: "#FAFAFA",
+                        padding: "10px 12px",
+                        borderRadius: 6,
+                        marginTop: 4,
+                        fontSize: 14,
+                        color: "#595959",
+                        border: "1px solid #f0f0f0",
+                      }}
+                    >
+                      {change.reason}
+                    </div>
                   )}
                 </div>
               </Space>
