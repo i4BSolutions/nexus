@@ -19,6 +19,9 @@ interface SupplierModalProps {
   initialValues?: SupplierInterface;
   onClose: () => void;
   onSubmit: (values: any) => void;
+  emailDuplicateError?: string;
+  onEmailChange?: () => void;
+  loading?: boolean;
 }
 
 const SupplierModal: React.FC<SupplierModalProps> = ({
@@ -27,6 +30,9 @@ const SupplierModal: React.FC<SupplierModalProps> = ({
   initialValues,
   onClose,
   onSubmit,
+  emailDuplicateError,
+  onEmailChange,
+  loading = false,
 }) => {
   const [form] = Form.useForm();
 
@@ -146,8 +152,18 @@ const SupplierModal: React.FC<SupplierModalProps> = ({
             size="large"
             placeholder="example@email.com"
             prefix={<MailOutlined />}
+            onChange={onEmailChange}
           />
         </Form.Item>
+
+        {emailDuplicateError && (
+          <Typography.Text
+            type="danger"
+            style={{ display: "block", marginTop: -16, marginBottom: 16 }}
+          >
+            {emailDuplicateError}
+          </Typography.Text>
+        )}
 
         <Form.Item label="Phone" name="phone">
           <Input
@@ -185,7 +201,12 @@ const SupplierModal: React.FC<SupplierModalProps> = ({
         <Form.Item>
           <Space className="flex justify-start w-full">
             <Button onClick={onClose}>Cancel</Button>
-            <Button type="primary" htmlType="submit">
+            <Button
+              type="primary"
+              htmlType="submit"
+              disabled={loading}
+              loading={loading}
+            >
               {isEdit ? "Save" : "Add Supplier"}
             </Button>
           </Space>

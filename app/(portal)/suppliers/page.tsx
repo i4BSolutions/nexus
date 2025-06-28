@@ -25,7 +25,6 @@ import {
 } from "@/types/supplier/supplier.type";
 
 import { useCreate } from "@/hooks/react-query/useCreate";
-import { useDelete } from "@/hooks/react-query/useDelete";
 import { useList } from "@/hooks/react-query/useList";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 
@@ -41,6 +40,10 @@ export default function SuppliersPage() {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
   const [sortField, setSortField] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+
+  const [emailDuplicateError, setEmailDuplicateError] = useState<
+    string | undefined
+  >();
 
   const router = useRouter();
 
@@ -64,7 +67,6 @@ export default function SuppliersPage() {
 
   const create = useCreate("suppliers");
   const update = useUpdate("suppliers");
-  const remove = useDelete("suppliers");
 
   // Extract data from the query result
   const suppliers = (suppliersData as SuppliersResponse)?.items || [];
@@ -107,6 +109,9 @@ export default function SuppliersPage() {
       setIsModalOpen(false);
       setEditingSupplier(null);
     } catch (error: any) {
+      if (error?.message?.includes("supplier_email_key")) {
+        setEmailDuplicateError("Existing email address");
+      }
       message.error(error?.message || "Operation failed");
     }
   };
@@ -311,8 +316,12 @@ export default function SuppliersPage() {
         onClose={() => {
           setIsModalOpen(false);
           setEditingSupplier(null);
+          setEmailDuplicateError(undefined);
         }}
         onSubmit={handleSubmit}
+        emailDuplicateError={emailDuplicateError}
+        onEmailChange={() => setEmailDuplicateError("")}
+        loading={editingSupplier ? update.isPending : create.isPending}
       />
     </section>
   );
