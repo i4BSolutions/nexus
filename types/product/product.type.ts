@@ -20,3 +20,11 @@ export interface ProductCurrencyInterface {
   created_at: string;
   updated_at: string;
 }
+
+export interface ProductResponse {
+  items: ProductInterface[];
+  total: number;
+  page: number;
+  pageSize: number;
+  counts: { total: number; lowStock: number; outOfStock: number };
+}

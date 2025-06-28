@@ -1,5 +1,6 @@
 export interface CategoryInterface {
-  id: string;
+  id: number;
   category_name: string;
   created_at: string;
+  updated_at: string;
 }
