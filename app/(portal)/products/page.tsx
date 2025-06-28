@@ -53,6 +53,8 @@ export default function ProductsPage() {
     }[]
   >([]);
   const [productSKU, setProductSKU] = useState<string>("");
+  const [editProduct, setEditProduct] = useState<ProductInterface | null>(null);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
 
   const [isOpenProductFormModal, setIsOpenProductFormModal] = useState(false);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] =
@@ -123,14 +125,14 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchCategories();
-  }, [categoryOptions]);
+  }, []);
 
   useEffect(() => {
     const fetchProductSKU = async () => {
       try {
         const res = await fetch("/api/products/get-product-sku");
         const data = await res.json();
-        console.log(data);
+
         if (data.status === "success") {
           setProductSKU(data.data);
         }
@@ -158,6 +160,8 @@ export default function ProductsPage() {
   }, []);
 
   const handleAddNewProduct = useCallback(() => {
+    setFormMode("create");
+    setEditProduct(null);
     setIsOpenProductFormModal(true);
   }, []);
 
@@ -168,11 +172,22 @@ export default function ProductsPage() {
     [router]
   );
 
+  const handleEdit = useCallback((product: ProductInterface) => {
+    setFormMode("edit");
+    setEditProduct(product);
+    setIsOpenProductFormModal(true);
+  }, []);
+
   const handleSubmit = async (data: ProductFormSchema) => {
-    console.log(data);
     try {
-      const res = await fetch("/api/products", {
-        method: "POST",
+      const url =
+        formMode === "edit"
+          ? `/api/products/${editProduct?.id}`
+          : "/api/products";
+      const method = formMode === "edit" ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
@@ -180,13 +195,18 @@ export default function ProductsPage() {
       const result = await res.json();
 
       if (res.ok) {
-        message.success("Product created successfully");
+        message.success(
+          formMode === "edit"
+            ? "Product updated successfully"
+            : "Product created successfully"
+        );
         setIsOpenProductFormModal(false);
+        setEditProduct(null);
       } else {
-        message.error(result.message || "Failed to create product");
+        message.error(result.message || "Operation failed");
       }
     } catch {
-      message.error("Unexpected error creating product");
+      message.error("Unexpected error occurred");
     }
   };
 
@@ -337,7 +357,7 @@ export default function ProductsPage() {
           <Divider type="vertical" />
           <Button
             type="link"
-            onClick={() => console.log("view")}
+            onClick={() => handleEdit(product)}
             style={{ padding: 0 }}
           >
             Edit
@@ -432,19 +452,29 @@ export default function ProductsPage() {
 
       <ProductFormModal
         open={isOpenProductFormModal}
-        onClose={() => setIsOpenProductFormModal(false)}
+        onClose={() => {
+          setIsOpenProductFormModal(false);
+          setEditProduct(null);
+        }}
         onSubmit={handleSubmit}
         onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
-        mode="create"
-        initialValues={{
-          sku: productSKU,
-          name: "",
-          category: "",
-          currency_code_id: 1,
-          unit_price: 0,
-          min_stock: 0,
-          description: "",
-        }}
+        mode={formMode}
+        initialValues={
+          formMode === "edit"
+            ? {
+                ...editProduct,
+                currency_code_id: Number(editProduct?.currency_code_id),
+              }
+            : {
+                sku: productSKU,
+                name: "",
+                category: "",
+                currency_code_id: 1,
+                unit_price: 0,
+                min_stock: 0,
+                description: "",
+              }
+        }
         currencyOptions={currencyOptions}
         categoryOptions={categoryOptions}
       />

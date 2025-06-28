@@ -32,6 +32,9 @@ importers:
       antd:
         specifier: ^5.26.1
         version: 5.26.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      dayjs:
+        specifier: ^1.11.13
+        version: 1.11.13
       next:
         specifier: 15.3.4
         version: 15.3.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -41,12 +44,12 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.1.0(react@19.1.0)
-      ua-parser-js:
-        specifier: ^2.0.4
-        version: 2.0.4
       react-hook-form:
         specifier: ^7.58.1
         version: 7.58.1(react@19.1.0)
+      ua-parser-js:
+        specifier: ^2.0.4
+        version: 2.0.4
       zod:
         specifier: ^3.25.67
         version: 3.25.67
@@ -517,8 +520,6 @@ packages:
   '@tailwindcss/postcss@4.1.10':
     resolution: {integrity: sha512-B+7r7ABZbkXJwpvt2VMnS6ujcDoR2OOcFaqrLIo1xbcdxje4Vf+VgJdBzNNbrAjBj/rLZ66/tlQ1knIGNLKOBQ==}
 
-  '@types/node-fetch@2.6.12':
-    resolution: {integrity: sha512-8nneRWKCg3rMtF69nLQJnOYUcbafYeFSjqkw3jCRLsqkWFlHaoQrr5mXmofFGOx3DKn7UfmBMyov8ySvLRVldA==}
   '@tanstack/query-core@5.81.2':
     resolution: {integrity: sha512-QLYkPdrudoMATDFa3MiLEwRhNnAlzHWDf0LKaXUqJd0/+QxN8uTPi7bahRlxoAyH0UbLMBdeDbYzWALj7THOtw==}
 
@@ -526,6 +527,9 @@ packages:
     resolution: {integrity: sha512-pe8kFlTrL2zFLlcAj2kZk9UaYYHDk9/1hg9EBaoO3cxDhOZf1FRGJeziSXKrVZyxIfs7b3aoOj/bw7Lie0mDUg==}
     peerDependencies:
       react: ^18 || ^19
+
+  '@types/node-fetch@2.6.12':
+    resolution: {integrity: sha512-8nneRWKCg3rMtF69nLQJnOYUcbafYeFSjqkw3jCRLsqkWFlHaoQrr5mXmofFGOx3DKn7UfmBMyov8ySvLRVldA==}
 
   '@types/node@20.19.1':
     resolution: {integrity: sha512-jJD50LtlD2dodAEO653i3YF04NWak6jN3ky+Ri3Em3mGR39/glWiboM/IePaRbgwSfqM1TpGXfAg8ohn/4dTgA==}
@@ -1598,16 +1602,17 @@ snapshots:
       postcss: 8.5.6
       tailwindcss: 4.1.10
 
-  '@types/node-fetch@2.6.12':
-    dependencies:
-      '@types/node': 20.19.1
-      form-data: 4.0.3
   '@tanstack/query-core@5.81.2': {}
 
   '@tanstack/react-query@5.81.2(react@19.1.0)':
     dependencies:
       '@tanstack/query-core': 5.81.2
       react: 19.1.0
+
+  '@types/node-fetch@2.6.12':
+    dependencies:
+      '@types/node': 20.19.1
+      form-data: 4.0.3
 
   '@types/node@20.19.1':
     dependencies:

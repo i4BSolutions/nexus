@@ -11,6 +11,8 @@ import PopConfirm from "../../../../components/products/PopConfirm";
 import DetailsCard from "../../../../components/products/DetailsCard";
 import ProductFormModal from "../../../../components/products/ProductFormModal";
 import ConfirmModal from "@/components/products/ConfirmModal";
+import UsageHistory from "@/components/products/UsageHistory";
+import PriceHistory from "@/components/products/PriceHistory";
 
 const ProductDetailPage = () => {
   const params = useParams() as { id: string };
@@ -197,12 +199,12 @@ const ProductDetailPage = () => {
           {
             key: "usage_history",
             label: "Usage History",
-            // children: <HistoryCard />,
+            children: <UsageHistory />,
           },
           {
             key: "price_history",
             label: "Price History",
-            // children: <HistoryCard />,
+            children: <PriceHistory />,
           },
         ]}
       />
