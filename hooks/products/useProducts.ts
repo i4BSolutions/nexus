@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { ApiResponse } from "@/types/api-response-type";
 import { ProductResponse } from "@/types/product/product.type";
+import { useQuery } from "@tanstack/react-query";
 
 export function useProducts(params: {
   page: number;
@@ -8,6 +8,7 @@ export function useProducts(params: {
   searchText?: string;
   stockStatusFilter?: string;
   selectedCategory?: string;
+  sort?: string;
 }) {
   const queryParams = new URLSearchParams({
     page: String(params.page),
@@ -15,6 +16,7 @@ export function useProducts(params: {
     ...(params.searchText && { search: params.searchText }),
     ...(params.stockStatusFilter && { stock_status: params.stockStatusFilter }),
     ...(params.selectedCategory && { category: params.selectedCategory }),
+    ...(params.sort && { sort: params.sort }), // ✅ fixed line
   });
 
   return useQuery<ApiResponse<ProductResponse>>({

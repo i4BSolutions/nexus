@@ -38,7 +38,6 @@ export default function ProductsPage() {
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
-    total: 0,
   });
   const [searchText, setSearchText] = useState("");
   const [stockStatusFilter, setStockStatusFilter] = useState<string>();
@@ -50,11 +49,18 @@ export default function ProductsPage() {
     ProductCurrencyInterface[]
   >([]);
   const [productSKU, setProductSKU] = useState<string>("");
+  const [sortField, setSortField] = useState<string>();
+  const [sortOrder, setSortOrder] = useState<SortOrder>();
   const [editProduct, setEditProduct] = useState<ProductInterface | null>(null);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [isOpenProductFormModal, setIsOpenProductFormModal] = useState(false);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] =
     useState(false);
+
+  const sortParam =
+    sortField && sortOrder
+      ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
+      : undefined;
 
   const {
     data: productData,
@@ -66,6 +72,7 @@ export default function ProductsPage() {
     searchText,
     stockStatusFilter,
     selectedCategory,
+    sort: sortParam,
   });
 
   useEffect(() => {
@@ -207,9 +214,9 @@ export default function ProductsPage() {
     {
       title: "PRODUCT SKU",
       dataIndex: "sku",
-      sorter: (a: ProductInterface, b: ProductInterface) =>
-        a.sku.localeCompare(b.sku),
-      sortDirections: ["ascend", "descend"] as SortOrder[],
+      key: "sku",
+      sorter: true,
+      sortOrder: sortField === "sku" ? (sortOrder as SortOrder) : undefined,
       render: (sku: string) => (
         <span>
           <TagOutlined style={{ marginRight: 8 }} />
@@ -218,17 +225,17 @@ export default function ProductsPage() {
       ),
     },
     {
-      title: "Name",
+      title: "NAME",
       dataIndex: "name",
       render: formatField,
     },
     {
-      title: "Category",
+      title: "CATEGORY",
       dataIndex: "category",
       render: formatField,
     },
     {
-      title: "Unit Price",
+      title: "UNIT PRICE",
       dataIndex: "unit_price",
       render: (v: number, record: ProductInterface) =>
         `${v} ${
@@ -237,11 +244,11 @@ export default function ProductsPage() {
         }`,
     },
     {
-      title: "Min Stock",
+      title: "MIN STOCK",
       dataIndex: "min_stock",
     },
     {
-      title: "Status",
+      title: "STATUS",
       dataIndex: "stock",
       render: (stock: number, record: ProductInterface) => {
         if (record.min_stock === 0)
@@ -252,7 +259,7 @@ export default function ProductsPage() {
       },
     },
     {
-      title: "Actions",
+      title: "ACTIONS",
       render: (_: any, product: ProductInterface) => (
         <Space>
           <Button type="link" onClick={() => handleView(product)}>
@@ -329,17 +336,25 @@ export default function ProductsPage() {
         pagination={{
           current: pagination.page,
           pageSize: pagination.pageSize,
-          total: pagination.total,
-          onChange: (page, pageSize) => {
-            setPagination({
-              page,
-              pageSize: pageSize || 10,
-              total: pagination.total,
-            });
-          },
+          total: total,
+        }}
+        onChange={(pagination, filters, sorter) => {
+          setPagination({
+            page: pagination.current ?? 1,
+            pageSize: pagination.pageSize ?? 10,
+          });
+          if (Array.isArray(sorter)) {
+            const sortInfo = sorter[0];
+            setSortField(sortInfo?.field as string);
+            setSortOrder(sortInfo?.order);
+          } else {
+            setSortField(sorter?.field as string);
+            setSortOrder(sorter?.order);
+          }
         }}
         bordered
       />
+
       <ProductFormModal
         open={isOpenProductFormModal}
         onClose={() => {

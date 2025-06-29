@@ -218,7 +218,7 @@ export default function ProductFormModal({
                 )}
               >
                 {categoryOptions.map((cat) => (
-                  <Select.Option key={cat.id} value={cat.id}>
+                  <Select.Option key={cat.id} value={cat.category_name}>
                     {cat.category_name}
                   </Select.Option>
                 ))}
