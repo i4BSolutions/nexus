@@ -16,7 +16,7 @@ export function useProducts(params: {
     ...(params.searchText && { search: params.searchText }),
     ...(params.stockStatusFilter && { stock_status: params.stockStatusFilter }),
     ...(params.selectedCategory && { category: params.selectedCategory }),
-    ...(params.sort && { sort: params.sort }), // ✅ fixed line
+    ...(params.sort && { sort: params.sort }),
   });
 
   return useQuery<ApiResponse<ProductResponse>>({
