@@ -1,43 +1,30 @@
 import React from "react";
 import PriceHistoryCard from "./PriceHistoryCard";
+import { useQuery } from "@tanstack/react-query";
+import { Spin } from "antd";
 
-const PriceHistory = () => {
+const PriceHistory = ({ id }: { id: string }) => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["price_history"],
+    queryFn: async () => {
+      const response = await fetch(
+        `/api/products/${id}/get-product-price-history`
+      );
+      return await response.json();
+    },
+  });
+
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center h-[100vh]">
+        <Spin />;
+      </div>
+    );
+  if (error) return <div>Error loading price history</div>;
+
   return (
     <>
-      <PriceHistoryCard
-        lastUpdated="2025-06-14T06:17:00"
-        changes={[
-          {
-            id: "1",
-            date: "2025-06-14T06:17:00",
-            oldPrice: 899,
-            newPrice: 1000,
-            currency: "USD",
-            updatedBy: "Aung Aung",
-            updatedByAvatar: "/avatars/aung.png",
-            reason: "Supplier price increase due to component shortage",
-          },
-          {
-            id: "2",
-            date: "2025-02-01T21:45:00",
-            oldPrice: 860,
-            newPrice: 899,
-            currency: "USD",
-            updatedBy: "Maung Maung",
-            updatedByAvatar: "/avatars/maung.png",
-          },
-          {
-            id: "3",
-            date: "2025-01-09T16:23:00",
-            oldPrice: 820,
-            newPrice: 860,
-            currency: "USD",
-            updatedBy: "Ma Ma",
-            updatedByAvatar: "/avatars/mama.png",
-            reason: "Supplier price increase due to component shortage",
-          },
-        ]}
-      />
+      <PriceHistoryCard data={data?.data} />
     </>
   );
 };

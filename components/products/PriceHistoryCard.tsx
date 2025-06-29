@@ -7,28 +7,14 @@ import {
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { ProductPriceHistoryInterface } from "@/types/product/product.type";
 
 const { Title, Text, Paragraph } = Typography;
 
-interface PriceChange {
-  id: string;
-  date: string;
-  oldPrice: number;
-  newPrice: number;
-  currency: string;
-  updatedBy: string;
-  updatedByAvatar: string;
-  reason?: string;
-}
-
-interface PriceHistoryCardProps {
-  lastUpdated: string;
-  changes: PriceChange[];
-}
-
-const PriceHistoryCard: React.FC<PriceHistoryCardProps> = ({
-  lastUpdated,
-  changes,
+const PriceHistoryCard = ({
+  data,
+}: {
+  data: ProductPriceHistoryInterface[];
 }) => {
   return (
     <Card
@@ -72,7 +58,8 @@ const PriceHistoryCard: React.FC<PriceHistoryCardProps> = ({
               Price History
             </Title>
             <Text type="secondary">
-              Last updated on {dayjs(lastUpdated).format("MMM D, YYYY h:mm A")}
+              Last updated on{" "}
+              {dayjs(data[0]?.created_at).format("MMM D, YYYY h:mm A")}
             </Text>
           </div>
         </Space>
@@ -80,7 +67,7 @@ const PriceHistoryCard: React.FC<PriceHistoryCardProps> = ({
 
       {/* Body */}
       <div style={{ padding: "16px 24px" }}>
-        {changes.map((change, idx) => (
+        {data.map((change, idx) => (
           <div key={change.id} style={{ marginBottom: 24 }}>
             <div
               style={{
@@ -110,17 +97,14 @@ const PriceHistoryCard: React.FC<PriceHistoryCardProps> = ({
                   <Text strong>Price Updated</Text>
                   <Paragraph style={{ margin: 0 }}>
                     Price changed from{" "}
-                    <Text delete>
-                      {change.oldPrice.toLocaleString()} {change.currency}
-                    </Text>{" "}
-                    to{" "}
+                    <Text delete>{change.old_price.toLocaleString()}</Text> to{" "}
                     <Text style={{ color: "#722ED1", fontWeight: 500 }}>
-                      {change.newPrice.toLocaleString()} {change.currency}
+                      {change.new_price.toLocaleString()}
                     </Text>
                   </Paragraph>
                   <Space size="middle" style={{ margin: "8px 0" }}>
-                    <Avatar size="small" src={change.updatedByAvatar} />
-                    <Text type="secondary">Updated by {change.updatedBy}</Text>
+                    {/* <Avatar size="small" src={change.updatedByAvatar} /> */}
+                    <Text type="secondary">Updated by {change.updated_by}</Text>
                   </Space>
                   {change.reason && (
                     <div
@@ -134,18 +118,16 @@ const PriceHistoryCard: React.FC<PriceHistoryCardProps> = ({
                         border: "1px solid #f0f0f0",
                       }}
                     >
-                      {change.reason}
+                      Reason: {change.reason}
                     </div>
                   )}
                 </div>
               </Space>
               <Text type="secondary" style={{ whiteSpace: "nowrap" }}>
-                {dayjs(change.date).format("MMM D, YYYY h:mm A")}
+                {dayjs(change.created_at).format("MMM D, YYYY h:mm A")}
               </Text>
             </div>
-            {idx < changes.length - 1 && (
-              <Divider style={{ margin: "16px 0" }} />
-            )}
+            {idx < data.length - 1 && <Divider style={{ margin: "16px 0" }} />}
           </div>
         ))}
       </div>

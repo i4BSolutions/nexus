@@ -1,108 +1,120 @@
 "use client";
 
 import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
-import { Button, message, Space, Tabs, Tag, Typography } from "antd";
+import { Button, message, Space, Tabs, Tag, Typography, Spin } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { ProductInterface } from "@/types/product/product.type";
-import { ProductFormSchema } from "@/schemas/products/products.schemas";
+import { useEffect, useState } from "react";
+
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import PopConfirm from "../../../../components/products/PopConfirm";
-import DetailsCard from "../../../../components/products/DetailsCard";
-import ProductFormModal from "../../../../components/products/ProductFormModal";
+import PopConfirm from "@/components/products/PopConfirm";
+import DetailsCard from "@/components/products/DetailsCard";
+import ProductFormModal from "@/components/products/ProductFormModal";
 import ConfirmModal from "@/components/products/ConfirmModal";
 import UsageHistory from "@/components/products/UsageHistory";
 import PriceHistory from "@/components/products/PriceHistory";
 
-const ProductDetailPage = () => {
-  const params = useParams() as { id: string };
-  const { id } = params;
+import {
+  ProductInterface,
+  ProductCurrencyInterface,
+} from "@/types/product/product.type";
+import { CategoryInterface } from "@/types/category/category.type";
+import { ProductFormInput } from "@/schemas/products/products.schemas";
+import { useGetById } from "@/hooks/react-query/useGetById";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { useCategories } from "@/hooks/products/useCategories";
+import { useCreate } from "@/hooks/react-query/useCreate";
+import CreateCategoryModal from "@/components/products/CreateCategoryModal";
+import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
+import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
+import { useProductSKU } from "@/hooks/products/useProductSKU";
 
+const ProductDetailPage = () => {
+  const { id } = useParams() as { id: string };
   const router = useRouter();
-  const [productDetail, setProductDetail] = useState<ProductInterface | null>(
-    null
+
+  const [openPopConfirm, setOpenPopConfirm] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryInterface[]>(
+    []
   );
-  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [currencyOptions, setCurrencyOptions] = useState<
-    {
-      id: string;
-      currency_code: string;
-      currency_name: string;
-    }[]
+    ProductCurrencyInterface[]
   >([]);
-  const [open, setOpen] = useState(false);
   const [openProductFormModal, setOpenProductFormModal] = useState(false);
   const [openConfirmModal, setOpenConfirmModal] = useState(false);
-  const [type, setType] = useState<"deactivate" | "delete">("deactivate");
+  const [isOpenCreateCategoryModal, setIsOpenCreateCategoryModal] =
+    useState(false);
+  const [confirmType, setConfirmType] = useState<"deactivate" | "delete">(
+    "deactivate"
+  );
 
-  const fetchProductDetail = async () => {
+  const { data, isLoading, refetch } = useGetById("products", id);
+  const productDetail = data as ProductInterface;
+  const { mutateAsync: updateProduct } = useUpdate("products");
+
+  const {
+    data: categories,
+    status: categoriesStatus,
+    refetch: refetchCategory,
+  } = useCategories();
+  const { mutateAsync: createCategory } = useCreate("categories");
+
+  const { data: currencyData, status: currencyStatus } = useProductCurrencies();
+
+  useEffect(() => {
+    if (categoriesStatus === "success" && categories.data) {
+      setCategoryOptions(categories.data);
+    }
+  }, [categories, categoriesStatus]);
+
+  useEffect(() => {
+    if (currencyStatus === "success" && currencyData) {
+      setCurrencyOptions(currencyData);
+    }
+  }, [currencyData]);
+
+  const handleCreateCategory = async (data: CreateCategoryFormSchema) => {
     try {
-      const res = await fetch(`/api/products/${id}`);
-      const result = await res.json();
-      if (res.ok && result.status === "success") {
-        setProductDetail(result.data);
-      } else {
-        message.error("Failed to fetch product");
-      }
+      await createCategory(data);
+      setIsOpenCreateCategoryModal((prev) => !prev);
+      refetchCategory();
+      message.success("New category created successfully.");
     } catch {
-      message.error("Error fetching product");
+      message.error("Unexpected error creating category");
     }
   };
 
-  useEffect(() => {
-    fetchProductDetail();
-  }, []);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const res = await fetch("/api/categories");
-      const data = await res.json();
-      if (data.status === "success") {
-        const cleaned = data.data
-          .map((cat: any) => cat.category_name)
-          .filter((c: string) => !!c && c.trim());
-        setCategoryOptions(cleaned);
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    const fetchCurrencies = async () => {
-      try {
-        const res = await fetch("/api/products/get-product-currencies");
-        const data = await res.json();
-        console.log(data);
-        if (data.status === "success") {
-          setCurrencyOptions(data.data);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchCurrencies();
-  }, []);
-
-  const handleSubmit = async (data: ProductFormSchema) => {
-    console.log(data);
+  const handleSubmit = async (formData: ProductFormInput) => {
     try {
-      const res = await fetch(`/api/products/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-
-      if (res.ok) {
-        message.success("Product updated successfully");
-        setOpenProductFormModal(false);
-      } else {
-        message.error(result.message || "Failed to create product");
-      }
-    } catch {
-      message.error("Unexpected error creating product");
+      const payload = {
+        ...formData,
+        unit_price: parseFloat(formData.unit_price),
+        min_stock: parseInt(formData.min_stock),
+        currency_code_id: parseInt(formData.currency_code_id),
+      };
+      const { reason, ...rest } = payload;
+      await updateProduct({ id, data: { ...rest, reason } });
+      message.success("Product updated successfully");
+      setOpenProductFormModal(false);
+      refetch();
+    } catch (error) {
+      console.log(error);
+      message.error("Unexpected error updating product");
     }
+  };
+
+  if (isLoading || !productDetail) {
+    return (
+      <div className="text-center py-20">
+        <Spin tip="Loading product details..." />
+      </div>
+    );
+  }
+
+  const statusTag = () => {
+    const { stock, min_stock } = productDetail;
+    if (stock === 0) return <Tag color="#F5222D">Out of Stock</Tag>;
+    if (stock <= min_stock) return <Tag color="#FA8C16">Low Stock</Tag>;
+    return <Tag color="#52C41A">In Stock</Tag>;
   };
 
   return (
@@ -111,7 +123,7 @@ const ProductDetailPage = () => {
         items={[
           { title: "Home", href: "/" },
           { title: "Products", href: "/products" },
-          { title: `${productDetail?.name}`, href: `/products/${id}` },
+          { title: productDetail.name },
         ]}
       />
 
@@ -124,7 +136,7 @@ const ProductDetailPage = () => {
           marginBottom: 12,
         }}
       >
-        <Space align="center">
+        <Space>
           <Button
             icon={<ArrowLeftOutlined />}
             type="link"
@@ -133,26 +145,9 @@ const ProductDetailPage = () => {
           />
           <Space direction="vertical" size={0}>
             <Typography.Title level={3} style={{ marginBottom: 0 }}>
-              {productDetail?.name}
+              {productDetail.name}
             </Typography.Title>
-            {productDetail && (
-              <Tag
-                color={
-                  productDetail.stock === 0
-                    ? "#F5222D"
-                    : productDetail.stock <= productDetail.min_stock
-                    ? "#FA8C16"
-                    : "#52C41A"
-                }
-                style={{ marginTop: 0 }}
-              >
-                {productDetail.stock === 0
-                  ? "Out of Stock"
-                  : productDetail.stock <= productDetail.min_stock
-                  ? "Low Stock"
-                  : "In Stock"}
-              </Tag>
-            )}
+            {statusTag()}
           </Space>
         </Space>
 
@@ -165,14 +160,14 @@ const ProductDetailPage = () => {
             Edit Product
           </Button>
           <PopConfirm
-            open={open}
-            setOpen={setOpen}
+            open={openPopConfirm}
+            setOpen={setOpenPopConfirm}
             onDeactivate={() => {
-              setType("deactivate");
+              setConfirmType("deactivate");
               setOpenConfirmModal(true);
             }}
             onDelete={() => {
-              setType("delete");
+              setConfirmType("delete");
               setOpenConfirmModal(true);
             }}
           />
@@ -186,7 +181,7 @@ const ProductDetailPage = () => {
           {
             key: "details",
             label: "Details",
-            children: productDetail?.category && (
+            children: (
               <DetailsCard
                 sku={productDetail.sku}
                 category={productDetail.category}
@@ -204,51 +199,48 @@ const ProductDetailPage = () => {
           {
             key: "price_history",
             label: "Price History",
-            children: <PriceHistory />,
+            children: <PriceHistory id={id} />,
           },
         ]}
       />
 
+      {/* Product Form Modal */}
       {openProductFormModal && (
         <ProductFormModal
           open={openProductFormModal}
           onClose={() => setOpenProductFormModal(false)}
-          onCreateCategory={() => {}}
-          mode="edit"
           onSubmit={handleSubmit}
+          onCreateCategory={() => setIsOpenCreateCategoryModal(true)}
+          mode="edit"
           initialValues={{
-            sku: productDetail?.sku || "",
-            name: productDetail?.name || "",
-            category: productDetail?.category || "",
-            unit_price: productDetail?.unit_price || 0,
-            min_stock: productDetail?.min_stock || 0,
-            currency_code_id: productDetail?.currency_code_id,
-            description: productDetail?.description || "",
+            sku: productDetail?.sku,
+            name: productDetail?.name,
+            category: productDetail?.category,
+            currency_code_id: String(productDetail?.currency_code_id),
+            unit_price: String(productDetail?.unit_price),
+            min_stock: String(productDetail?.min_stock),
+            description: productDetail?.description ?? "",
           }}
           currencyOptions={currencyOptions}
           categoryOptions={categoryOptions}
         />
       )}
 
-      {openConfirmModal && (
-        <ConfirmModal
-          open={openConfirmModal}
-          type={type}
-          onCancel={() => {
-            setOpenConfirmModal(false);
-          }}
-          onConfirm={() => {}}
+      {isOpenCreateCategoryModal && (
+        <CreateCategoryModal
+          open={isOpenCreateCategoryModal}
+          onClose={() => setIsOpenCreateCategoryModal(false)}
+          onSubmit={handleCreateCategory}
         />
       )}
 
+      {/* Confirm Modal */}
       {openConfirmModal && (
         <ConfirmModal
           open={openConfirmModal}
-          type={type}
-          onCancel={() => {
-            setOpenConfirmModal(false);
-          }}
-          onConfirm={() => {}}
+          type={confirmType}
+          onCancel={() => setOpenConfirmModal(false)}
+          onConfirm={() => message.success("Confirmed")}
         />
       )}
     </section>

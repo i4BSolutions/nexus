@@ -1,20 +1,15 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { ApiResponse, PaginatedResponse } from "@/types/api-response-type";
-import { ProductInterface } from "@/types/product/product.type";
+import {
+  ProductInterface,
+  ProductResponse,
+} from "@/types/product/product.type";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest): Promise<
-  NextResponse<
-    | ApiResponse<
-        PaginatedResponse<ProductInterface> & {
-          lowStock: number;
-          outOfStock: number;
-        }
-      >
-    | ApiResponse<null>
-  >
-> {
+export async function GET(
+  req: NextRequest
+): Promise<NextResponse<ApiResponse<ProductResponse> | ApiResponse<null>>> {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
 
@@ -82,16 +77,16 @@ export async function GET(req: NextRequest): Promise<
     // Paginate
     const paginated = filtered.slice(from, to + 1);
 
-    const response: PaginatedResponse<ProductInterface> & {
-      lowStock: number;
-      outOfStock: number;
-    } = {
+    const response = {
       items: paginated,
       total: allProducts.length,
       page,
       pageSize,
-      lowStock,
-      outOfStock,
+      counts: {
+        total: allProducts.length,
+        lowStock,
+        outOfStock,
+      },
     };
 
     return NextResponse.json(
