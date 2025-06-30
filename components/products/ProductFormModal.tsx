@@ -358,7 +358,7 @@ export default function ProductFormModal({
 
         <Form.Item style={{ textAlign: "left", marginBottom: 0 }}>
           <Space>
-            <Button onClick={handleClose} disabled={isSubmitting}>
+            <Button onClick={handleClose} disabled={isSubmitting || loading}>
               Cancel
             </Button>
             <Button
