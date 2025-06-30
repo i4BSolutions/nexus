@@ -79,7 +79,6 @@ export default function ProductFormModal({
   const currentUnitPrice = watch("unit_price");
   const initialPrice = initialValues?.unit_price;
 
-  // Reset form when modal opens/closes or initial values change
   useEffect(() => {
     if (open) {
       const formData = {
@@ -94,7 +93,6 @@ export default function ProductFormModal({
       };
       reset(formData);
     } else {
-      // Reset to default values when modal closes
       reset({
         sku: "",
         name: "",
