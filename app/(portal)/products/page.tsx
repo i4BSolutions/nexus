@@ -59,8 +59,8 @@ export default function ProductsPage() {
 
   const sortParam =
     sortField && sortOrder
-      ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
-      : "created_at_desc";
+      ? `${sortField}_${sortOrder === "descend" ? "desc" : "asc"}`
+      : undefined;
 
   const {
     data: productData,
@@ -370,7 +370,9 @@ export default function ProductsPage() {
 
       <ProductFormModal
         open={isOpenProductFormModal}
-        loading={createProduct.isPending || updateProduct.isPending}
+        loading={
+          createProduct.isPending || updateProduct.isPending || loadingSKU
+        }
         onClose={() => {
           setIsOpenProductFormModal((prev) => !prev);
           setEditProduct(null);

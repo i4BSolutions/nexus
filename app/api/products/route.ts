@@ -66,7 +66,7 @@ export async function GET(
     }
 
     // Sort
-    const [sortField, sortDirection] = sort.split("_"); // e.g., created_at_desc
+    const [sortField = "sku", sortDirection = "desc"] = sort.split("_"); // e.g., created_at_desc
     const direction = sortDirection === "asc" ? 1 : -1;
 
     filtered.sort((a, b) => {

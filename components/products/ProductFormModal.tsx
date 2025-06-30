@@ -8,6 +8,7 @@ import {
   InputNumber,
   Select,
   Space,
+  Spin,
   message,
 } from "antd";
 import {
@@ -75,33 +76,20 @@ export default function ProductFormModal({
       reason: "",
     },
   });
-  console.log(initialValues);
 
   const currentUnitPrice = watch("unit_price");
   const initialPrice = initialValues?.unit_price;
 
   useEffect(() => {
-    if (open) {
-      const formData = {
-        sku: initialValues?.sku || "",
-        name: initialValues?.name || "",
-        category: initialValues?.category || "",
-        currency_code_id: initialValues?.currency_code_id || "",
-        unit_price: initialValues?.unit_price || 0,
-        min_stock: initialValues?.min_stock || 0,
-        description: initialValues?.description || "",
-        reason: "",
-      };
-      reset(formData);
-    } else {
+    if (open && initialValues) {
       reset({
-        sku: "",
-        name: "",
-        category: "",
-        currency_code_id: "",
-        unit_price: 0,
-        min_stock: 0,
-        description: "",
+        sku: initialValues.sku || "",
+        name: initialValues.name || "",
+        category: initialValues.category || "",
+        currency_code_id: initialValues.currency_code_id || "",
+        unit_price: initialValues.unit_price || 0,
+        min_stock: initialValues.min_stock || 0,
+        description: initialValues.description || "",
         reason: "",
       });
     }
@@ -127,6 +115,14 @@ export default function ProductFormModal({
     currentUnitPrice &&
     initialPrice &&
     currentUnitPrice !== initialPrice;
+
+  if (loading) {
+    return (
+      <div className="text-center py-20">
+        <Spin />
+      </div>
+    );
+  }
 
   return (
     <Modal
@@ -280,8 +276,6 @@ export default function ProductFormModal({
                 <InputNumber
                   {...field}
                   placeholder="Enter unit price"
-                  min={0}
-                  precision={2}
                   style={{ width: "100%" }}
                   disabled={isSubmitting}
                   value={field.value ? field.value : undefined}

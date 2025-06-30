@@ -13,7 +13,7 @@ const PriceHistory = ({ priceHistory, loading, error }: PriceHistoryProps) => {
   if (loading) {
     return (
       <div className="text-center py-20">
-        <Spin tip="Loading product details..." />
+        <Spin />
       </div>
     );
   }
