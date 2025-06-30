@@ -49,14 +49,14 @@ const ProductDetailPage = () => {
 
   const { data, isLoading, refetch } = useGetById("products", id);
   const productDetail = data as ProductInterface;
-  const { mutateAsync: updateProduct } = useUpdate("products");
+  const updateProduct = useUpdate("products");
 
   const {
     data: categories,
     status: categoriesStatus,
     refetch: refetchCategory,
   } = useCategories();
-  const { mutateAsync: createCategory } = useCreate("categories");
+  const createCategory = useCreate("categories");
 
   const { data: currencyData, status: currencyStatus } = useProductCurrencies();
 
@@ -74,7 +74,7 @@ const ProductDetailPage = () => {
 
   const handleCreateCategory = async (data: CreateCategoryFormSchema) => {
     try {
-      await createCategory(data);
+      await createCategory.mutateAsync(data);
       setIsOpenCreateCategoryModal((prev) => !prev);
       refetchCategory();
       message.success("New category created successfully.");
@@ -92,7 +92,7 @@ const ProductDetailPage = () => {
         currency_code_id: parseInt(formData.currency_code_id),
       };
       const { reason, ...rest } = payload;
-      await updateProduct({ id, data: { ...rest, reason } });
+      await updateProduct.mutateAsync({ id, data: { ...rest, reason } });
       setOpenProductFormModal(false);
       message.success("Product updated successfully");
       refetch();
@@ -210,6 +210,7 @@ const ProductDetailPage = () => {
           open={openProductFormModal}
           onClose={() => setOpenProductFormModal(false)}
           onSubmit={handleSubmit}
+          loading={updateProduct.isPending}
           onCreateCategory={() => setIsOpenCreateCategoryModal(true)}
           mode="edit"
           initialValues={{

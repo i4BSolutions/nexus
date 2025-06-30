@@ -10,7 +10,11 @@ import {
   Space,
   message,
 } from "antd";
-import { PlusCircleOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  PlusCircleOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -129,6 +133,13 @@ export default function ProductFormModal({
     <Modal
       isOpen={open}
       onClose={handleClose}
+      icon={
+        isEdit ? (
+          <EditOutlined style={{ color: "#FFFFFF" }} />
+        ) : (
+          <PlusOutlined style={{ color: "#FFFFFF" }} />
+        )
+      }
       title={isEdit ? "Edit Product" : "Add New Product"}
       description={
         isEdit
@@ -354,6 +365,7 @@ export default function ProductFormModal({
               type="primary"
               htmlType="submit"
               loading={isSubmitting || loading}
+              disabled={isSubmitting || loading}
             >
               {isEdit ? "Update Product" : "Add Product"}
             </Button>

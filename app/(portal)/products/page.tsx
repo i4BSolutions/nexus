@@ -276,7 +276,7 @@ export default function ProductsPage() {
     },
   ];
 
-  if (isLoading || createProduct.isPending || updateProduct.isPending)
+  if (isLoading)
     return (
       <div className="text-center py-20">
         <Spin />
@@ -366,6 +366,7 @@ export default function ProductsPage() {
 
       <ProductFormModal
         open={isOpenProductFormModal}
+        loading={createProduct.isPending || updateProduct.isPending}
         onClose={() => {
           setIsOpenProductFormModal((prev) => !prev);
           setEditProduct(null);
