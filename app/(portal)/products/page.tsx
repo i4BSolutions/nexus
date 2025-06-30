@@ -102,7 +102,11 @@ export default function ProductsPage() {
   const { mutateAsync: createCategory } = useCreate("categories");
 
   const { data: currencyData, status: currencyStatus } = useProductCurrencies();
-  const { data: skuData, status: skuStatus } = useProductSKU();
+  const {
+    data: skuData,
+    status: skuStatus,
+    refetch: refetchSKU,
+  } = useProductSKU();
 
   useEffect(() => {
     if (categoriesStatus === "success" && categories.data) {
@@ -122,11 +126,12 @@ export default function ProductsPage() {
     }
   }, [skuData]);
 
-  const handleAddNewProduct = useCallback(() => {
+  const handleAddNewProduct = useCallback(async () => {
     setFormMode("create");
     setEditProduct(null);
+    await refetchSKU();
     setIsOpenProductFormModal((prev) => !prev);
-  }, []);
+  }, [refetchSKU]);
 
   const handleView = useCallback(
     (product: ProductInterface) => {
@@ -156,17 +161,15 @@ export default function ProductsPage() {
           id: String(editProduct?.id),
           data: { ...rest, reason },
         });
-        // setIsOpenProductFormModal(false);
         message.success("Product updated successfully");
       } else {
         await createProduct.mutateAsync(payload);
-        // setIsOpenProductFormModal(false);
         message.success("Product created successfully");
       }
 
       setIsOpenProductFormModal(false);
       setEditProduct(null);
-      await refetch();
+      refetch();
     } catch (err: any) {
       console.error(err);
       message.error("Operation failed");

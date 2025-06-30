@@ -75,6 +75,7 @@ export default function ProductFormModal({
       reason: "",
     },
   });
+  console.log(initialValues);
 
   const currentUnitPrice = watch("unit_price");
   const initialPrice = initialValues?.unit_price;
