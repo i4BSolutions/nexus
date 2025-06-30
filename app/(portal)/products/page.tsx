@@ -17,7 +17,7 @@ import {
   TagOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
-import { Button, Divider, message, Space, Table, Tag } from "antd";
+import { Button, Divider, message, Space, Spin, Table, Tag } from "antd";
 import { SortOrder } from "antd/es/table/interface";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -156,17 +156,17 @@ export default function ProductsPage() {
           id: String(editProduct?.id),
           data: { ...rest, reason },
         });
-        setIsOpenProductFormModal((prev) => !prev);
+        setIsOpenProductFormModal(false);
         message.success("Product updated successfully");
       } else {
         await createProduct(payload);
-        setIsOpenProductFormModal((prev) => !prev);
+        setIsOpenProductFormModal(false);
         message.success("Product created successfully");
       }
 
-      setIsOpenProductFormModal((prev) => !prev);
+      setIsOpenProductFormModal(false);
       setEditProduct(null);
-      refetch();
+      await refetch();
     } catch (err: any) {
       console.error(err);
       message.error("Operation failed");
@@ -177,7 +177,7 @@ export default function ProductsPage() {
     try {
       await createCategory(data);
       setIsCreateCategoryModalOpen((prev) => !prev);
-      refetchCategory();
+      await refetchCategory();
       message.success("New category created successfully.");
     } catch {
       message.error("Unexpected error creating category");
@@ -276,6 +276,13 @@ export default function ProductsPage() {
     },
   ];
 
+  if (isLoading)
+    return (
+      <div className="text-center py-20">
+        <Spin />
+      </div>
+    );
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <Breadcrumbs
@@ -357,49 +364,45 @@ export default function ProductsPage() {
         bordered
       />
 
-      {isOpenProductFormModal && (
-        <ProductFormModal
-          open={isOpenProductFormModal}
-          onClose={() => {
-            setIsOpenProductFormModal((prev) => !prev);
-            setEditProduct(null);
-          }}
-          onSubmit={handleSubmit}
-          onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
-          mode={formMode}
-          initialValues={
-            formMode === "edit" && editProduct
-              ? {
-                  sku: editProduct.sku,
-                  name: editProduct.name,
-                  category: editProduct.category,
-                  currency_code_id: String(editProduct.currency_code_id),
-                  unit_price: editProduct.unit_price,
-                  min_stock: editProduct.min_stock,
-                  description: editProduct.description ?? "",
-                }
-              : {
-                  sku: skuData,
-                  name: "",
-                  category: "",
-                  currency_code_id: "",
-                  unit_price: 0,
-                  min_stock: 0,
-                  description: "",
-                }
-          }
-          currencyOptions={currencyOptions}
-          categoryOptions={categoryOptions}
-        />
-      )}
+      <ProductFormModal
+        open={isOpenProductFormModal}
+        onClose={() => {
+          setIsOpenProductFormModal((prev) => !prev);
+          setEditProduct(null);
+        }}
+        onSubmit={handleSubmit}
+        onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
+        mode={formMode}
+        initialValues={
+          formMode === "edit" && editProduct
+            ? {
+                sku: editProduct.sku,
+                name: editProduct.name,
+                category: editProduct.category,
+                currency_code_id: String(editProduct.currency_code_id),
+                unit_price: editProduct.unit_price,
+                min_stock: editProduct.min_stock,
+                description: editProduct.description ?? "",
+              }
+            : {
+                sku: skuData,
+                name: "",
+                category: "",
+                currency_code_id: "",
+                unit_price: 0,
+                min_stock: 0,
+                description: "",
+              }
+        }
+        currencyOptions={currencyOptions}
+        categoryOptions={categoryOptions}
+      />
 
-      {isCreateCategoryModalOpen && (
-        <CreateCategoryModal
-          open={isCreateCategoryModalOpen}
-          onClose={() => setIsCreateCategoryModalOpen(false)}
-          onSubmit={handleCreateCategory}
-        />
-      )}
+      <CreateCategoryModal
+        open={isCreateCategoryModalOpen}
+        onClose={() => setIsCreateCategoryModalOpen(false)}
+        onSubmit={handleCreateCategory}
+      />
     </section>
   );
 }
