@@ -125,7 +125,7 @@ export default function ProductsPage() {
   const handleAddNewProduct = useCallback(() => {
     setFormMode("create");
     setEditProduct(null);
-    setIsOpenProductFormModal(true);
+    setIsOpenProductFormModal((prev) => !prev);
   }, []);
 
   const handleView = useCallback(
@@ -138,7 +138,7 @@ export default function ProductsPage() {
   const handleEdit = useCallback((product: ProductInterface) => {
     setFormMode("edit");
     setEditProduct(product);
-    setIsOpenProductFormModal(true);
+    setIsOpenProductFormModal((prev) => !prev);
   }, []);
 
   const handleSubmit = async (form: ProductFormInput) => {
@@ -156,15 +156,15 @@ export default function ProductsPage() {
           id: String(editProduct?.id),
           data: { ...rest, reason },
         });
-        setIsOpenProductFormModal(false);
+        setIsOpenProductFormModal((prev) => !prev);
         message.success("Product updated successfully");
       } else {
         await createProduct(payload);
-        setIsOpenProductFormModal(false);
+        setIsOpenProductFormModal((prev) => !prev);
         message.success("Product created successfully");
       }
 
-      setIsOpenProductFormModal(false);
+      setIsOpenProductFormModal((prev) => !prev);
       setEditProduct(null);
       refetch();
     } catch (err: any) {
@@ -357,45 +357,49 @@ export default function ProductsPage() {
         bordered
       />
 
-      <ProductFormModal
-        open={isOpenProductFormModal}
-        onClose={() => {
-          setIsOpenProductFormModal(false);
-          setEditProduct(null);
-        }}
-        onSubmit={handleSubmit}
-        onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
-        mode={formMode}
-        initialValues={
-          formMode === "edit" && editProduct
-            ? {
-                sku: editProduct.sku,
-                name: editProduct.name,
-                category: editProduct.category,
-                currency_code_id: String(editProduct.currency_code_id),
-                unit_price: editProduct.unit_price,
-                min_stock: editProduct.min_stock,
-                description: editProduct.description ?? "",
-              }
-            : {
-                sku: skuData,
-                name: "",
-                category: "",
-                currency_code_id: "",
-                unit_price: 0,
-                min_stock: 0,
-                description: "",
-              }
-        }
-        currencyOptions={currencyOptions}
-        categoryOptions={categoryOptions}
-      />
+      {isOpenProductFormModal && (
+        <ProductFormModal
+          open={isOpenProductFormModal}
+          onClose={() => {
+            setIsOpenProductFormModal((prev) => !prev);
+            setEditProduct(null);
+          }}
+          onSubmit={handleSubmit}
+          onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
+          mode={formMode}
+          initialValues={
+            formMode === "edit" && editProduct
+              ? {
+                  sku: editProduct.sku,
+                  name: editProduct.name,
+                  category: editProduct.category,
+                  currency_code_id: String(editProduct.currency_code_id),
+                  unit_price: editProduct.unit_price,
+                  min_stock: editProduct.min_stock,
+                  description: editProduct.description ?? "",
+                }
+              : {
+                  sku: skuData,
+                  name: "",
+                  category: "",
+                  currency_code_id: "",
+                  unit_price: 0,
+                  min_stock: 0,
+                  description: "",
+                }
+          }
+          currencyOptions={currencyOptions}
+          categoryOptions={categoryOptions}
+        />
+      )}
 
-      <CreateCategoryModal
-        open={isCreateCategoryModalOpen}
-        onClose={() => setIsCreateCategoryModalOpen(false)}
-        onSubmit={handleCreateCategory}
-      />
+      {isCreateCategoryModalOpen && (
+        <CreateCategoryModal
+          open={isCreateCategoryModalOpen}
+          onClose={() => setIsCreateCategoryModalOpen(false)}
+          onSubmit={handleCreateCategory}
+        />
+      )}
     </section>
   );
 }
