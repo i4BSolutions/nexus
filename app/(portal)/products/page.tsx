@@ -126,11 +126,15 @@ export default function ProductsPage() {
     }
   }, [skuData]);
 
-  const handleAddNewProduct = useCallback(() => {
+  const handleAddNewProduct = useCallback(async () => {
     setFormMode("create");
     setEditProduct(null);
-    refetchSKU();
-    setIsOpenProductFormModal((prev) => !prev);
+    try {
+      await refetchSKU();
+      setIsOpenProductFormModal(true);
+    } catch (error) {
+      message.error("Failed to generate SKU");
+    }
   }, [refetchSKU]);
 
   const handleView = useCallback(
