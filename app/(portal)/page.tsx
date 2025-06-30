@@ -1,5 +1,5 @@
-import UsersPage from "./users/page";
+import MainMenuPage from "./(main-menu)/page";
 
 export default function RootPage() {
-  return <UsersPage />;
+  return <MainMenuPage />;
 }

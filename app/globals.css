@@ -9,3 +9,7 @@
   color: #f0f0f0;
   background-color: transparent;
 }
+
+.ant-menu-item-selected {
+  border-right: 3px solid #722ed1;
+}
