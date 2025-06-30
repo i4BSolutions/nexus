@@ -1,18 +1,18 @@
 "use client";
 
+import ConfirmModal from "@/components/products/ConfirmModal";
+import DetailsCard from "@/components/products/DetailsCard";
+import PopConfirm from "@/components/products/PopConfirm";
+import PriceHistory from "@/components/products/PriceHistory";
+import ProductFormModal from "@/components/products/ProductFormModal";
+import UsageHistory from "@/components/products/UsageHistory";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import { ProductFormSchema } from "@/schemas/products/products.schemas";
+import { ProductInterface } from "@/types/product/product.type";
 import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
 import { Button, message, Space, Tabs, Tag, Typography } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { ProductInterface } from "@/types/product/product.type";
-import { ProductFormSchema } from "@/schemas/products/products.schemas";
-import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import PopConfirm from "../../../../components/products/PopConfirm";
-import DetailsCard from "../../../../components/products/DetailsCard";
-import ProductFormModal from "../../../../components/products/ProductFormModal";
-import ConfirmModal from "@/components/products/ConfirmModal";
-import UsageHistory from "@/components/products/UsageHistory";
-import PriceHistory from "@/components/products/PriceHistory";
+import { useEffect, useState } from "react";
 
 const ProductDetailPage = () => {
   const params = useParams() as { id: string };

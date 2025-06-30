@@ -12,7 +12,7 @@ import { Button, Image, Layout, Menu, MenuProps, theme } from "antd";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 
 export default function MainLayout({
   children,
