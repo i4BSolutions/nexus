@@ -64,7 +64,7 @@ export default function ProductsPage() {
 
   const {
     data: productData,
-    isLoading,
+    isLoading: loadingProduct,
     refetch,
   } = useProducts({
     page: pagination.page,
@@ -106,6 +106,7 @@ export default function ProductsPage() {
     data: skuData,
     status: skuStatus,
     refetch: refetchSKU,
+    isLoading: loadingSKU,
   } = useProductSKU();
 
   useEffect(() => {
@@ -279,7 +280,7 @@ export default function ProductsPage() {
     },
   ];
 
-  if (isLoading)
+  if (loadingProduct || loadingSKU)
     return (
       <div className="text-center py-20">
         <Spin />
@@ -344,7 +345,7 @@ export default function ProductsPage() {
         columns={columns}
         dataSource={products}
         rowKey="id"
-        loading={isLoading}
+        loading={loadingProduct || loadingSKU}
         pagination={{
           current: pagination.page,
           pageSize: pagination.pageSize,
