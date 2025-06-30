@@ -126,10 +126,10 @@ export default function ProductsPage() {
     }
   }, [skuData]);
 
-  const handleAddNewProduct = useCallback(async () => {
+  const handleAddNewProduct = useCallback(() => {
     setFormMode("create");
     setEditProduct(null);
-    await refetchSKU();
+    refetchSKU();
     setIsOpenProductFormModal((prev) => !prev);
   }, [refetchSKU]);
 
