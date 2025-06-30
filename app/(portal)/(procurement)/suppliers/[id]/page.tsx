@@ -18,9 +18,9 @@ import { useDelete } from "@/hooks/react-query/useDelete";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 
-import DetailsCard from "../../../../components/suppliers/DetailsCard";
-import HistoryCard from "../../../../components/suppliers/HistoryCard";
-import SupplierModal from "../../../../components/suppliers/SupplierModal";
+import DetailsCard from "@/components/suppliers/DetailsCard";
+import HistoryCard from "@/components/suppliers/HistoryCard";
+import SupplierModal from "@/components/suppliers/SupplierModal";
 
 const SupplierPage = () => {
   const params = useParams();

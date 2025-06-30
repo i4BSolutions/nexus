@@ -2,10 +2,10 @@
 
 import { Typography } from "antd";
 
-export default function MainMenuPage() {
+export default function BudgetsPage() {
   return (
     <section className="grid place-items-center h-full">
-      <Typography.Title>Main Menu</Typography.Title>
+      <Typography.Title>Budgets Page</Typography.Title>
     </section>
   );
 }

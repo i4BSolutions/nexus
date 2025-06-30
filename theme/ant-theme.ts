@@ -1,6 +1,9 @@
 import type { ThemeConfig } from "antd";
 
 const customAntTheme: ThemeConfig = {
+  token: {
+    colorBgContainer: "#FFFFFF",
+  },
   components: {
     Button: {
       colorPrimary: "#722ED1",
@@ -18,6 +21,14 @@ const customAntTheme: ThemeConfig = {
     },
     Form: {
       verticalLabelPadding: 0,
+    },
+    Menu: {
+      itemSelectedBg: "#F9F0FF",
+      itemSelectedColor: "#722ED1",
+      subMenuItemSelectedColor: "#722ED1",
+      itemHoverBg: "#F9F0FF",
+      itemBorderRadius: 0,
+      itemMarginInline: 0,
     },
   },
 };
