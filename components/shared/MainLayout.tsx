@@ -2,15 +2,17 @@
 
 import { createClient } from "@/lib/supabase/client";
 import {
-  ProductOutlined,
-  TruckOutlined,
-  UserOutlined,
+  AuditOutlined,
+  DollarCircleOutlined,
+  HomeOutlined,
+  SettingOutlined,
+  ShoppingOutlined,
 } from "@ant-design/icons";
-import { Button, Layout, Menu, MenuProps, theme } from "antd";
+import { Button, Image, Layout, Menu, MenuProps, theme } from "antd";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 
 export default function MainLayout({
   children,
@@ -18,7 +20,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer },
   } = theme.useToken();
 
   const router = useRouter();
@@ -29,24 +31,73 @@ export default function MainLayout({
     router.push("/login");
   };
 
-  const items2: MenuProps["items"] = [
+  const MENU_ITEMS: MenuProps["items"] = [
     {
-      key: "1",
-      icon: <UserOutlined />,
-      label: "Users",
-      onClick: () => router.push("/users"),
+      key: "main-menu",
+      label: "Main Menu",
+      icon: <HomeOutlined />,
+      onClick: () => router.push("/"),
     },
     {
-      key: "2",
-      icon: <TruckOutlined />,
-      label: "Suppliers",
-      onClick: () => router.push("/suppliers"),
+      key: "procurement",
+      label: "Procurement",
+      icon: <ShoppingOutlined />,
+      children: [
+        {
+          key: "purchase-orders",
+          label: "Purchase Orders",
+          onClick: () => router.push("/purchase-orders"),
+        },
+        {
+          key: "invoices",
+          label: "Invoices",
+          onClick: () => router.push("/invoices"),
+        },
+        {
+          key: "products",
+          label: "Products",
+          onClick: () => router.push("/products"),
+        },
+        {
+          key: "suppliers",
+          label: "Suppliers",
+          onClick: () => router.push("/suppliers"),
+        },
+      ],
     },
     {
-      key: "3",
-      icon: <ProductOutlined />,
-      label: "Products",
-      onClick: () => router.push("/products"),
+      key: "inventory",
+      label: "Inventory",
+      icon: <AuditOutlined />,
+    },
+    {
+      key: "finance",
+      label: "Finance",
+      icon: <DollarCircleOutlined />,
+      children: [
+        {
+          key: "budgets",
+          label: "Budgets",
+          onClick: () => router.push("/budgets"),
+        },
+        {
+          key: "budget-allocations",
+          label: "Budget Allocations",
+          onClick: () => router.push("/budget-allocations"),
+        },
+      ],
+    },
+    {
+      key: "administration",
+      label: "Administration",
+      icon: <SettingOutlined />,
+      children: [
+        {
+          key: "users",
+          label: "Users",
+          onClick: () => router.push("/users"),
+        },
+      ],
     },
   ];
   return (
@@ -57,44 +108,52 @@ export default function MainLayout({
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
+          background: colorBgContainer,
+          borderBottom: "1px solid #F0F0F0 ",
+          padding: "0 16px 0 32px",
         }}
       >
+        <Image
+          src="/nexus_logo.svg"
+          alt="Nexus Logo"
+          preview={false}
+          width={140}
+          height={40}
+        />
+
         <Button type="default" onClick={handleSignOut}>
           Logout
         </Button>
       </Header>
-      <div
+
+      <Layout
         style={{
-          padding: "40px 48px",
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
+          padding: 20,
+          background: colorBgContainer,
         }}
       >
-        <Layout
+        <Sider
           style={{
-            padding: "12px 0",
             background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-            flex: 1,
-            display: "flex",
+            borderRadius: 16,
+            boxShadow:
+              " 0px 3px 6px -4px rgba(0, 0, 0, 0.12), 0px 6px 16px 0px rgba(0, 0, 0, 0.08), 0px 9px 28px 8px rgba(0, 0, 0, 0.05)",
+            marginRight: 8,
           }}
+          width={208}
         >
-          <Sider style={{ background: colorBgContainer }} width={200}>
-            <Menu
-              mode="inline"
-              defaultSelectedKeys={["1"]}
-              defaultOpenKeys={["sub1"]}
-              style={{ height: "100%" }}
-              items={items2}
-            />
-          </Sider>
-          <Content style={{ padding: "0 24px", height: "100%" }}>
-            {children}
-          </Content>
-        </Layout>
-      </div>
+          <Menu
+            mode="inline"
+            defaultSelectedKeys={["main-menu"]}
+            style={{ height: "100%", borderRadius: 16 }}
+            items={MENU_ITEMS}
+          />
+        </Sider>
+        <Content style={{ padding: "0 24px", height: "100%" }}>
+          {children}
+        </Content>
+      </Layout>
     </Layout>
   );
 }

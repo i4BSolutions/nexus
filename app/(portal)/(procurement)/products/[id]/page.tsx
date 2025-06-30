@@ -1,33 +1,31 @@
 "use client";
 
-import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
-import { Button, message, Space, Tabs, Tag, Typography, Spin } from "antd";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import PopConfirm from "@/components/products/PopConfirm";
-import DetailsCard from "@/components/products/DetailsCard";
-import ProductFormModal from "@/components/products/ProductFormModal";
 import ConfirmModal from "@/components/products/ConfirmModal";
-import UsageHistory from "@/components/products/UsageHistory";
+import CreateCategoryModal from "@/components/products/CreateCategoryModal";
+import DetailsCard from "@/components/products/DetailsCard";
+import PopConfirm from "@/components/products/PopConfirm";
 import PriceHistory from "@/components/products/PriceHistory";
-
-import {
-  ProductInterface,
-  ProductCurrencyInterface,
-  ProductPriceHistoryInterface,
-} from "@/types/product/product.type";
-import { CategoryInterface } from "@/types/category/category.type";
-import { ProductFormInput } from "@/schemas/products/products.schemas";
+import ProductFormModal from "@/components/products/ProductFormModal";
+import UsageHistory from "@/components/products/UsageHistory";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import { useCategories } from "@/hooks/products/useCategories";
+import { useGetProductById } from "@/hooks/products/useGetProductById";
+import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
+import { useCreate } from "@/hooks/react-query/useCreate";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
-import { useCategories } from "@/hooks/products/useCategories";
-import { useCreate } from "@/hooks/react-query/useCreate";
-import CreateCategoryModal from "@/components/products/CreateCategoryModal";
 import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
-import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
-import { useGetProductById } from "@/hooks/products/useGetProductById";
+import { ProductFormInput } from "@/schemas/products/products.schemas";
+import { CategoryInterface } from "@/types/category/category.type";
+import {
+  ProductCurrencyInterface,
+  ProductInterface,
+  ProductPriceHistoryInterface,
+} from "@/types/product/product.type";
+import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
+import { Button, message, Space, Spin, Tabs, Tag, Typography } from "antd";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const ProductDetailPage = () => {
   const { id } = useParams() as { id: string };

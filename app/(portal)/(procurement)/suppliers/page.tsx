@@ -17,7 +17,7 @@ import HeaderSection from "@/components/shared/HeaderSection";
 import SearchAndFilters from "@/components/shared/SearchAndFilters";
 import StatisticsCards from "@/components/shared/StatisticsCards";
 
-import SupplierModal from "../../../components/suppliers/SupplierModal";
+import SupplierModal from "@/components/suppliers/SupplierModal";
 
 import {
   SupplierInterface,
