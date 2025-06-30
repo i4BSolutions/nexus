@@ -3,7 +3,6 @@ import type { ThemeConfig } from "antd";
 const customAntTheme: ThemeConfig = {
   token: {
     colorBgContainer: "#FFFFFF",
-    borderRadiusLG: 16,
   },
   components: {
     Button: {

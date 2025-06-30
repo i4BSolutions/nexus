@@ -20,7 +20,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer },
   } = theme.useToken();
 
   const router = useRouter();
@@ -136,7 +136,7 @@ export default function MainLayout({
         <Sider
           style={{
             background: colorBgContainer,
-            borderRadius: borderRadiusLG,
+            borderRadius: 16,
             boxShadow:
               " 0px 3px 6px -4px rgba(0, 0, 0, 0.12), 0px 6px 16px 0px rgba(0, 0, 0, 0.08), 0px 9px 28px 8px rgba(0, 0, 0, 0.05)",
             marginRight: 8,
@@ -146,7 +146,7 @@ export default function MainLayout({
           <Menu
             mode="inline"
             defaultSelectedKeys={["main-menu"]}
-            style={{ height: "100%", borderRadius: borderRadiusLG }}
+            style={{ height: "100%", borderRadius: 16 }}
             items={MENU_ITEMS}
           />
         </Sider>
