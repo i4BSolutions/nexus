@@ -91,8 +91,8 @@ export default function ProductsPage() {
 
   const counts = { total, lowStock, outOfStock };
 
-  const { mutateAsync: createProduct } = useCreate("products");
-  const { mutateAsync: updateProduct } = useUpdate("products");
+  const createProduct = useCreate("products");
+  const updateProduct = useUpdate("products");
 
   const {
     data: categories,
@@ -152,15 +152,15 @@ export default function ProductsPage() {
 
       if (formMode === "edit") {
         const { reason, ...rest } = payload;
-        await updateProduct({
+        await updateProduct.mutateAsync({
           id: String(editProduct?.id),
           data: { ...rest, reason },
         });
-        setIsOpenProductFormModal(false);
+        // setIsOpenProductFormModal(false);
         message.success("Product updated successfully");
       } else {
-        await createProduct(payload);
-        setIsOpenProductFormModal(false);
+        await createProduct.mutateAsync(payload);
+        // setIsOpenProductFormModal(false);
         message.success("Product created successfully");
       }
 
@@ -276,7 +276,7 @@ export default function ProductsPage() {
     },
   ];
 
-  if (isLoading)
+  if (isLoading || createProduct.isPending || updateProduct.isPending)
     return (
       <div className="text-center py-20">
         <Spin />
