@@ -16,6 +16,7 @@ import PriceHistory from "@/components/products/PriceHistory";
 import {
   ProductInterface,
   ProductCurrencyInterface,
+  ProductPriceHistoryInterface,
 } from "@/types/product/product.type";
 import { CategoryInterface } from "@/types/category/category.type";
 import { ProductFormInput } from "@/schemas/products/products.schemas";
@@ -26,7 +27,7 @@ import { useCreate } from "@/hooks/react-query/useCreate";
 import CreateCategoryModal from "@/components/products/CreateCategoryModal";
 import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
 import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
-import { useProductSKU } from "@/hooks/products/useProductSKU";
+import { useGetProductById } from "@/hooks/products/useGetProductById";
 
 const ProductDetailPage = () => {
   const { id } = useParams() as { id: string };
@@ -59,6 +60,14 @@ const ProductDetailPage = () => {
   const createCategory = useCreate("categories");
 
   const { data: currencyData, status: currencyStatus } = useProductCurrencies();
+
+  const {
+    data: priceHistoryData,
+    isLoading: loadingPriceHistory,
+    error: productPriceHistoryError,
+    refetch: refetchProductPriceHistory,
+  } = useGetProductById("get-product-price-history", id);
+  const priceHistory = priceHistoryData as ProductPriceHistoryInterface[];
 
   useEffect(() => {
     if (categoriesStatus === "success" && categories.data) {
@@ -94,8 +103,8 @@ const ProductDetailPage = () => {
       const { reason, ...rest } = payload;
       await updateProduct.mutateAsync({ id, data: { ...rest, reason } });
       setOpenProductFormModal(false);
+      refetchProductPriceHistory();
       message.success("Product updated successfully");
-      refetch();
     } catch (error) {
       console.log(error);
       message.error("Unexpected error updating product");
@@ -199,7 +208,13 @@ const ProductDetailPage = () => {
           {
             key: "price_history",
             label: "Price History",
-            children: <PriceHistory id={id} />,
+            children: (
+              <PriceHistory
+                priceHistory={priceHistory}
+                loading={loadingPriceHistory}
+                error={productPriceHistoryError}
+              />
+            ),
           },
         ]}
       />

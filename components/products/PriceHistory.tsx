@@ -2,32 +2,33 @@ import React from "react";
 import PriceHistoryCard from "./PriceHistoryCard";
 import { Empty, Spin } from "antd";
 import { ProductPriceHistoryInterface } from "@/types/product/product.type";
-import { useGetProductById } from "@/hooks/products/useGetProductById";
 
-const PriceHistory = ({ id }: { id: string }) => {
-  const { data, isLoading, error } = useGetProductById(
-    "get-product-price-history",
-    id
-  );
+type PriceHistoryProps = {
+  priceHistory: ProductPriceHistoryInterface[];
+  loading: boolean;
+  error: Error | null;
+};
 
-  const priceHistory = data as ProductPriceHistoryInterface[];
-
-  if (isLoading)
+const PriceHistory = ({ priceHistory, loading, error }: PriceHistoryProps) => {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center">
-        <Spin />
+      <div className="text-center py-20">
+        <Spin tip="Loading product details..." />
       </div>
     );
+  }
 
-  if (!priceHistory || priceHistory.length === 0)
+  if (!priceHistory || priceHistory.length === 0) {
     return (
-      <Empty
-        className="flex items-center justify-center"
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-      />
+      <div className="text-center py-20">
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+      </div>
     );
+  }
 
-  if (error) return <div>Error loading price history</div>;
+  if (error) {
+    return <div className="text-center py-20">Something went wrong!</div>;
+  }
 
   return (
     <>
