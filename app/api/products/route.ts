@@ -16,7 +16,7 @@ export async function GET(
   const search = searchParams.get("search")?.trim() || "";
   const category = searchParams.get("category") || "";
   const stockStatus = searchParams.get("stock_status");
-  const sort = searchParams.get("sort") || "name";
+  const sort = searchParams.get("sort") || "sku";
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
@@ -66,12 +66,27 @@ export async function GET(
     }
 
     // Sort
+    const [sortField, sortDirection] = sort.split("_"); // e.g., created_at_desc
+    const direction = sortDirection === "asc" ? 1 : -1;
+
     filtered.sort((a, b) => {
-      const valA = a[sort as keyof ProductInterface];
-      const valB = b[sort as keyof ProductInterface];
-      return typeof valA === "string"
-        ? String(valA).localeCompare(String(valB))
-        : 0;
+      const valA = a[sortField as keyof ProductInterface];
+      const valB = b[sortField as keyof ProductInterface];
+
+      if (typeof valA === "number" && typeof valB === "number") {
+        return (valA - valB) * direction;
+      }
+
+      if (
+        valA instanceof Date ||
+        (typeof valA === "string" && !isNaN(Date.parse(valA)))
+      ) {
+        const timeA = new Date(valA as string).getTime();
+        const timeB = new Date(valB as string).getTime();
+        return (timeA - timeB) * direction;
+      }
+
+      return String(valA).localeCompare(String(valB)) * direction;
     });
 
     // Paginate

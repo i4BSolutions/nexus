@@ -65,8 +65,8 @@ export default function ProductFormModal({
       name: "",
       category: "",
       currency_code_id: "",
-      unit_price: "",
-      min_stock: "",
+      unit_price: 0,
+      min_stock: 0,
       description: "",
       reason: "",
     },
@@ -83,8 +83,8 @@ export default function ProductFormModal({
         name: initialValues?.name || "",
         category: initialValues?.category || "",
         currency_code_id: initialValues?.currency_code_id || "",
-        unit_price: initialValues?.unit_price || "",
-        min_stock: initialValues?.min_stock || "",
+        unit_price: initialValues?.unit_price || 0,
+        min_stock: initialValues?.min_stock || 0,
         description: initialValues?.description || "",
         reason: "",
       };
@@ -96,8 +96,8 @@ export default function ProductFormModal({
         name: "",
         category: "",
         currency_code_id: "",
-        unit_price: "",
-        min_stock: "",
+        unit_price: 0,
+        min_stock: 0,
         description: "",
         reason: "",
       });
@@ -123,7 +123,7 @@ export default function ProductFormModal({
     isEdit &&
     currentUnitPrice &&
     initialPrice &&
-    parseFloat(currentUnitPrice) !== parseFloat(initialPrice);
+    currentUnitPrice !== initialPrice;
 
   return (
     <Modal
@@ -274,8 +274,8 @@ export default function ProductFormModal({
                   precision={2}
                   style={{ width: "100%" }}
                   disabled={isSubmitting}
-                  value={field.value ? parseFloat(field.value) : undefined}
-                  onChange={(value) => field.onChange(value?.toString() || "")}
+                  value={field.value ? field.value : undefined}
+                  onChange={(value) => field.onChange(value)}
                 />
               )}
             />
@@ -322,8 +322,8 @@ export default function ProductFormModal({
                 precision={0}
                 style={{ width: "100%" }}
                 disabled={isSubmitting}
-                value={field.value ? parseInt(field.value) : undefined}
-                onChange={(value) => field.onChange(value?.toString() || "")}
+                value={field.value ? field.value : undefined}
+                onChange={(value) => field.onChange(value)}
               />
             )}
           />

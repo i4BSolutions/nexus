@@ -2,11 +2,15 @@ import { z } from "zod";
 
 export const productFormInputSchema = z.object({
   sku: z.string().optional(),
-  name: z.string().min(1).max(255).trim(),
+  name: z.string().min(1, "Name is required").max(255).trim(),
   category: z.string().min(1, "Category is required"), // category_name
   currency_code_id: z.string().min(1, "Currency is required"),
-  unit_price: z.string().refine((val) => !isNaN(parseFloat(val))),
-  min_stock: z.string().refine((val) => Number.isInteger(Number(val))),
+  unit_price: z.number().min(0, "Unit price is required"),
+  min_stock: z
+    .number()
+    .min(1, "Min stock level is required")
+    .int()
+    .nonnegative("Must be a valid stock count"),
   reason: z.string().optional(),
   description: z.string().optional(),
 });

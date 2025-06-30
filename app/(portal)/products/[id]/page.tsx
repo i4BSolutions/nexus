@@ -87,14 +87,14 @@ const ProductDetailPage = () => {
     try {
       const payload = {
         ...formData,
-        unit_price: parseFloat(formData.unit_price),
-        min_stock: parseInt(formData.min_stock),
+        unit_price: formData.unit_price,
+        min_stock: formData.min_stock,
         currency_code_id: parseInt(formData.currency_code_id),
       };
       const { reason, ...rest } = payload;
       await updateProduct({ id, data: { ...rest, reason } });
-      message.success("Product updated successfully");
       setOpenProductFormModal(false);
+      message.success("Product updated successfully");
       refetch();
     } catch (error) {
       console.log(error);
@@ -217,8 +217,8 @@ const ProductDetailPage = () => {
             name: productDetail?.name,
             category: productDetail?.category,
             currency_code_id: String(productDetail?.currency_code_id),
-            unit_price: String(productDetail?.unit_price),
-            min_stock: String(productDetail?.min_stock),
+            unit_price: productDetail?.unit_price,
+            min_stock: productDetail?.min_stock,
             description: productDetail?.description ?? "",
           }}
           currencyOptions={currencyOptions}

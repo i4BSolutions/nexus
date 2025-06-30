@@ -60,7 +60,7 @@ export default function ProductsPage() {
   const sortParam =
     sortField && sortOrder
       ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
-      : undefined;
+      : "created_at_desc";
 
   const {
     data: productData,
@@ -145,8 +145,8 @@ export default function ProductsPage() {
     try {
       const payload = {
         ...form,
-        unit_price: parseFloat(form.unit_price),
-        min_stock: parseInt(form.min_stock),
+        unit_price: form.unit_price,
+        min_stock: form.min_stock,
         currency_code_id: parseInt(form.currency_code_id),
       };
 
@@ -156,9 +156,11 @@ export default function ProductsPage() {
           id: String(editProduct?.id),
           data: { ...rest, reason },
         });
+        setIsOpenProductFormModal(false);
         message.success("Product updated successfully");
       } else {
         await createProduct(payload);
+        setIsOpenProductFormModal(false);
         message.success("Product created successfully");
       }
 
@@ -371,8 +373,8 @@ export default function ProductsPage() {
                 name: editProduct.name,
                 category: editProduct.category,
                 currency_code_id: String(editProduct.currency_code_id),
-                unit_price: String(editProduct.unit_price),
-                min_stock: String(editProduct.min_stock),
+                unit_price: editProduct.unit_price,
+                min_stock: editProduct.min_stock,
                 description: editProduct.description ?? "",
               }
             : {
@@ -380,8 +382,8 @@ export default function ProductsPage() {
                 name: "",
                 category: "",
                 currency_code_id: "",
-                unit_price: "",
-                min_stock: "",
+                unit_price: 0,
+                min_stock: 0,
                 description: "",
               }
         }
