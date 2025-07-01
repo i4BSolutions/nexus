@@ -14,12 +14,14 @@ interface CreateCategoryModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: CreateCategoryForm) => void;
+  loading?: boolean;
 }
 
 export default function CreateCategoryModal({
   open,
   onClose,
   onSubmit,
+  loading,
 }: CreateCategoryModalProps) {
   const {
     control,
@@ -70,8 +72,15 @@ export default function CreateCategoryModal({
 
         <Form.Item style={{ textAlign: "left" }}>
           <Space>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button type="primary" htmlType="submit">
+            <Button onClick={handleClose} disabled={isSubmitted}>
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isSubmitted || loading}
+              disabled={isSubmitted || loading}
+            >
               Create
             </Button>
           </Space>

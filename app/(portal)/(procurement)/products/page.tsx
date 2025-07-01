@@ -5,165 +5,134 @@ import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import SearchAndFilters from "@/components/shared/SearchAndFilters";
 import StatisticsCards from "@/components/shared/StatisticsCards";
-import { ProductFormSchema } from "@/schemas/products/products.schemas";
-import { ProductInterface } from "@/types/product/product.type";
+import CreateCategoryModal from "@/components/products/CreateCategoryModal";
+import { ProductFormInput } from "@/schemas/products/products.schemas";
+import {
+  ProductCurrencyInterface,
+  ProductInterface,
+} from "@/types/product/product.type";
 import {
   ExclamationCircleOutlined,
   PlusOutlined,
   TagOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
-import { Button, Divider, message, Space, Table, Tag } from "antd";
+import { Button, Divider, message, Space, Spin, Table, Tag } from "antd";
 import { SortOrder } from "antd/es/table/interface";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
-import CreateCategoryModal from "@/components/products/CreateCategoryModal";
+import { useProducts } from "@/hooks/products/useProducts";
+import { useCreate } from "@/hooks/react-query/useCreate";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { useCategories } from "@/hooks/products/useCategories";
+import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
+import { useProductSKU } from "@/hooks/products/useProductSKU";
+import { CategoryInterface } from "@/types/category/category.type";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function ProductsPage() {
   const router = useRouter();
-  const [products, setProducts] = useState<ProductInterface[]>([]);
-  const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
-    total: 0,
-  });
-  const [counts, setCounts] = useState({
-    total: 0,
-    lowStock: 0,
-    outOfStock: 0,
   });
   const [searchText, setSearchText] = useState("");
-  const [stockStatusFilter, setStockStatusFilter] = useState<
-    string | undefined
-  >();
-  const [selectedCategory, setSelectedCategory] = useState<
-    string | undefined
-  >();
-  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [stockStatusFilter, setStockStatusFilter] = useState<string>();
+  const [selectedCategory, setSelectedCategory] = useState<string>();
+  const [categoryOptions, setCategoryOptions] = useState<CategoryInterface[]>(
+    []
+  );
   const [currencyOptions, setCurrencyOptions] = useState<
-    {
-      id: string;
-      currency_code: string;
-      currency_name: string;
-    }[]
+    ProductCurrencyInterface[]
   >([]);
   const [productSKU, setProductSKU] = useState<string>("");
+  const [sortField, setSortField] = useState<string>();
+  const [sortOrder, setSortOrder] = useState<SortOrder>();
   const [editProduct, setEditProduct] = useState<ProductInterface | null>(null);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
-
   const [isOpenProductFormModal, setIsOpenProductFormModal] = useState(false);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] =
     useState(false);
 
-  useEffect(() => {
-    let mounted = true;
+  const sortParam =
+    sortField && sortOrder
+      ? `${sortField}_${sortOrder === "descend" ? "desc" : "asc"}`
+      : undefined;
 
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({
-          page: pagination.page.toString(),
-          pageSize: pagination.pageSize.toString(),
-        });
-
-        if (searchText.trim()) params.append("search", searchText.trim());
-        if (stockStatusFilter) params.append("stock_status", stockStatusFilter);
-        if (selectedCategory) params.append("category", selectedCategory);
-
-        const res = await fetch(`/api/products?${params.toString()}`);
-        const result = await res.json();
-
-        if (mounted && result.status === "success") {
-          setProducts(result.data.items);
-          setPagination((prev) => ({
-            ...prev,
-            page: result.data.page,
-            pageSize: result.data.pageSize,
-          }));
-          setCounts({
-            total: result.data.total,
-            lowStock: result.data.lowStock,
-            outOfStock: result.data.outOfStock,
-          });
-        }
-      } catch (err) {
-        console.error("Fetch failed:", err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    fetchProducts();
-
-    return () => {
-      mounted = false;
-    };
-  }, [
-    pagination.page,
-    pagination.pageSize,
+  const {
+    data: productData,
+    isLoading: loadingProduct,
+    refetch,
+  } = useProducts({
+    page: pagination.page,
+    pageSize: pagination.pageSize,
     searchText,
     stockStatusFilter,
     selectedCategory,
-  ]);
+    sort: sortParam,
+  });
 
-  const fetchCategories = async () => {
-    const res = await fetch("/api/categories");
-    const data = await res.json();
-    console.log("Data:", data);
-    if (data.status === "success") {
-      const cleaned = data.data
-        .map((cat: any) => cat.category_name)
-        .filter((c: string) => !!c && c.trim());
-      setCategoryOptions(cleaned);
+  useEffect(() => {
+    if (!productData || !productData.data?.items) return;
+
+    const { total } = productData.data;
+    setPagination((prev) => ({ ...prev, total }));
+  }, [productData]);
+
+  const products = productData?.data?.items || [];
+  const {
+    total = 0,
+    lowStock = 0,
+    outOfStock = 0,
+  } = productData?.data?.counts ?? {};
+
+  const counts = { total, lowStock, outOfStock };
+
+  const createProduct = useCreate("products");
+  const updateProduct = useUpdate("products");
+
+  const {
+    data: categories,
+    status: categoriesStatus,
+    refetch: refetchCategory,
+  } = useCategories();
+  const { mutateAsync: createCategory } = useCreate("categories");
+
+  const { data: currencyData, status: currencyStatus } = useProductCurrencies();
+  const {
+    data: skuData,
+    status: skuStatus,
+    refetch: refetchSKU,
+    isLoading: loadingSKU,
+  } = useProductSKU();
+
+  useEffect(() => {
+    if (categoriesStatus === "success" && categories.data) {
+      setCategoryOptions(categories.data);
     }
-  };
+  }, [categories, categoriesStatus]);
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (currencyStatus === "success" && currencyData) {
+      setCurrencyOptions(currencyData);
+    }
+  }, [currencyData]);
 
   useEffect(() => {
-    const fetchProductSKU = async () => {
-      try {
-        const res = await fetch("/api/products/get-product-sku");
-        const data = await res.json();
-
-        if (data.status === "success") {
-          setProductSKU(data.data);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchProductSKU();
-  }, []);
-
-  useEffect(() => {
-    const fetchCurrencies = async () => {
-      try {
-        const res = await fetch("/api/products/get-product-currencies");
-        const data = await res.json();
-        console.log(data);
-        if (data.status === "success") {
-          setCurrencyOptions(data.data);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchCurrencies();
-  }, []);
+    if (skuStatus === "success" && skuData) {
+      setProductSKU(skuData);
+    }
+  }, [skuData]);
 
   const handleAddNewProduct = useCallback(() => {
     setFormMode("create");
     setEditProduct(null);
+    refetchSKU();
     setIsOpenProductFormModal(true);
-  }, []);
+  }, [refetchSKU]);
 
   const handleView = useCallback(
     (product: ProductInterface) => {
@@ -175,58 +144,45 @@ export default function ProductsPage() {
   const handleEdit = useCallback((product: ProductInterface) => {
     setFormMode("edit");
     setEditProduct(product);
-    setIsOpenProductFormModal(true);
+    setIsOpenProductFormModal((prev) => !prev);
   }, []);
 
-  const handleSubmit = async (data: ProductFormSchema) => {
+  const handleSubmit = async (form: ProductFormInput) => {
     try {
-      const url =
-        formMode === "edit"
-          ? `/api/products/${editProduct?.id}`
-          : "/api/products";
-      const method = formMode === "edit" ? "PUT" : "POST";
+      const payload = {
+        ...form,
+        unit_price: form.unit_price,
+        min_stock: form.min_stock,
+        currency_code_id: parseInt(form.currency_code_id),
+      };
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-
-      if (res.ok) {
-        message.success(
-          formMode === "edit"
-            ? "Product updated successfully"
-            : "Product created successfully"
-        );
-        setIsOpenProductFormModal(false);
-        setEditProduct(null);
+      if (formMode === "edit") {
+        const { reason, ...rest } = payload;
+        await updateProduct.mutateAsync({
+          id: String(editProduct?.id),
+          data: { ...rest, reason },
+        });
+        message.success("Product updated successfully");
       } else {
-        message.error(result.message || "Operation failed");
+        await createProduct.mutateAsync(payload);
+        message.success("Product created successfully");
       }
-    } catch {
-      message.error("Unexpected error occurred");
+
+      setIsOpenProductFormModal(false);
+      setEditProduct(null);
+      refetch();
+    } catch (err: any) {
+      console.error(err);
+      message.error("Operation failed");
     }
   };
 
   const handleCreateCategory = async (data: CreateCategoryFormSchema) => {
     try {
-      const res = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category_name: data.category_name }),
-      });
-
-      const result = await res.json();
-
-      if (res.ok) {
-        message.success("Category created successfully");
-        setIsCreateCategoryModalOpen(false);
-        // fetchCategories();
-      } else {
-        message.error(result.message || "Failed to create category");
-      }
+      await createCategory(data);
+      setIsCreateCategoryModalOpen((prev) => !prev);
+      await refetchCategory();
+      message.success("New category created successfully.");
     } catch {
       message.error("Unexpected error creating category");
     }
@@ -241,8 +197,8 @@ export default function ProductsPage() {
       options: [
         { label: "All", value: "" },
         ...categoryOptions.map((cat) => ({
-          label: cat,
-          value: cat,
+          label: cat.category_name,
+          value: cat.category_name,
         })),
       ],
     },
@@ -264,14 +220,9 @@ export default function ProductsPage() {
     {
       title: "PRODUCT SKU",
       dataIndex: "sku",
-      sorter: (a: ProductInterface, b: ProductInterface) =>
-        a.sku.localeCompare(b.sku),
-      sortDirections: ["ascend", "descend"] as SortOrder[],
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
+      key: "sku",
+      sorter: true,
+      sortOrder: sortField === "sku" ? (sortOrder as SortOrder) : undefined,
       render: (sku: string) => (
         <span>
           <TagOutlined style={{ marginRight: 8 }} />
@@ -280,56 +231,31 @@ export default function ProductsPage() {
       ),
     },
     {
-      title: "Name",
+      title: "NAME",
       dataIndex: "name",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
       render: formatField,
     },
     {
-      title: "Category",
+      title: "CATEGORY",
       dataIndex: "category",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
       render: formatField,
     },
     {
-      title: "Unit Price",
+      title: "UNIT PRICE",
       dataIndex: "unit_price",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
       render: (v: number, record: ProductInterface) =>
         `${v} ${
-          currencyOptions.find((c) => Number(c.id) === record.currency_code_id)
+          currencyData?.find((c) => Number(c.id) === record.currency_code_id)
             ?.currency_code ?? ""
         }`,
     },
     {
-      title: "Min Stock",
+      title: "MIN STOCK",
       dataIndex: "min_stock",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
     },
     {
-      title: "Status",
+      title: "STATUS",
       dataIndex: "stock",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
       render: (stock: number, record: ProductInterface) => {
         if (record.min_stock === 0)
           return <Tag color="#F5222D">Out of Stock</Tag>;
@@ -339,27 +265,14 @@ export default function ProductsPage() {
       },
     },
     {
-      title: "Actions",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
+      title: "ACTIONS",
       render: (_: any, product: ProductInterface) => (
-        <Space style={{ display: "flex", gap: 0 }}>
-          <Button
-            type="link"
-            onClick={() => handleView(product)}
-            style={{ padding: 0 }}
-          >
+        <Space>
+          <Button type="link" onClick={() => handleView(product)}>
             View
           </Button>
           <Divider type="vertical" />
-          <Button
-            type="link"
-            onClick={() => handleEdit(product)}
-            style={{ padding: 0 }}
-          >
+          <Button type="link" onClick={() => handleEdit(product)}>
             Edit
           </Button>
         </Space>
@@ -367,14 +280,18 @@ export default function ProductsPage() {
     },
   ];
 
+  if (loadingProduct || loadingSKU)
+    return (
+      <div className="text-center py-20">
+        <Spin />
+      </div>
+    );
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Breadcrumb */}
       <Breadcrumbs
         items={[{ title: "Home", href: "/" }, { title: "Products" }]}
       />
-
-      {/* Header Section */}
       <HeaderSection
         title="Products"
         description="Manage your product catalog"
@@ -383,8 +300,6 @@ export default function ProductsPage() {
         buttonText="New Product"
         buttonIcon={<PlusOutlined />}
       />
-
-      {/* Statistics */}
       <StatisticsCards
         stats={[
           {
@@ -413,11 +328,9 @@ export default function ProductsPage() {
           },
         ]}
       />
-
-      {/* Search & Filter */}
       <SearchAndFilters
         searchPlaceholder="Search by product SKU or Name"
-        onSearch={(text) => setSearchText(text)}
+        onSearch={setSearchText}
         filters={filters}
         onFilterChange={(key, value) => {
           if (key === "category") setSelectedCategory(value);
@@ -428,48 +341,61 @@ export default function ProductsPage() {
           setStockStatusFilter(undefined);
         }}
       />
-
-      {/* Table */}
       <Table
         columns={columns}
         dataSource={products}
         rowKey="id"
-        loading={loading}
+        loading={loadingProduct || loadingSKU}
         pagination={{
           current: pagination.page,
           pageSize: pagination.pageSize,
-          total: counts.total,
-          onChange: (page, pageSize) => {
-            setPagination({
-              page,
-              pageSize: pageSize || 10,
-              total: pagination.total,
-            });
-          },
+          total: total,
+        }}
+        onChange={(pagination, filters, sorter) => {
+          setPagination({
+            page: pagination.current ?? 1,
+            pageSize: pagination.pageSize ?? 10,
+          });
+          if (Array.isArray(sorter)) {
+            const sortInfo = sorter[0];
+            setSortField(sortInfo?.field as string);
+            setSortOrder(sortInfo?.order);
+          } else {
+            setSortField(sorter?.field as string);
+            setSortOrder(sorter?.order);
+          }
         }}
         bordered
       />
 
       <ProductFormModal
         open={isOpenProductFormModal}
+        loading={
+          createProduct.isPending || updateProduct.isPending || loadingSKU
+        }
         onClose={() => {
-          setIsOpenProductFormModal(false);
+          setIsOpenProductFormModal((prev) => !prev);
           setEditProduct(null);
         }}
         onSubmit={handleSubmit}
         onCreateCategory={() => setIsCreateCategoryModalOpen(true)}
         mode={formMode}
         initialValues={
-          formMode === "edit"
+          formMode === "edit" && editProduct
             ? {
-                ...editProduct,
-                currency_code_id: Number(editProduct?.currency_code_id),
+                sku: editProduct.sku,
+                name: editProduct.name,
+                category: editProduct.category,
+                currency_code_id: String(editProduct.currency_code_id),
+                unit_price: editProduct.unit_price,
+                min_stock: editProduct.min_stock,
+                description: editProduct.description ?? "",
               }
             : {
-                sku: productSKU,
+                sku: skuData,
                 name: "",
                 category: "",
-                currency_code_id: 1,
+                currency_code_id: "",
                 unit_price: 0,
                 min_stock: 0,
                 description: "",
