@@ -46,7 +46,11 @@ const ProductDetailPage = () => {
     "deactivate"
   );
 
-  const { data, isLoading, refetch } = useGetById("products", id);
+  const {
+    data,
+    isLoading,
+    refetch: refetchProduct,
+  } = useGetById("products", id);
   const productDetail = data as ProductInterface;
   const updateProduct = useUpdate("products");
 
@@ -101,7 +105,7 @@ const ProductDetailPage = () => {
       const { reason, ...rest } = payload;
       await updateProduct.mutateAsync({ id, data: { ...rest, reason } });
       setOpenProductFormModal(false);
-      refetchProductPriceHistory();
+      await refetchProductPriceHistory();
       message.success("Product updated successfully");
     } catch (error) {
       console.log(error);
@@ -245,6 +249,7 @@ const ProductDetailPage = () => {
           open={isOpenCreateCategoryModal}
           onClose={() => setIsOpenCreateCategoryModal(false)}
           onSubmit={handleCreateCategory}
+          loading={createCategory.isPending}
         />
       )}
 
