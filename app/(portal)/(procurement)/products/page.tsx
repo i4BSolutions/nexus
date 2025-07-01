@@ -371,7 +371,11 @@ export default function ProductsPage() {
 
       <ProductFormModal
         open={isOpenProductFormModal}
-        loading={createProduct.isPending || updateProduct.isPending}
+        loading={
+          editProduct
+            ? updateProduct.isPending
+            : createProduct.isPending || loadingSKU
+        }
         onClose={() => {
           setIsOpenProductFormModal((prev) => !prev);
           setEditProduct(null);

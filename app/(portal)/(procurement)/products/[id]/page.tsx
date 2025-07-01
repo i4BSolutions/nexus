@@ -116,7 +116,7 @@ const ProductDetailPage = () => {
   if (isLoading || !productDetail) {
     return (
       <div className="text-center py-20">
-        <Spin tip="Loading product details..." />
+        <Spin />
       </div>
     );
   }
