@@ -30,4 +30,20 @@ values
   ('Home & Kitchen'),
   ('Stationery');
 
+-- Seed data for the purchase order region table in Supabase
+insert into public.purchase_order_region (name)
+values 
+  ('North Region'),
+  ('South Region'),
+  ('East Region'),
+  ('West Region'),
+  ('Central Region');
 
+-- Seed data for the purchase order currency table in Supabase
+insert into public.purchase_order_currency (currency_name, currency_code)
+values
+  ('US Dollar', 'USD'),
+  ('Euro', 'EUR'),
+  ('Japanese Yen', 'JPY'),
+  ('British Pound', 'GBP'),
+  ('Canadian Dollar', 'CAD');
