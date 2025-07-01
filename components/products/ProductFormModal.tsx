@@ -112,8 +112,8 @@ export default function ProductFormModal({
 
   const showPriceChangeReason =
     isEdit &&
-    currentUnitPrice &&
-    initialPrice &&
+    typeof currentUnitPrice === "number" &&
+    typeof initialPrice === "number" &&
     currentUnitPrice !== initialPrice;
 
   if (loading) {
