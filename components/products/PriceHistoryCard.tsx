@@ -24,7 +24,11 @@ const PriceHistoryCard = ({
         borderRadius: 12,
         overflow: "hidden",
       }}
-      bodyStyle={{ padding: 0 }}
+      styles={{
+        body: {
+          padding: 0,
+        },
+      }}
     >
       {/* Header */}
       <div

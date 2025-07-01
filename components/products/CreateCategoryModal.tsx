@@ -72,7 +72,7 @@ export default function CreateCategoryModal({
 
         <Form.Item style={{ textAlign: "left" }}>
           <Space>
-            <Button onClick={handleClose} disabled={isSubmitted}>
+            <Button onClick={handleClose} disabled={isSubmitted || loading}>
               Cancel
             </Button>
             <Button

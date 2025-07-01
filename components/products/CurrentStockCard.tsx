@@ -23,7 +23,7 @@ export default function CurrentStockCard({
 
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       style={{
         maxWidth: "100%",
         width: 564,
@@ -32,7 +32,11 @@ export default function CurrentStockCard({
         borderWidth: 1,
         borderColor: "#F9F0FF",
       }}
-      bodyStyle={{ padding: 0 }}
+      styles={{
+        body: {
+          padding: 0,
+        },
+      }}
     >
       {/* Header */}
       <div

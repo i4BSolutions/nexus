@@ -65,7 +65,7 @@ export default function ProductsPage() {
   const {
     data: productData,
     isLoading: loadingProduct,
-    refetch,
+    refetch: refetchProduct,
   } = useProducts({
     page: pagination.page,
     pageSize: pagination.pageSize,
@@ -99,7 +99,7 @@ export default function ProductsPage() {
     status: categoriesStatus,
     refetch: refetchCategory,
   } = useCategories();
-  const { mutateAsync: createCategory } = useCreate("categories");
+  const createCategory = useCreate("categories");
 
   const { data: currencyData, status: currencyStatus } = useProductCurrencies();
   const {
@@ -170,7 +170,7 @@ export default function ProductsPage() {
 
       setIsOpenProductFormModal(false);
       setEditProduct(null);
-      refetch();
+      await refetchProduct();
     } catch (err: any) {
       console.error(err);
       message.error("Operation failed");
@@ -179,11 +179,12 @@ export default function ProductsPage() {
 
   const handleCreateCategory = async (data: CreateCategoryFormSchema) => {
     try {
-      await createCategory(data);
+      await createCategory.mutateAsync(data);
       setIsCreateCategoryModalOpen((prev) => !prev);
       await refetchCategory();
       message.success("New category created successfully.");
-    } catch {
+    } catch (err: any) {
+      console.error(err);
       message.error("Unexpected error creating category");
     }
   };
@@ -371,7 +372,9 @@ export default function ProductsPage() {
       <ProductFormModal
         open={isOpenProductFormModal}
         loading={
-          createProduct.isPending || updateProduct.isPending || loadingSKU
+          editProduct
+            ? updateProduct.isPending || loadingSKU
+            : createProduct.isPending || loadingSKU
         }
         onClose={() => {
           setIsOpenProductFormModal((prev) => !prev);
@@ -392,7 +395,7 @@ export default function ProductsPage() {
                 description: editProduct.description ?? "",
               }
             : {
-                sku: skuData,
+                sku: skuData ?? "",
                 name: "",
                 category: "",
                 currency_code_id: "",
@@ -409,6 +412,7 @@ export default function ProductsPage() {
         open={isCreateCategoryModalOpen}
         onClose={() => setIsCreateCategoryModalOpen(false)}
         onSubmit={handleCreateCategory}
+        loading={createCategory.isPending}
       />
     </section>
   );
