@@ -373,7 +373,7 @@ export default function ProductsPage() {
         open={isOpenProductFormModal}
         loading={
           editProduct
-            ? updateProduct.isPending
+            ? updateProduct.isPending || loadingSKU
             : createProduct.isPending || loadingSKU
         }
         onClose={() => {
@@ -395,7 +395,7 @@ export default function ProductsPage() {
                 description: editProduct.description ?? "",
               }
             : {
-                sku: skuData,
+                sku: skuData ?? "",
                 name: "",
                 category: "",
                 currency_code_id: "",

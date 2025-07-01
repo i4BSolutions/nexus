@@ -8,7 +8,6 @@ import {
   InputNumber,
   Select,
   Space,
-  Spin,
   message,
 } from "antd";
 import {
@@ -116,13 +115,8 @@ export default function ProductFormModal({
     typeof initialPrice === "number" &&
     currentUnitPrice !== initialPrice;
 
-  if (loading) {
-    return (
-      <div className="text-center py-20">
-        <Spin />
-      </div>
-    );
-  }
+  const isSubmitDisabled =
+    isSubmitting || loading || (mode === "create" && !watch("sku"));
 
   return (
     <Modal
@@ -358,7 +352,7 @@ export default function ProductFormModal({
               type="primary"
               htmlType="submit"
               loading={isSubmitting || loading}
-              disabled={isSubmitting || loading}
+              disabled={isSubmitDisabled}
             >
               {isEdit ? "Update Product" : "Add Product"}
             </Button>
