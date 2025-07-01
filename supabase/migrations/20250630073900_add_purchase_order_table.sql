@@ -21,7 +21,7 @@ CREATE UNIQUE INDEX purchase_order_pkey ON public.purchase_order USING btree (id
 
 alter table "public"."purchase_order" add constraint "purchase_order_pkey" PRIMARY KEY using index "purchase_order_pkey";
 
-alter table "public"."purchase_order" add constraint "purchase_order_currency_id_fkey" FOREIGN KEY (currency_id) REFERENCES purchase_order_currency(id) ON DELETE RESTRICT not valid;
+alter table "public"."purchase_order" add constraint "purchase_order_currency_id_fkey" FOREIGN KEY (currency_id) REFERENCES product_currency(id) ON DELETE RESTRICT not valid;
 
 alter table "public"."purchase_order" validate constraint "purchase_order_currency_id_fkey";
 
