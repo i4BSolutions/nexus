@@ -37,6 +37,7 @@ const StatisticsCards = ({ stats }: { stats: StatItem[] }) => {
               borderColor: item.borderColor,
               background: item.gradient,
               boxSizing: "border-box",
+              height: "100%",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -67,33 +68,30 @@ const StatisticsCards = ({ stats }: { stats: StatItem[] }) => {
               </div>
             </div>
 
-            <div style={{ fontSize: 24, fontWeight: 600, marginTop: 8 }}>
+            <div style={{ fontSize: 24, fontWeight: 600 }}>
               {item.isCurrency && typeof item.value === "number"
                 ? `$ ${item.value.toLocaleString()}`
                 : item.value}
             </div>
 
-            <div style={{ fontSize: 12, color: "#888", marginTop: 4 }}>
-              {item.bottomText}
-            </div>
+            <div style={{ fontSize: 12, color: "#888" }}>{item.bottomText}</div>
 
-            <div style={{ marginTop: 8 }}>
-              {item.showProgress && typeof item.progressPercent === "number" ? (
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <Progress
-                    percent={item.progressPercent}
-                    strokeColor={item.bgColor}
-                    trailColor="#f0f0f0"
-                    showInfo={false}
-                    style={{ flex: 1, marginRight: 8 }}
-                  />
-                  <span style={{ fontSize: 14 }}>
-                    {item.progressPercent.toFixed(2)}%
-                  </span>
-                </div>
-              ) : (
-                <div style={{ height: 24 }} />
-              )}
+            <div style={{}}>
+              {item.showProgress &&
+                typeof item.progressPercent === "number" && (
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <Progress
+                      percent={item.progressPercent}
+                      strokeColor={item.bgColor}
+                      trailColor="#f0f0f0"
+                      showInfo={false}
+                      style={{ flex: 1, marginRight: 8 }}
+                    />
+                    <span style={{ fontSize: 14 }}>
+                      {item.progressPercent.toFixed(2)}%
+                    </span>
+                  </div>
+                )}
             </div>
           </Card>
         </Col>

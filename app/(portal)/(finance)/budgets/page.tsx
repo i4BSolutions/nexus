@@ -36,7 +36,6 @@ const stats: StatItem[] = [
     isCurrency: true,
     showProgress: true,
     progressPercent: 60,
-    bottomText: "Across 4 active budget projects",
   },
   {
     title: "Total Invoiced",
@@ -49,7 +48,6 @@ const stats: StatItem[] = [
     isCurrency: true,
     showProgress: true,
     progressPercent: 66.66,
-    bottomText: "Across 4 active budget projects",
   },
   {
     title: "Avg. Utilization",
