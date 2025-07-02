@@ -54,7 +54,7 @@ export default function CreatePurchaseOrderPage() {
       case 1:
         return (
           <StepDateCurrency
-            // ref={currentStepRef}
+            ref={currentStepRef}
             onNext={handleNext}
             onBack={handleBack}
             formData={formData}
