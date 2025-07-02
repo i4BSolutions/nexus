@@ -18,7 +18,7 @@ export default function CreationSteps({
       current={currentStep}
       items={steps}
       size="default"
-      style={{ background: "white", padding: 16 }}
+      style={{ background: "white" }}
     />
   );
 }
