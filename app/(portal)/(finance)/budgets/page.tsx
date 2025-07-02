@@ -5,6 +5,9 @@ import BudgetStatsCard, {
 } from "@/components/budgets/BudgetStatsCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
+import { apiGet } from "@/lib/react-query/apiClient";
+import { BudgetStatistics } from "@/types/budgets/budgets.type";
+import { mapBudgetStatsToItems } from "@/utils/mapStatistics";
 import {
   ArrowUpOutlined,
   CheckCircleOutlined,
@@ -12,6 +15,7 @@ import {
   DollarOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
+import { useQuery } from "@tanstack/react-query";
 
 const stats: StatItem[] = [
   {
@@ -62,6 +66,15 @@ const stats: StatItem[] = [
 ];
 
 export default function BudgetsPage() {
+  const { data: statsData } = useQuery({
+    queryKey: ["statistics"],
+    queryFn: () => apiGet("api/budgets/statistics"),
+  });
+
+  const stats = statsData
+    ? mapBudgetStatsToItems(statsData as BudgetStatistics)
+    : [];
+
   const handleAddNewProduct = () => {
     console.log("Add new product");
   };

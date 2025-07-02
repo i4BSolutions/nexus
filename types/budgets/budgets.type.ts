@@ -14,7 +14,17 @@ export interface Budget {
   updated_at?: string;
 }
 
-export interface BudgetsResponse {
+export interface BudgetAuditLog {
+  id: number;
+  budget_id: number;
+  action: string;
+  changes: string;
+  ip_address: string;
+  performed_by: string;
+  created_at: string;
+}
+
+export interface BudgetResponse {
   items: Budget[];
   total: number;
   page: number;
@@ -24,4 +34,13 @@ export interface BudgetsResponse {
     active: number;
     inactive: number;
   };
+}
+
+export interface BudgetStatistics {
+  totalPlannedUSD: number; // Total planned budget amount in USD
+  totalAllocatedUSD: number; // Total allocated budget amount in USD
+  totalInvoicedUSD: number; // Total invoiced budget amount in USD
+  allocationPercentage: number;
+  invoiceUtilizationPercentage: number;
+  averageUtilization: number;
 }
