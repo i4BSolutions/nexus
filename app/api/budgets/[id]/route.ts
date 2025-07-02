@@ -4,12 +4,67 @@ import { ApiResponse } from "@/types/api-response-type";
 import { Budget } from "@/types/budgets/budgets.type";
 import { NextRequest, NextResponse } from "next/server";
 
+export async function GET(
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse<ApiResponse<Budget | null>>> {
+  const { id: idStr } = await context.params;
+  const id = parseInt(idStr);
+
+  if (!id) {
+    return NextResponse.json(error("Invalid budget ID", 400), {
+      status: 400,
+    });
+  }
+
+  const supabase = await createClient();
+
+  const { data, error: dbError } = await supabase
+    .from("budgets")
+    .select(
+      `
+      id,
+      budget_name,
+      project_name,
+      description,
+      start_date,
+      end_date,
+      currency_code,
+      exchange_rate_usd,
+      planned_amount,
+      planned_amount_usd,
+      status,
+      created_by,
+      created_at,
+      updated_at
+      `
+    )
+    .eq("id", id)
+    .single();
+
+  if (dbError || !data) {
+    return NextResponse.json(error("Budget not found", 404), {
+      status: 404,
+    });
+  }
+
+  return NextResponse.json(success(data, "Budget retrieved successfully"), {
+    status: 200,
+  });
+}
+
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse<Budget | null>>> {
+  const { id: idStr } = await context.params;
+  const id = parseInt(idStr);
+
+  if (!id) {
+    return NextResponse.json(error("Invalid budget ID", 400), { status: 400 });
+  }
+
   const supabase = await createClient();
-  const id = params.id;
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
   const body = await req.json();
   const userId = body.updated_by || "system";
@@ -54,10 +109,16 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse<Budget | null>>> {
+  const { id: idStr } = await context.params;
+  const id = parseInt(idStr);
+
+  if (!id) {
+    return NextResponse.json(error("Invalid budget ID", 400), { status: 400 });
+  }
+
   const supabase = await createClient();
-  const id = params.id;
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
 
   const { data: old } = await supabase
