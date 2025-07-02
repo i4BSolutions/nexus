@@ -12,6 +12,7 @@ insert into public.product_currency (currency_code, currency_name, is_active)
 values
   ('MMK', 'Myanmar Kyat', true),
   ('USD', 'United States Dollar', true),
+  ('THB', 'Thai Baht', true),
   ('EUR', 'Euro', true);
   
 -- Seed data for the product table in Supabase
@@ -38,12 +39,3 @@ values
   ('East Region'),
   ('West Region'),
   ('Central Region');
-
--- Seed data for the purchase order currency table in Supabase
-insert into public.purchase_order_currency (currency_name, currency_code)
-values
-  ('US Dollar', 'USD'),
-  ('Euro', 'EUR'),
-  ('Japanese Yen', 'JPY'),
-  ('British Pound', 'GBP'),
-  ('Canadian Dollar', 'CAD');
