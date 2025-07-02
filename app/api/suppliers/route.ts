@@ -16,15 +16,23 @@ import {
  */
 export async function GET(
   req: NextRequest
-): Promise<NextResponse<ApiResponse<SuppliersResponse> | ApiResponse<null>>> {
+): Promise<
+  NextResponse<
+    | ApiResponse<SuppliersResponse>
+    | ApiResponse<SupplierInterface[]>
+    | ApiResponse<null>
+  >
+> {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
 
   // Pagination
   const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+  const pageSizeParam = searchParams.get("pageSize") || "10";
+  const pageSize =
+    pageSizeParam === "all" ? "all" : parseInt(pageSizeParam, 10);
+  const from = (page - 1) * (pageSize === "all" ? 0 : pageSize);
+  const to = pageSize === "all" ? undefined : from + pageSize - 1;
 
   const search = searchParams.get("q") || "";
 
@@ -56,8 +64,10 @@ export async function GET(
     query = query.order("inserted_at", { ascending: false });
   }
 
-  // Apply pagination
-  query = query.range(from, to);
+  // Apply pagination only if pageSize is not 'all'
+  if (pageSize !== "all" && typeof to === "number") {
+    query = query.range(from, to);
+  }
 
   const { data: items, error: dbError, count } = await query;
 
@@ -84,7 +94,7 @@ export async function GET(
     items: items || [],
     total: count || 0,
     page,
-    pageSize,
+    pageSize: pageSize === "all" ? count || 0 : pageSize,
     statistics: {
       total: totalResult.count || 0,
       active: activeResult.count || 0,
