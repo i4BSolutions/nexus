@@ -1,7 +1,6 @@
 "use client";
 
 import { Button, Form, Input, Modal, Typography } from "antd";
-import { useEffect } from "react";
 
 interface Props {
   open: boolean;
@@ -14,6 +13,7 @@ export default function RegionCreateModal({ open, onClose, onSubmit }: Props) {
 
   const handleFinish = (values: { name: string }) => {
     onSubmit(values);
+    form.resetFields();
   };
 
   return (
