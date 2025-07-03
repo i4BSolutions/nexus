@@ -24,13 +24,14 @@ const StatisticsCards = ({ stats }: { stats: StatItem[] }) => {
         <Col xs={24} sm={12} md={12} lg={6} key={index}>
           <Card
             size="small"
-            bordered
-            bodyStyle={{
-              padding: "12px 24px",
-              minHeight: 121,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
+            styles={{
+              body: {
+                padding: "12px 24px",
+                minHeight: 121,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              },
             }}
             style={{
               borderRadius: 12,
