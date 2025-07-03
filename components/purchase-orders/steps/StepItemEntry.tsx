@@ -258,6 +258,18 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                                 }
                                 return false;
                               }}
+                              onChange={(value) => {
+                                // Auto-select the currency from previous step
+                                const currentItems =
+                                  form.getFieldValue("items") || [];
+                                currentItems[name] = {
+                                  ...currentItems[name],
+                                  product: value,
+                                  currency_code_id: formData?.currency || "",
+                                };
+                                form.setFieldValue("items", currentItems);
+                                forceUpdate();
+                              }}
                             />
                           </Form.Item>
                         </Col>
@@ -299,6 +311,7 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                                     ? "Loading currencies..."
                                     : "Select currency"
                                 }
+                                disabled
                                 loading={currenciesLoading}
                                 options={currenciesData?.map(
                                   (currency: ProductCurrencyInterface) => ({
