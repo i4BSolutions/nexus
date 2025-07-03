@@ -1,16 +1,44 @@
 "use client";
 
+import BudgetCard from "@/components/budgets/BudgetCard";
 import BudgetStatsCard from "@/components/budgets/BudgetStatsCard";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
+import { useList } from "@/hooks/react-query/useList";
 import { apiGet } from "@/lib/react-query/apiClient";
-import { BudgetStatistics } from "@/types/budgets/budgets.type";
+import {
+  Budget,
+  BudgetResponse,
+  BudgetStatistics,
+} from "@/types/budgets/budgets.type";
 import { mapBudgetStatsToItems } from "@/utils/mapStatistics";
 import { DollarCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Empty, Spin } from "antd";
+import { SortOrder } from "antd/es/table/interface";
+import { useState } from "react";
 
 export default function BudgetsPage() {
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [searchText, setSearchText] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [sortField, setSortField] = useState<string | undefined>();
+  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>("descend");
+
+  const sortParam =
+    sortField && sortOrder
+      ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
+      : "";
+
+  const { data: budgetsData, isLoading: loadingBudgets } = useList("budgets", {
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    q: searchText,
+    status: statusFilter || "",
+    sort: sortParam,
+  });
+  const budgets = budgetsData as BudgetResponse;
+
   const { data: statsData, isLoading: loadingStatistics } = useQuery({
     queryKey: ["statistics"],
     queryFn: () => apiGet("api/budgets/statistics"),
@@ -68,6 +96,9 @@ export default function BudgetsPage() {
       />
 
       <BudgetStatsCard stats={stats} />
+      <div style={{ marginTop: 32 }}>
+        <BudgetCard data={budgets} />
+      </div>
     </section>
   );
 }
