@@ -18,7 +18,12 @@ export default function CreationSteps({
       current={currentStep}
       items={steps}
       size="default"
-      style={{ background: "white" }}
+      style={{
+        background: "white",
+        margin: "12px 0",
+        height: "76px",
+        alignItems: "center",
+      }}
     />
   );
 }
