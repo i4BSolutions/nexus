@@ -3,6 +3,8 @@ import type { ThemeConfig } from "antd";
 const customAntTheme: ThemeConfig = {
   token: {
     colorBgContainer: "#FFFFFF",
+    colorPrimary: "#722ED1",
+    colorPrimaryBorder: "#722ED1",
   },
   components: {
     Button: {
@@ -29,6 +31,12 @@ const customAntTheme: ThemeConfig = {
       itemHoverBg: "#F9F0FF",
       itemBorderRadius: 0,
       itemMarginInline: 0,
+    },
+    Segmented: {
+      itemSelectedBg: "#722ED1",
+      itemSelectedColor: "#FFFFFF",
+      trackBg: "#FFFFFF",
+      trackPadding: 0,
     },
   },
 };

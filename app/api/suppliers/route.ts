@@ -1,11 +1,11 @@
+import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse, NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { ApiResponse, PaginatedResponse } from "@/types/api-response-type";
+import { ApiResponse } from "@/types/shared/api-response-type";
 import {
   SupplierInterface,
   SuppliersResponse,
 } from "@/types/supplier/supplier.type";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * This API route retrieves all suppliers from the database with
