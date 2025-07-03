@@ -195,7 +195,12 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                 >
                   <Select
                     size="large"
-                    placeholder="Select currency"
+                    placeholder={
+                      currenciesLoading
+                        ? "Loading currencies..."
+                        : "Select currency"
+                    }
+                    loading={currenciesLoading}
                     options={currenciesData?.map(
                       (currency: ProductCurrencyInterface) => ({
                         value: currency.id,

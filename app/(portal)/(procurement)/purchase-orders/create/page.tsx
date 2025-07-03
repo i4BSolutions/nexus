@@ -63,7 +63,7 @@ export default function CreatePurchaseOrderPage() {
       case 2:
         return (
           <StepItemEntry
-            // ref={currentStepRef}
+            ref={currentStepRef}
             onNext={handleNext}
             onBack={handleBack}
             formData={formData}

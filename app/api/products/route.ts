@@ -22,11 +22,14 @@ export async function GET(req: NextRequest): Promise<
   const category = searchParams.get("category") || "";
   const stockStatus = searchParams.get("stock_status");
   const sort = searchParams.get("sort") || "name";
+  const isActiveParam = searchParams.get("status");
 
   const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+  const pageSizeParam = searchParams.get("pageSize") || "10";
+  const pageSize =
+    pageSizeParam === "all" ? "all" : parseInt(pageSizeParam, 10);
+  const from = (page - 1) * (pageSize === "all" ? 0 : pageSize);
+  const to = pageSize === "all" ? undefined : from + pageSize - 1;
 
   try {
     // Fetch all products for lowStock & outOfStock
@@ -70,6 +73,12 @@ export async function GET(req: NextRequest): Promise<
       filtered = filtered.filter((p) => p.stock === 0);
     }
 
+    if (isActiveParam === "true") {
+      filtered = filtered.filter((p) => p.is_active === true);
+    } else if (isActiveParam === "false") {
+      filtered = filtered.filter((p) => p.is_active === false);
+    }
+
     // Sort
     filtered.sort((a, b) => {
       const valA = a[sort as keyof ProductInterface];
@@ -80,7 +89,12 @@ export async function GET(req: NextRequest): Promise<
     });
 
     // Paginate
-    const paginated = filtered.slice(from, to + 1);
+    let paginated;
+    if (pageSize === "all") {
+      paginated = filtered;
+    } else {
+      paginated = filtered.slice(from, (to as number) + 1);
+    }
 
     const response: PaginatedResponse<ProductInterface> & {
       lowStock: number;
@@ -89,7 +103,7 @@ export async function GET(req: NextRequest): Promise<
       items: paginated,
       total: allProducts.length,
       page,
-      pageSize,
+      pageSize: pageSize === "all" ? filtered.length : pageSize,
       lowStock,
       outOfStock,
     };
