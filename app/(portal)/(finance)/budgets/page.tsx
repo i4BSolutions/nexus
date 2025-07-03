@@ -8,9 +8,10 @@ import { BudgetStatistics } from "@/types/budgets/budgets.type";
 import { mapBudgetStatsToItems } from "@/utils/mapStatistics";
 import { DollarCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
+import { Empty, Spin } from "antd";
 
 export default function BudgetsPage() {
-  const { data: statsData } = useQuery({
+  const { data: statsData, isLoading: loadingStatistics } = useQuery({
     queryKey: ["statistics"],
     queryFn: () => apiGet("api/budgets/statistics"),
   });
@@ -22,6 +23,35 @@ export default function BudgetsPage() {
   const handleAddNewProduct = () => {
     console.log("Add new product");
   };
+
+  if (loadingStatistics)
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Spin />
+      </div>
+    );
+
+  if (stats.length === 0 || !stats)
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Empty />
+      </div>
+    );
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <Breadcrumbs
