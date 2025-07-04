@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Space, Typography, Button } from "antd";
+import { Space, Typography, Button, message } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 
@@ -20,9 +20,12 @@ export default function CreatePurchaseOrderPage() {
   const currentStepRef = useRef<any>(null);
 
   const handleNext = (values: any) => {
-    console.log("Step values:", values);
-    setFormData({ ...formData, ...values });
-    setCurrentStep(currentStep + 1);
+    if (currentStep < 4) {
+      setFormData({ ...formData, ...values });
+      setCurrentStep(currentStep + 1);
+    } else {
+      router.push("/purchase-orders");
+    }
   };
 
   const handleBack = () => {
@@ -30,11 +33,11 @@ export default function CreatePurchaseOrderPage() {
   };
 
   const handleCancel = () => {
+    message.info("Purchase order not created");
     router.push("/purchase-orders");
   };
 
   const handleNextClick = () => {
-    // Trigger the current step's form submission
     if (currentStepRef.current?.submitForm) {
       currentStepRef.current.submitForm();
     }
@@ -81,7 +84,7 @@ export default function CreatePurchaseOrderPage() {
       case 4:
         return (
           <StepReviewSubmit
-            // ref={currentStepRef}
+            ref={currentStepRef}
             onNext={handleNext}
             onBack={handleBack}
             formData={formData}
@@ -153,12 +156,8 @@ export default function CreatePurchaseOrderPage() {
           >
             Previous
           </Button>
-          <Button
-            type="primary"
-            disabled={currentStep === 4}
-            onClick={handleNextClick}
-          >
-            {currentStep === 4 ? "Submit" : "Next"}
+          <Button type="primary" onClick={handleNextClick}>
+            {currentStep === 4 ? "Create" : "Next"}
           </Button>
         </Space>
       </Space>
