@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GoogleOutlined, MailOutlined } from "@ant-design/icons";
 import { App, Button, Image, Input, Typography } from "antd";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { signInWithOtp } from "../actions";
 
 export default function LoginPage() {
@@ -41,11 +41,13 @@ export default function LoginPage() {
     });
   };
 
-  const googleLoginHandler = async () => {
+  useEffect(() => {
     if (!navigator.onLine) {
       message.error("You are offline! Please check your internet connection.");
-      return;
     }
+  }, [email]);
+
+  const googleLoginHandler = async () => {
     startGoogleRequest(async () => {
       const data = await fetch(
         `/api/auth/check-user?email=${encodeURIComponent(email)}`
