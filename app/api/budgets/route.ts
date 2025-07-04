@@ -2,6 +2,7 @@ import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { ApiResponse } from "@/types/api-response-type";
 import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
+import dayjs from "dayjs";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -124,15 +125,19 @@ export async function POST(
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
   const userId = body.created_by || "system";
 
-  const planned_amount_usd = body.planned_amount / body.exchange_rate_usd;
-  const payload = { ...body, planned_amount_usd };
+  if (!body.planned_amount || !body.exchange_rate_usd) {
+    return NextResponse.json(error("Invalid data", 400), { status: 400 });
+  }
+
+  // const planned_amount_usd = body.planned_amount / body.exchange_rate_usd;
+  const { planned_amount_usd, ...payload } = body;
 
   const { data: created, error: dbError } = await supabase
     .from("budgets")
     .insert([payload])
     .select()
     .single();
-
+  console.log(dbError?.message);
   if (dbError)
     return NextResponse.json(error("Failed to create budget", 500), {
       status: 500,

@@ -4,6 +4,7 @@ import CreationSteps from "@/components/budgets/CreationSteps";
 import StepBudgetDetails from "@/components/budgets/steps/StepBudgetDetails";
 import StepFinancialParameters from "@/components/budgets/steps/StepFinancialParameters";
 import StepReviewAndSubmit from "@/components/budgets/steps/StepReviewAndSubmit";
+import { BudgetFormInput } from "@/schemas/budgets/budgets.schema";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Button, message, Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
@@ -15,18 +16,18 @@ const CreateBudgetPage = () => {
   const [formData, setFormData] = useState<any>({});
   const currentStepRef = useRef<any>(null);
 
-  const handleNext = (values: any) => {
+  const handleNext = (values: BudgetFormInput) => {
     console.log("Step values:", values);
     setFormData({ ...formData, ...values, status: "Active" });
-    setCurrentStep(currentStep + 1);
+    setCurrentStep((prevStep) => prevStep + 1);
   };
 
   const handleBack = () => {
-    setCurrentStep(currentStep - 1);
+    setCurrentStep((prevStep) => prevStep - 1);
   };
 
   const handleCancel = () => {
-    message.info("Budget not created");
+    message.info("Budget creation cancelled");
     router.push("/budgets");
   };
 
@@ -61,7 +62,7 @@ const CreateBudgetPage = () => {
         return (
           <StepReviewAndSubmit
             ref={currentStepRef}
-            onNext={handleNext}
+            onNext={() => router.push("/budgets")}
             onBack={handleBack}
             formData={formData}
           />
