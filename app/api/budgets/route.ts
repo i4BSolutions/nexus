@@ -137,7 +137,7 @@ export async function POST(
     .insert([payload])
     .select()
     .single();
-  console.log(dbError?.message);
+
   if (dbError)
     return NextResponse.json(error("Failed to create budget", 500), {
       status: 500,
