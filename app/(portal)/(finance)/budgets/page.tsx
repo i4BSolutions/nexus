@@ -21,6 +21,8 @@ import { Empty, Flex, Spin, Input, Select, Button, Segmented } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 
 export default function BudgetsPage() {
   const [statItems, setStatItems] = useState<StatItem[]>([]);
@@ -44,6 +46,8 @@ export default function BudgetsPage() {
     sort: sortParam,
   });
   const budgets = budgetsData as BudgetResponse;
+
+  const router = useRouter();
 
   const { data: statsData, isLoading: loadingStatistics } = useQuery({
     queryKey: ["statistics"],
@@ -70,9 +74,9 @@ export default function BudgetsPage() {
     console.log(`View changed to ${value}`);
   };
 
-  const handleAddNewProduct = () => {
-    console.log("Add new product");
-  };
+  const handleAddNewBudget = useCallback(() => {
+    router.push("/budgets/create");
+  }, []);
 
   if (loadingStatistics || loadingBudgets)
     return (
@@ -112,7 +116,7 @@ export default function BudgetsPage() {
         title="Budgets"
         description="Create and manage budgets for projects and operations"
         icon={<DollarCircleOutlined />}
-        onAddNew={handleAddNewProduct}
+        onAddNew={handleAddNewBudget}
         buttonText="New Budget"
         buttonIcon={<PlusOutlined />}
       />
