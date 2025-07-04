@@ -1,18 +1,52 @@
 "use client";
 
-import BudgetStatsCard from "@/components/budgets/BudgetStatsCard";
+import BudgetCard from "@/components/budgets/BudgetCard";
+import BudgetStatsCard, {
+  StatItem,
+} from "@/components/budgets/BudgetStatsCard";
+import TableView from "@/components/budgets/TableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
+import { useList } from "@/hooks/react-query/useList";
 import { apiGet } from "@/lib/react-query/apiClient";
-import { BudgetStatistics } from "@/types/budgets/budgets.type";
+import {
+  Budget,
+  BudgetResponse,
+  BudgetStatistics,
+} from "@/types/budgets/budgets.type";
 import { mapBudgetStatsToItems } from "@/utils/mapStatistics";
 import { DollarCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import { Empty, Spin } from "antd";
+import { Empty, Flex, Spin, Input, Select, Button, Segmented } from "antd";
+import { SearchProps } from "antd/es/input";
+import { SortOrder } from "antd/es/table/interface";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 export default function BudgetsPage() {
+  const [statItems, setStatItems] = useState<StatItem[]>([]);
+  const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [searchText, setSearchText] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [sortField, setSortField] = useState<string | undefined>();
+  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>("descend");
+
+  const sortParam =
+    sortField && sortOrder
+      ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
+      : "";
+
+  const { data: budgetsData, isLoading: loadingBudgets } = useList("budgets", {
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    q: searchText,
+    status: statusFilter || "",
+    sort: sortParam,
+  });
+  const budgets = budgetsData as BudgetResponse;
+
   const router = useRouter();
 
   const { data: statsData, isLoading: loadingStatistics } = useQuery({
@@ -24,11 +58,27 @@ export default function BudgetsPage() {
     ? mapBudgetStatsToItems(statsData as BudgetStatistics)
     : [];
 
+  const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) =>
+    console.log(info?.source, value);
+
+  const onSortHandler = (value: string) => {
+    console.log(`selected ${value}`);
+  };
+
+  const statusChangeHandler = (value: string) => {
+    console.log(`selected ${value}`);
+  };
+
+  const viewChangeHandler = (value: "Card" | "Table") => {
+    setViewMode(value);
+    console.log(`View changed to ${value}`);
+  };
+
   const handleAddNewBudget = useCallback(() => {
     router.push("/budgets/create");
   }, []);
 
-  if (loadingStatistics)
+  if (loadingStatistics || loadingBudgets)
     return (
       <div
         style={{
@@ -42,7 +92,7 @@ export default function BudgetsPage() {
       </div>
     );
 
-  if (stats.length === 0 || !stats)
+  if (stats.length === 0 || budgets.items.length === 0 || !stats || !budgets)
     return (
       <div
         style={{
@@ -72,6 +122,78 @@ export default function BudgetsPage() {
       />
 
       <BudgetStatsCard stats={stats} />
+
+      <Flex
+        justify="center"
+        align="center"
+        gap={12}
+        style={{ marginTop: 12, marginBottom: 12 }}
+      >
+        <Input.Search
+          placeholder="Search By PO Number"
+          allowClear
+          onSearch={onSearchHandler}
+        />
+        <Flex justify="center" align="center" gap={12}>
+          <span>Sort:</span>
+          <Select
+            defaultValue="Date (Newest First)"
+            style={{ width: 160 }}
+            onChange={onSortHandler}
+            options={[
+              {
+                value: "Date (Newest First)",
+                label: "Date (Newest First)",
+              },
+              {
+                value: "Date (Oldest First)",
+                label: "Date (Oldest First)",
+              },
+            ]}
+          />
+        </Flex>
+        <div className="bg-[#D9D9D9] w-[1px] h-7" />
+        <Flex justify="center" align="center" gap={12}>
+          <span>Filter(s):</span>
+          <Select
+            defaultValue="All Status"
+            style={{ width: 160 }}
+            onChange={statusChangeHandler}
+            options={[
+              {
+                value: "All Status",
+                label: "All Status",
+              },
+              {
+                value: "Active",
+                label: "Active",
+              },
+              {
+                value: "Inactive",
+                label: "Inactive",
+              },
+            ]}
+          />
+          <Button
+            type="link"
+            style={{ padding: 0 }}
+            onClick={() => console.log("Clear Filters")}
+          >
+            Clear Filter(s)
+          </Button>
+        </Flex>
+        <div className="bg-[#D9D9D9] w-[1px] h-7" />
+        <Segmented<"Card" | "Table">
+          options={["Card", "Table"]}
+          style={{ borderRadius: 9, border: "1px solid #D9D9D9" }}
+          onChange={viewChangeHandler}
+        />
+      </Flex>
+      {viewMode === "Card" ? (
+        <BudgetCard data={budgets} />
+      ) : (
+        <TableView data={budgets.items} />
+      )}
     </section>
   );
 }

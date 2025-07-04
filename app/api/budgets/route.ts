@@ -102,7 +102,7 @@ export async function GET(
       success(
         {
           items: enrichedItems,
-          total: filteredBudgets.length,
+          total: allBudgets.length,
           page,
           pageSize,
           statistics,

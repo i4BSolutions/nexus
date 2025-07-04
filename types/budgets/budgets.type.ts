@@ -9,6 +9,12 @@ export interface Budget {
   planned_amount: number;
   planned_amount_usd: number;
   status: "Active" | "Inactive";
+  allocated_variance_usd?: number;
+  allocated_amount_usd?: number;
+  invoiced_amount_usd?: number;
+  allocation_percentage?: number;
+  unutilized_amount_usd?: number;
+  utilization_percentage?: number;
   created_by?: string;
   created_at?: string;
   updated_at?: string;
