@@ -4,7 +4,17 @@ import {
   EllipsisOutlined,
   InfoOutlined,
 } from "@ant-design/icons";
-import { Button, Col, Flex, Progress, Row, Tooltip, Typography } from "antd";
+import {
+  Button,
+  Col,
+  Flex,
+  Pagination,
+  Progress,
+  Row,
+  Tooltip,
+  Typography,
+} from "antd";
+import StatusBadge from "./StatusBadge";
 
 export default function CardView({ data }: { data: PurchaseOrderType[] }) {
   return (
@@ -48,24 +58,7 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
                     >
                       {item.order_date}
                     </Typography.Text>
-                    <div
-                      style={{
-                        color:
-                          item.status === "Approved" ? "#52C41A" : "#FAAD14",
-                        background:
-                          item.status === "Approved" ? "#F6FFED" : "#FFFBE6",
-                        border:
-                          item.status === "Approved"
-                            ? "1px solid #B7EB8F"
-                            : "1px solid #FFE58F",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                        fontWeight: 400,
-                        padding: "0 8px",
-                      }}
-                    >
-                      {item.status}
-                    </div>
+                    <StatusBadge status={item.status} />
                   </div>
                 </Col>
                 <Col span={6} className="!grid !place-items-center">
@@ -167,7 +160,7 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
                 <Col span={12}>
                   <Typography.Text type="secondary">
                     Allocated(USD){" "}
-                    <Tooltip title="Total amount invoiced in USD">
+                    <Tooltip title="Total amount allocated in USD">
                       <InfoOutlined
                         style={{
                           cursor: "pointer",
@@ -212,6 +205,12 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
           </div>
         ))}
       </div>
+      <Flex justify="space-between" align="center" className="!pb-10 !pt-6">
+        <div>
+          <Typography.Text type="secondary">Total 12 items</Typography.Text>
+        </div>
+        <Pagination defaultCurrent={1} total={data.length} />
+      </Flex>
     </section>
   );
 }

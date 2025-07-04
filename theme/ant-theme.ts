@@ -20,6 +20,8 @@ const customAntTheme: ThemeConfig = {
     },
     Table: {
       borderColor: "#F5F5F5",
+      footerBg: "#FFFFFF",
+      headerSplitColor: "#fafafa",
     },
     Form: {
       verticalLabelPadding: 0,

@@ -13,15 +13,7 @@ import {
   ShoppingCartOutlined,
   UpCircleOutlined,
 } from "@ant-design/icons";
-import {
-  Button,
-  Flex,
-  Input,
-  Pagination,
-  Segmented,
-  Select,
-  Typography,
-} from "antd";
+import { Button, Flex, Input, Segmented, Select } from "antd";
 import { SearchProps } from "antd/es/input";
 import { useState } from "react";
 
@@ -216,14 +208,11 @@ export default function PurchaseOrdersPage() {
           onChange={viewChangeHandler}
         />
       </Flex>
-      {viewMode === "Card" ? <CardView data={data} /> : <TableView />}
-      <Flex justify="space-between" align="center" className="!pb-10">
-        <div>
-          {" "}
-          <Typography.Text type="secondary">Total 12 items</Typography.Text>
-        </div>
-        <Pagination defaultCurrent={1} total={data.length} />
-      </Flex>
+      {viewMode === "Card" ? (
+        <CardView data={data} />
+      ) : (
+        <TableView data={data} />
+      )}
     </section>
   );
 }
