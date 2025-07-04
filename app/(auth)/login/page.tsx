@@ -17,6 +17,10 @@ export default function LoginPage() {
 
   const loginHandler = async () => {
     if (!email) return;
+    if (!navigator.onLine) {
+      message.error("You are offline! Please check your internet connection.");
+      return;
+    }
     startOtpRequest(async () => {
       try {
         await signInWithOtp(email);
@@ -38,6 +42,10 @@ export default function LoginPage() {
   };
 
   const googleLoginHandler = async () => {
+    if (!navigator.onLine) {
+      message.error("You are offline! Please check your internet connection.");
+      return;
+    }
     startGoogleRequest(async () => {
       const data = await fetch(
         `/api/auth/check-user?email=${encodeURIComponent(email)}`
