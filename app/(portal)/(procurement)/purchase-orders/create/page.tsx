@@ -72,7 +72,7 @@ export default function CreatePurchaseOrderPage() {
       case 3:
         return (
           <StepContactPersons
-            // ref={currentStepRef}
+            ref={currentStepRef}
             onNext={handleNext}
             onBack={handleBack}
             formData={formData}
