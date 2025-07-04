@@ -5,7 +5,7 @@ import StepBudgetDetails from "@/components/budgets/steps/StepBudgetDetails";
 import StepFinancialParameters from "@/components/budgets/steps/StepFinancialParameters";
 import StepReviewAndSubmit from "@/components/budgets/steps/StepReviewAndSubmit";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { Button, Space, Typography } from "antd";
+import { Button, message, Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
 
@@ -17,7 +17,7 @@ const CreateBudgetPage = () => {
 
   const handleNext = (values: any) => {
     console.log("Step values:", values);
-    setFormData({ ...formData, ...values });
+    setFormData({ ...formData, ...values, status: "Active" });
     setCurrentStep(currentStep + 1);
   };
 
@@ -26,7 +26,8 @@ const CreateBudgetPage = () => {
   };
 
   const handleCancel = () => {
-    router.push("/purchase-orders");
+    message.info("Budget not created");
+    router.push("/budgets");
   };
 
   const handleNextClick = () => {
@@ -59,7 +60,7 @@ const CreateBudgetPage = () => {
       case 2:
         return (
           <StepReviewAndSubmit
-            // ref={currentStepRef}
+            ref={currentStepRef}
             onNext={handleNext}
             onBack={handleBack}
             formData={formData}
@@ -130,7 +131,7 @@ const CreateBudgetPage = () => {
             disabled={currentStep === 4}
             onClick={handleNextClick}
           >
-            {currentStep === 4 ? "Submit" : "Next"}
+            {currentStep === 4 ? "Create" : "Next"}
           </Button>
         </Space>
       </Space>
