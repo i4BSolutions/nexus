@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GoogleOutlined, MailOutlined } from "@ant-design/icons";
 import { App, Button, Image, Input, Typography } from "antd";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { signInWithOtp } from "../actions";
 
 export default function LoginPage() {
@@ -41,19 +41,13 @@ export default function LoginPage() {
     });
   };
 
-  useEffect(() => {
-    if (!navigator.onLine) {
-      message.error("You are offline! Please check your internet connection.");
-    }
-  }, [email]);
-
   const googleLoginHandler = async () => {
     startGoogleRequest(async () => {
       const data = await fetch(
         `/api/auth/check-user?email=${encodeURIComponent(email)}`
       );
       const { exists } = await data.json();
-      if (exists) {
+      if (exists && data.status === 200) {
         const supabase = createClient();
         await supabase.auth.signInWithOAuth({
           provider: "google",
@@ -61,7 +55,7 @@ export default function LoginPage() {
             redirectTo: `${location.origin}/api/auth/callback`,
           },
         });
-      } else {
+      } else if (!exists && data.status === 200) {
         message.error("Account not provisioned in system!");
         await fetch("/api/auth/login-audit", {
           method: "POST",
@@ -73,6 +67,8 @@ export default function LoginPage() {
             method: "Google SSO",
           }),
         });
+      } else {
+        message.error("Please check your internet connection!");
       }
     });
   };

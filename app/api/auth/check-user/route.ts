@@ -22,5 +22,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ exists: data.length > 0 });
+  return NextResponse.json({ exists: data.length > 0 }, { status: 200 });
 }
