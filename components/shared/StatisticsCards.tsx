@@ -1,56 +1,68 @@
-import React from "react";
-import { Row, Col, Card, Statistic, Space } from "antd";
-
-type StatItem = {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  bgColor: string;
-  gradient: string;
-  borderColor: string;
-};
+import { StatItem } from "@/types/shared/stat-item.type";
+import { InfoCircleOutlined } from "@ant-design/icons";
+import { Card, Flex, Space, Statistic, Tooltip, Typography } from "antd";
 
 const StatisticsCards = ({ stats }: { stats: StatItem[] }) => (
-  <Row gutter={16} className="mb-6">
+  <Flex className="!mb-6" gap={12}>
     {stats.map((item, index) => (
-      <Col span={8} key={index}>
-        <Card
-          size="small"
+      <Card
+        size="small"
+        style={{
+          borderColor: item.borderColor,
+          background: item.gradient,
+          padding: "4px 24px",
+          width: "100%",
+        }}
+        key={index}
+      >
+        <Space
           style={{
-            borderColor: item.borderColor,
-            background: item.gradient,
-            padding: "12px 24px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+            marginBottom: 4,
           }}
         >
-          <Space
+          <Flex vertical gap={4}>
+            <Typography.Text type="secondary">
+              {item.title}{" "}
+              {item.tooltip && (
+                <Tooltip title={item.tooltip}>
+                  <InfoCircleOutlined style={{ cursor: "pointer" }} />
+                </Tooltip>
+              )}
+            </Typography.Text>
+            <Statistic
+              value={item.value}
+              prefix={item.prefix}
+              suffix={item.suffix}
+            />
+          </Flex>
+          <div
             style={{
+              width: 32,
+              height: 32,
+              background: item.bgColor,
+              borderRadius: "100%",
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: "center",
               alignItems: "center",
-              width: "100%",
+              color: "white",
+              fontSize: 20,
             }}
           >
-            <Statistic title={item.title} value={item.value} />
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                background: item.bgColor,
-                borderRadius: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              {React.cloneElement(item.icon as any, {
-                style: { fontSize: 20, color: "white" },
-              })}
-            </div>
-          </Space>
-        </Card>
-      </Col>
+            {item.icon}
+          </div>
+        </Space>
+        {stats[0].title === "Total POs" && index !== 0 && (
+          <Typography.Text type="secondary">
+            Across {stats[0].value} approved POs
+          </Typography.Text>
+        )}
+      </Card>
     ))}
-  </Row>
+  </Flex>
 );
 
 export default StatisticsCards;
