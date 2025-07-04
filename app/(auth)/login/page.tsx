@@ -43,31 +43,33 @@ export default function LoginPage() {
 
   const googleLoginHandler = async () => {
     startGoogleRequest(async () => {
-      const data = await fetch(
-        `/api/auth/check-user?email=${encodeURIComponent(email)}`
-      );
-      const { exists } = await data.json();
-      if (exists && data.status === 200) {
-        const supabase = createClient();
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: `${location.origin}/api/auth/callback`,
-          },
-        });
-      } else if (!exists && data.status === 200) {
-        message.error("Account not provisioned in system!");
-        await fetch("/api/auth/login-audit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            method: "Google SSO",
-          }),
-        });
-      } else {
+      try {
+        const data = await fetch(
+          `/api/auth/check-user?email=${encodeURIComponent(email)}`
+        );
+        const { exists } = await data.json();
+        if (exists && data.status === 200) {
+          const supabase = createClient();
+          await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: `${location.origin}/api/auth/callback`,
+            },
+          });
+        } else if (!exists && data.status === 200) {
+          message.error("Account not provisioned in system!");
+          await fetch("/api/auth/login-audit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              method: "Google SSO",
+            }),
+          });
+        }
+      } catch (error) {
         message.error("Please check your internet connection!");
       }
     });
