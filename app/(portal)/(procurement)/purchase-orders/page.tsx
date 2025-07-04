@@ -15,6 +15,7 @@ import {
 } from "@ant-design/icons";
 import { Button, Flex, Input, Segmented, Select } from "antd";
 import { SearchProps } from "antd/es/input";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const initialStatItems = [
@@ -116,6 +117,7 @@ export default function PurchaseOrdersPage() {
   const [statItems, setStatItems] = useState<StatItem[]>(initialStatItems);
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
   const [data, setData] = useState<PurchaseOrderType[]>(dummyData);
+  const router = useRouter();
 
   const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) =>
     console.log(info?.source, value);
@@ -142,7 +144,7 @@ export default function PurchaseOrdersPage() {
         title="Purchase Orders"
         description="Manage and track all purchase orders"
         icon={<ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />}
-        onAddNew={() => console.log("Add New Purchase Order")}
+        onAddNew={() => router.push("/purchase-orders/create")}
         buttonText="New Purchase Order"
         buttonIcon={<PlusOutlined />}
       />
