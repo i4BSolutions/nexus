@@ -143,7 +143,6 @@ const StepContactPersons = forwardRef(function StepContactPersons(
             allowClear
             showSearch
             filterOption={(input, option) => {
-              if (option?.value === "create_new") return false;
               return (option?.label as string)
                 ?.toLowerCase()
                 .includes(input.toLowerCase());
@@ -152,7 +151,7 @@ const StepContactPersons = forwardRef(function StepContactPersons(
               ...(getFilteredOptions([signPerson, authorizedSignPerson]) || []),
               {
                 label: (
-                  <span
+                  <div
                     onClick={() => {
                       setPersonCreateTargetField("contact_person");
                       setIsPersonCreateModalOpen(true);
@@ -160,9 +159,8 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                   >
                     <PlusCircleOutlined style={{ marginRight: 8 }} />
                     Create New
-                  </span>
+                  </div>
                 ),
-                value: "create_new",
               },
             ]}
             style={{ width: "100%" }}
@@ -210,7 +208,6 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                 allowClear
                 showSearch
                 filterOption={(input, option) => {
-                  if (option?.value === "create_new") return false;
                   return (option?.label as string)
                     ?.toLowerCase()
                     .includes(input.toLowerCase());
@@ -222,7 +219,7 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                   ]) || []),
                   {
                     label: (
-                      <span
+                      <div
                         onClick={() => {
                           setPersonCreateTargetField("sign_person");
                           setIsPersonCreateModalOpen(true);
@@ -230,9 +227,8 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                       >
                         <PlusCircleOutlined style={{ marginRight: 8 }} />
                         Create New
-                      </span>
+                      </div>
                     ),
-                    value: "create_new",
                   },
                 ]}
                 style={{ width: "100%" }}
@@ -279,7 +275,6 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                 allowClear
                 showSearch
                 filterOption={(input, option) => {
-                  if (option?.value === "create_new") return false;
                   return (option?.label as string)
                     ?.toLowerCase()
                     .includes(input.toLowerCase());
@@ -288,7 +283,7 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                   ...(getFilteredOptions([contactPerson, signPerson]) || []),
                   {
                     label: (
-                      <span
+                      <div
                         onClick={() => {
                           setPersonCreateTargetField("authorized_sign_person");
                           setIsPersonCreateModalOpen(true);
@@ -296,9 +291,8 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                       >
                         <PlusCircleOutlined style={{ marginRight: 8 }} />
                         Create New
-                      </span>
+                      </div>
                     ),
-                    value: "create_new",
                   },
                 ]}
                 style={{ width: "100%" }}

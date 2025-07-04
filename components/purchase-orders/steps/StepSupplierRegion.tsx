@@ -231,12 +231,11 @@ const StepSupplierRegion = forwardRef<
                   label: s.name,
                 })) || []),
                 {
-                  value: "create_new",
                   label: (
-                    <span onClick={() => setIsSupplierModalOpen(true)}>
+                    <div onClick={() => setIsSupplierModalOpen(true)}>
                       <PlusCircleOutlined style={{ marginRight: 8 }} />
                       Create New Supplier
-                    </span>
+                    </div>
                   ),
                 },
               ]}
@@ -292,12 +291,11 @@ const StepSupplierRegion = forwardRef<
               options={[
                 ...regionOptions,
                 {
-                  value: "create_new",
                   label: (
-                    <span onClick={() => setIsRegionModalOpen(true)}>
+                    <div onClick={() => setIsRegionModalOpen(true)}>
                       <PlusCircleOutlined style={{ marginRight: 8 }} />
                       Create New Region
-                    </span>
+                    </div>
                   ),
                 },
               ]}

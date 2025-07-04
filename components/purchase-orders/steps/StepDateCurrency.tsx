@@ -5,6 +5,9 @@ import { forwardRef, useEffect, useImperativeHandle } from "react";
 // Ant Design
 import { Space, Typography, Form, DatePicker, Select, Input } from "antd";
 
+// Day.js
+import dayjs from "dayjs";
+
 // React Query
 import { useQuery } from "@tanstack/react-query";
 
@@ -100,7 +103,13 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                 name="order_date"
                 rules={[{ required: true, message: "Order date is required" }]}
               >
-                <DatePicker size="large" style={{ width: "100%" }} />
+                <DatePicker
+                  size="large"
+                  style={{ width: "100%" }}
+                  disabledDate={(current) =>
+                    current && current < dayjs().startOf("day")
+                  }
+                />
               </Form.Item>
 
               <Form.Item
@@ -129,7 +138,13 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                   },
                 ]}
               >
-                <DatePicker size="large" style={{ width: "100%" }} />
+                <DatePicker
+                  size="large"
+                  style={{ width: "100%" }}
+                  disabledDate={(current) =>
+                    current && current < dayjs().startOf("day")
+                  }
+                />
               </Form.Item>
             </Space>
 
