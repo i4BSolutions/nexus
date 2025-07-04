@@ -8,7 +8,9 @@ export const BudgetSchema = z.object({
   currency_code: z.string().min(1, "Currency is required"),
   exchange_rate_usd: z.number().positive("Exchange rate must be > 0"),
   planned_amount: z.number().positive("Planned amount must be > 0"),
+  planned_amount_usd: z.number().positive("Planned amount usd must be > 0"),
   status: z.enum(["Active", "Inactive"]),
+  description: z.string().optional(),
 });
 
 export type BudgetFormInput = z.infer<typeof BudgetSchema>;

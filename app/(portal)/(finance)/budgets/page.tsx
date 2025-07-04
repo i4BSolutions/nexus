@@ -9,8 +9,12 @@ import { mapBudgetStatsToItems } from "@/utils/mapStatistics";
 import { DollarCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Empty, Spin } from "antd";
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 
 export default function BudgetsPage() {
+  const router = useRouter();
+
   const { data: statsData, isLoading: loadingStatistics } = useQuery({
     queryKey: ["statistics"],
     queryFn: () => apiGet("api/budgets/statistics"),
@@ -20,9 +24,9 @@ export default function BudgetsPage() {
     ? mapBudgetStatsToItems(statsData as BudgetStatistics)
     : [];
 
-  const handleAddNewProduct = () => {
-    console.log("Add new product");
-  };
+  const handleAddNewBudget = useCallback(() => {
+    router.push("/budgets/create");
+  }, []);
 
   if (loadingStatistics)
     return (
@@ -62,7 +66,7 @@ export default function BudgetsPage() {
         title="Budgets"
         description="Create and manage budgets for projects and operations"
         icon={<DollarCircleOutlined />}
-        onAddNew={handleAddNewProduct}
+        onAddNew={handleAddNewBudget}
         buttonText="New Budget"
         buttonIcon={<PlusOutlined />}
       />
