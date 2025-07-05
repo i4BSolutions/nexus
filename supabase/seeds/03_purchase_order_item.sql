@@ -472,3 +472,41 @@ VALUES
         '2025-07-01T11:31:50.989449',
         '2025-07-01T11:31:50.989449'
     );
+
+INSERT INTO
+    public.purchase_order_items (
+        purchase_order_id,
+        product_id,
+        quantity,
+        unit_price_local,
+        created_at,
+        updated_at
+    )
+VALUES
+    (
+        11,
+        1,
+        10,
+        22.33,
+        '2025-07-01T11:31:50.989481',
+        '2025-07-01T11:31:50.989481'
+    );
+
+INSERT INTO
+    public.purchase_order_items (
+        purchase_order_id,
+        product_id,
+        quantity,
+        unit_price_local,
+        created_at,
+        updated_at
+    )
+VALUES
+    (
+        12,
+        2,
+        5,
+        18.67,
+        '2025-07-01T11:31:50.989484',
+        '2025-07-01T11:31:50.989484'
+    );

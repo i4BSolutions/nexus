@@ -367,3 +367,77 @@ VALUES
         '2025-07-01T11:31:50.989421',
         '2025-07-01T11:31:50.989421'
     );
+
+INSERT INTO
+    public.purchase_order (
+        purchase_order_no,
+        supplier_id,
+        region_id,
+        budget_id,
+        order_date,
+        currency_id,
+        usd_exchange_rate,
+        contact_person_id,
+        sign_person_id,
+        authorized_signer_id,
+        status,
+        note,
+        expected_delivery_date,
+        created_at,
+        updated_at
+    )
+VALUES
+    (
+        'PO-2025-1011',
+        2,
+        2,
+        113,
+        '2025-05-22',
+        1,
+        1.5678,
+        11,
+        NULL,
+        NULL,
+        'Draft',
+        'Requires inspection',
+        '2025-06-01',
+        '2025-07-01T11:31:50.989457',
+        '2025-07-01T11:31:50.989457'
+    );
+
+INSERT INTO
+    public.purchase_order (
+        purchase_order_no,
+        supplier_id,
+        region_id,
+        budget_id,
+        order_date,
+        currency_id,
+        usd_exchange_rate,
+        contact_person_id,
+        sign_person_id,
+        authorized_signer_id,
+        status,
+        note,
+        expected_delivery_date,
+        created_at,
+        updated_at
+    )
+VALUES
+    (
+        'PO-2025-1012',
+        4,
+        2,
+        115,
+        '2025-05-15',
+        1,
+        1.7890,
+        12,
+        NULL,
+        NULL,
+        'Draft',
+        'Urgent delivery',
+        '2025-05-25',
+        '2025-07-01T11:31:50.989493',
+        '2025-07-01T11:31:50.989493'
+    );
