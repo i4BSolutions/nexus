@@ -246,6 +246,21 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                   name="exchange_rate"
                   rules={[
                     { required: true, message: "Exchange rate is required" },
+                    {
+                      pattern: /^\d+(\.\d{1,4})?$/,
+                      message:
+                        "Exchange rate must be a positive number with up to 4 decimal places",
+                    },
+                    {
+                      validator: (_, value) => {
+                        if (value && parseFloat(value) <= 0) {
+                          return Promise.reject(
+                            new Error("Exchange rate must be greater than 0")
+                          );
+                        }
+                        return Promise.resolve();
+                      },
+                    },
                   ]}
                 >
                   <Input size="large" placeholder="Enter exchange rate" />
