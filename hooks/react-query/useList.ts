@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/react-query/apiClient";
+import { useQuery } from "@tanstack/react-query";
 
-export function useList(
+export function useList<T>(
   resource: string,
   { page = 1, pageSize = 10, q = "", status = "", sort = "" } = {}
 ) {
@@ -15,7 +15,7 @@ export function useList(
 
   return useQuery({
     queryKey: [resource, "list", page, pageSize, q, status, sort],
-    queryFn: () => apiGet(`/api/${resource}?${queryString}`),
+    queryFn: () => apiGet<T>(`/api/${resource}?${queryString}`),
     placeholderData: (previousData) => previousData,
   });
 }
