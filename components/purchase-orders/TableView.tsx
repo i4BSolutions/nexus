@@ -13,9 +13,13 @@ import StatusBadge from "./StatusBadge";
 
 export default function TableView({
   data,
+  total,
+  pagination,
   paginationChangeHandler,
 }: {
   data: GetPurchaseOrderDto[];
+  total: number;
+  pagination: { page: number; pageSize: number };
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
   const columns: TableProps<GetPurchaseOrderDto>["columns"] = [
@@ -114,7 +118,8 @@ export default function TableView({
             </Typography.Text>
             <Pagination
               defaultCurrent={1}
-              total={data.length}
+              current={pagination.page}
+              total={total}
               onChange={paginationChangeHandler}
             />
           </div>

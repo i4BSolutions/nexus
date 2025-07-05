@@ -31,6 +31,7 @@ export default function PurchaseOrdersPage() {
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+  const [total, setTotal] = useState<number>(0);
 
   const router = useRouter();
   const { data: poData, isPending } = useList<GetPurchaseOrderResponse>(
@@ -62,6 +63,7 @@ export default function PurchaseOrdersPage() {
         total_allocated_amount: item.allocated_amount || 0,
       }));
       setData(data);
+      setTotal(poData.total);
       setStatItems([
         {
           title: "Total POs",
@@ -229,12 +231,16 @@ export default function PurchaseOrdersPage() {
       {viewMode === "Card" ? (
         <CardView
           data={data}
+          pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
+          total={total}
         />
       ) : (
         <TableView
           data={data}
+          pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
+          total={total}
         />
       )}
     </section>

@@ -35,9 +35,13 @@ const items: MenuProps["items"] = [
 
 export default function CardView({
   data,
+  pagination,
+  total,
   paginationChangeHandler,
 }: {
   data: GetPurchaseOrderDto[];
+  pagination: { page: number; pageSize: number };
+  total: number;
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
   return (
@@ -249,12 +253,14 @@ export default function CardView({
       <Flex justify="space-between" align="center" className="!pb-10 !pt-6">
         <div>
           <Typography.Text type="secondary">
-            Total {data.length} items
+            Total {total} items
           </Typography.Text>
         </div>
         <Pagination
           defaultCurrent={1}
-          total={data.length}
+          current={pagination.page}
+          pageSize={pagination.pageSize}
+          total={total}
           onChange={paginationChangeHandler}
         />
       </Flex>

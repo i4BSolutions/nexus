@@ -127,7 +127,8 @@ export async function GET(
         quantity,
         unit_price_local
       )
-    `
+    `,
+    { count: "exact" }
   );
 
   if (poNumber) {
@@ -146,8 +147,13 @@ export async function GET(
     query = query.range(from, to);
   }
 
-  const { data, error: getError } = (await query) as unknown as {
+  const {
+    data,
+    count,
+    error: getError,
+  } = (await query) as unknown as {
     data: any[] | null;
+    count: number | null;
     error: any;
   };
 
@@ -175,11 +181,11 @@ export async function GET(
 
   const GetPurchaseOrderResponse: GetPurchaseOrderResponse = {
     dto: orders || [],
-    total: orders ? orders.length : 0,
+    total: count || 0,
     page,
     pageSize: pageSize,
     statistics: {
-      total: orders ? orders.length : 0,
+      total: count || 0,
       total_approved: orders
         ? orders.filter((order) => order.status === "Approved").length
         : 0,
