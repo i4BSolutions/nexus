@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, forwardRef, useImperativeHandle } from "react";
-import { Space, Typography, Form, Row, Col, Tag, message } from "antd";
+import { Space, Typography, Form, Row, Col, Tag, App } from "antd";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 
 // Hooks
@@ -28,6 +28,8 @@ const StepReviewSubmit = forwardRef(function StepReviewSubmit(
   { onNext, onBack, formData }: StepReviewSubmitProps,
   ref
 ) {
+  const { message } = App.useApp();
+
   const [form] = Form.useForm();
 
   const { data: supplierData } = useGetById("suppliers", formData?.supplier);
@@ -96,10 +98,8 @@ const StepReviewSubmit = forwardRef(function StepReviewSubmit(
   };
 
   const getTotal = () => {
-    const items = (form.getFieldValue("items") as any[]) || [];
-    const exchangeRate = form.getFieldValue("exchange_rate")
-      ? Number(form.getFieldValue("exchange_rate"))
-      : 0;
+    const items = formData.items;
+    const exchangeRate = formData.exchange_rate;
     let totalLocal = 0;
 
     items.forEach((item: any) => {
@@ -297,7 +297,7 @@ const StepReviewSubmit = forwardRef(function StepReviewSubmit(
             </Row>
             {formData?.items?.map((item: any, index: number) => (
               <Row
-                key={item.id}
+                key={index}
                 gutter={16}
                 style={{
                   margin: "0 6px 0 0",

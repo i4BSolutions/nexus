@@ -9,7 +9,7 @@ import {
   PlusOutlined,
   ShopOutlined,
 } from "@ant-design/icons";
-import { Button, Divider, message, Space, Table, Tag } from "antd";
+import { App, Button, Divider, Space, Table, Tag } from "antd";
 import type { SortOrder } from "antd/es/table/interface";
 
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -32,6 +32,8 @@ const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function SuppliersPage() {
+  const { message } = App.useApp();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] =
     useState<SupplierInterface | null>(null);
