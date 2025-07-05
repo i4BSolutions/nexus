@@ -18,3 +18,31 @@ export interface PurchaseOrderInterface {
   items: PurchaseOrderItemInterface[];
   created_at: string;
 }
+
+export interface GetPurchaseOrderDto {
+  id: number;
+  purchase_order_no: string;
+  order_date: string;
+  status: string;
+  currency_code: string;
+  usd_exchange_rate: number;
+  amount: number;
+  contact_person: string;
+  expected_delivery_date: string;
+  invoiced_amount?: number;
+  allocated_amount?: number;
+}
+
+export interface GetPurchaseOrderResponse {
+  dto: GetPurchaseOrderDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+  statistics: {
+    total: number;
+    total_approved: number;
+    total_usd_value: number;
+    invoiced_percentage: number;
+    allocated_percentage: number;
+  };
+}
