@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Space, Typography, Button, message, Tooltip, Spin } from "antd";
+import { Space, Typography, Button, Spin, App } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -15,8 +15,11 @@ import StepReviewSubmit from "@/components/purchase-orders/steps/StepReviewSubmi
 import WarningModal from "@/components/purchase-orders/WarningModal";
 
 export default function CreatePurchaseOrderPage() {
+  const { message } = App.useApp();
+
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<any>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
