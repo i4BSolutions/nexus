@@ -11,7 +11,7 @@ import { PurchaseOrderDraftInterface } from "@/types/purchase-order/purchase-ord
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<
   NextResponse<ApiResponse<PurchaseOrderDraftInterface> | ApiResponse<null>>
 > {
@@ -26,10 +26,12 @@ export async function GET(
     return NextResponse.json(error("Unauthorized"), { status: 401 });
   }
 
+  const { id: idStr } = await context.params;
+
   const { data: draft, error: draftError } = await supabase
     .from("purchase_order_drafts")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", idStr)
     .eq("user_id", user.id)
     .single();
 
@@ -44,7 +46,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<
   NextResponse<ApiResponse<PurchaseOrderDraftInterface> | ApiResponse<null>>
 > {
@@ -95,10 +97,12 @@ export async function PUT(
     updated_at: new Date().toISOString(),
   };
 
+  const { id: idStr } = await context.params;
+
   const { data: draft, error: draftError } = await supabase
     .from("purchase_order_drafts")
     .update(updateData)
-    .eq("id", params.id)
+    .eq("id", idStr)
     .eq("user_id", user.id)
     .select()
     .single();

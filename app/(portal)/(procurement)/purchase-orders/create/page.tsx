@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Space, Typography, Button, Spin, App } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 // Components
 import CreationSteps from "@/components/purchase-orders/CreationSteps";
@@ -18,7 +18,7 @@ export default function CreatePurchaseOrderPage() {
   const { message } = App.useApp();
 
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const params = useParams();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<any>({});
@@ -30,11 +30,11 @@ export default function CreatePurchaseOrderPage() {
 
   // Load draft if specified in URL
   useEffect(() => {
-    const draftId = searchParams.get("draft");
+    const draftId = params?.id as string;
     if (draftId) {
       loadDraft(draftId);
     }
-  }, [searchParams]);
+  }, [params]);
 
   // Track unsaved changes
   useEffect(() => {
