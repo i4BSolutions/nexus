@@ -284,6 +284,22 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                                 required: true,
                                 message: "Quantity is required",
                               },
+                              {
+                                pattern: /^[1-9]\d*$/,
+                                message: "Quantity cannot be 0",
+                              },
+                              {
+                                validator: (_, value) => {
+                                  if (value && parseFloat(value) <= 0) {
+                                    return Promise.reject(
+                                      new Error(
+                                        "Quantity must be greater than 0"
+                                      )
+                                    );
+                                  }
+                                  return Promise.resolve();
+                                },
+                              },
                             ]}
                             style={{ marginBottom: 0 }}
                           >
@@ -327,6 +343,22 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                                 {
                                   required: true,
                                   message: "Unit price is required",
+                                },
+                                {
+                                  pattern: /^[1-9]\d*$/,
+                                  message: "Unit price cannot be 0",
+                                },
+                                {
+                                  validator: (_, value) => {
+                                    if (value && parseFloat(value) <= 0) {
+                                      return Promise.reject(
+                                        new Error(
+                                          "Unit price must be greater than 0"
+                                        )
+                                      );
+                                    }
+                                    return Promise.resolve();
+                                  },
                                 },
                               ]}
                               style={{ marginBottom: 0 }}
