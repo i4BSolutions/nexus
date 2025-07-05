@@ -27,6 +27,7 @@ interface StepSupplierRegionProps {
 
 export interface StepSupplierRegionRef {
   submitForm: () => void;
+  getFormData: () => any;
 }
 
 const fetchRegions = async () => {
@@ -139,6 +140,7 @@ const StepSupplierRegion = forwardRef<
   // Expose submitForm method to parent component
   useImperativeHandle(ref, () => ({
     submitForm: handleNext,
+    getFormData: () => form.getFieldsValue(),
   }));
 
   return (

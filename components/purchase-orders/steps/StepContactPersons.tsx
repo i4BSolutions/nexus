@@ -17,10 +17,15 @@ interface StepContactPersonsProps {
   formData?: any;
 }
 
-const StepContactPersons = forwardRef(function StepContactPersons(
-  { onNext, onBack, formData }: StepContactPersonsProps,
-  ref
-) {
+export interface StepContactPersonsRef {
+  submitForm: () => void;
+  getFormData: () => any;
+}
+
+const StepContactPersons = forwardRef<
+  StepContactPersonsRef,
+  StepContactPersonsProps
+>(({ onNext, onBack, formData }, ref) => {
   const [form] = Form.useForm();
 
   const [isPersonCreateModalOpen, setIsPersonCreateModalOpen] = useState(false);
@@ -39,6 +44,7 @@ const StepContactPersons = forwardRef(function StepContactPersons(
     submitForm: () => {
       form.submit();
     },
+    getFormData: () => form.getFieldsValue(),
   }));
 
   const handleNext = () => {

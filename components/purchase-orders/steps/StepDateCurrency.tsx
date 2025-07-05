@@ -22,6 +22,7 @@ interface StepDateCurrencyProps {
 
 export interface StepDateCurrencyRef {
   submitForm: () => void;
+  getFormData: () => any;
 }
 
 // TODO: Fetch budgets
@@ -63,6 +64,7 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
 
     useImperativeHandle(ref, () => ({
       submitForm: handleNext,
+      getFormData: () => form.getFieldsValue(),
     }));
 
     return (

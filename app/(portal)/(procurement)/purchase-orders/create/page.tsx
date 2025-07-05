@@ -97,6 +97,15 @@ export default function CreatePurchaseOrderPage() {
   };
 
   const handleBack = () => {
+    // Save current form data if not on step 0 (StepSupplierRegion)
+    if (currentStep > 0) {
+      // Get current form data from the step component without validation
+      if (currentStepRef.current?.getFormData) {
+        const currentStepData = currentStepRef.current.getFormData();
+        setFormData((prevData: any) => ({ ...prevData, ...currentStepData }));
+      }
+    }
+
     setCurrentStep(currentStep - 1);
   };
 
