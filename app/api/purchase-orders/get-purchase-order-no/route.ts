@@ -7,7 +7,7 @@ import { generatePoNumber } from "@/utils/generatePoNumber";
 export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
   const supabase = await createClient();
 
-  const { data, error: dbError } = await supabase
+  const { data: latestPoData, error: dbError } = await supabase
     .from("purchase_order")
     .select("purchase_order_no")
     .order("id", { ascending: false })
@@ -23,7 +23,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
     );
   }
 
-  if (!data) {
+  if (!latestPoData) {
     const defaultPoNo = "PO-2025-1000";
 
     return NextResponse.json(
@@ -34,7 +34,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
     );
   }
 
-  const generatedPoNumber = generatePoNumber(data.purchase_order_no);
+  const generatedPoNumber = generatePoNumber(latestPoData.purchase_order_no);
 
   return NextResponse.json(
     success(generatedPoNumber, "Latest PO number retrieved"),
