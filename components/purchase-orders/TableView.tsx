@@ -11,7 +11,13 @@ import {
 } from "antd";
 import StatusBadge from "./StatusBadge";
 
-export default function TableView({ data }: { data: GetPurchaseOrderDto[] }) {
+export default function TableView({
+  data,
+  paginationChangeHandler,
+}: {
+  data: GetPurchaseOrderDto[];
+  paginationChangeHandler: (page: number, pageSize?: number) => void;
+}) {
   const columns: TableProps<GetPurchaseOrderDto>["columns"] = [
     {
       title: "PURCHASE ORDER",
@@ -106,7 +112,11 @@ export default function TableView({ data }: { data: GetPurchaseOrderDto[] }) {
             <Typography.Text type="secondary">
               Total {data.length} items
             </Typography.Text>
-            <Pagination defaultCurrent={1} total={data.length} />
+            <Pagination
+              defaultCurrent={1}
+              total={data.length}
+              onChange={paginationChangeHandler}
+            />
           </div>
         )}
       />

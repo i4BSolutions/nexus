@@ -16,7 +16,13 @@ import {
 } from "antd";
 import StatusBadge from "./StatusBadge";
 
-export default function CardView({ data }: { data: GetPurchaseOrderDto[] }) {
+export default function CardView({
+  data,
+  paginationChangeHandler,
+}: {
+  data: GetPurchaseOrderDto[];
+  paginationChangeHandler: (page: number, pageSize?: number) => void;
+}) {
   return (
     <section className="py-4">
       <div className="flex flex-wrap gap-4">
@@ -219,9 +225,15 @@ export default function CardView({ data }: { data: GetPurchaseOrderDto[] }) {
       </div>
       <Flex justify="space-between" align="center" className="!pb-10 !pt-6">
         <div>
-          <Typography.Text type="secondary">Total 12 items</Typography.Text>
+          <Typography.Text type="secondary">
+            Total {data.length} items
+          </Typography.Text>
         </div>
-        <Pagination defaultCurrent={1} total={data.length} />
+        <Pagination
+          defaultCurrent={1}
+          total={data.length}
+          onChange={paginationChangeHandler}
+        />
       </Flex>
     </section>
   );

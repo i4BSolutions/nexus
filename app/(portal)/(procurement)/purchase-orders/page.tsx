@@ -140,6 +140,10 @@ export default function PurchaseOrdersPage() {
     setPagination({ page: 1, pageSize: 10 });
   };
 
+  const paginationChangeHandler = (page: number, pageSize?: number) => {
+    setPagination({ page, pageSize: pageSize || 10 });
+  };
+
   return (
     <section className="px-6">
       <Breadcrumbs
@@ -223,9 +227,15 @@ export default function PurchaseOrdersPage() {
         />
       </Flex>
       {viewMode === "Card" ? (
-        <CardView data={data} />
+        <CardView
+          data={data}
+          paginationChangeHandler={paginationChangeHandler}
+        />
       ) : (
-        <TableView data={data} />
+        <TableView
+          data={data}
+          paginationChangeHandler={paginationChangeHandler}
+        />
       )}
     </section>
   );
