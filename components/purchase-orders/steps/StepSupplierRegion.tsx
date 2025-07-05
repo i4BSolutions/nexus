@@ -119,8 +119,8 @@ const StepSupplierRegion = forwardRef<
 
   const handleRegionCreate = (values: any) => {
     createRegion(values, {
-      onSuccess: () => {
-        form.setFieldValue("region", values.name);
+      onSuccess: (data: any) => {
+        form.setFieldValue("region", data.id);
         setIsRegionModalOpen(false);
         refetchRegions();
       },
@@ -129,8 +129,8 @@ const StepSupplierRegion = forwardRef<
 
   const handleSupplierCreate = (values: any) => {
     createSupplier(values, {
-      onSuccess: () => {
-        form.setFieldValue("supplier", values.id);
+      onSuccess: (data: any) => {
+        form.setFieldValue("supplier", data.id);
         setIsSupplierModalOpen(false);
         refetchSuppliers();
       },
