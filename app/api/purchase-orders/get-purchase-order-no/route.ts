@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
-import { ApiResponse } from "@/types/api-response-type";
 import { error, success } from "@/lib/api-response";
+import { createClient } from "@/lib/supabase/server";
+import { ApiResponse } from "@/types/shared/api-response-type";
 import { generatePoNumber } from "@/utils/generatePoNumber";
+import { NextResponse } from "next/server";
 
 export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
   const supabase = await createClient();

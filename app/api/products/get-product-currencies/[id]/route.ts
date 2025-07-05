@@ -1,8 +1,8 @@
+import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { ApiResponse } from "@/types/api-response-type";
 import { ProductCurrencyInterface } from "@/types/product/product.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * This API route retrieves a region by ID.
