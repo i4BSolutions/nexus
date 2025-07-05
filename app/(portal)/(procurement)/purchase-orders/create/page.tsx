@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { Space, Typography, Button, Spin, App } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -14,11 +14,12 @@ import StepDateCurrency from "@/components/purchase-orders/steps/StepDateCurrenc
 import StepReviewSubmit from "@/components/purchase-orders/steps/StepReviewSubmit";
 import WarningModal from "@/components/purchase-orders/WarningModal";
 
-export default function CreatePurchaseOrderPage() {
+function CreatePurchaseOrderPageContent() {
   const { message } = App.useApp();
 
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<any>({});
@@ -30,11 +31,11 @@ export default function CreatePurchaseOrderPage() {
 
   // Load draft if specified in URL
   useEffect(() => {
-    const draftId = params?.id as string;
+    const draftId = searchParams.get("draft");
     if (draftId) {
       loadDraft(draftId);
     }
-  }, [params]);
+  }, [searchParams]);
 
   // Track unsaved changes
   useEffect(() => {
@@ -345,5 +346,24 @@ export default function CreatePurchaseOrderPage() {
         loading={isSavingDraft}
       />
     </section>
+  );
+}
+
+export default function CreatePurchaseOrderPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="max-w-7xl mx-auto py-4 px-6">
+          <div style={{ textAlign: "center", padding: "100px 0" }}>
+            <Spin size="large" />
+            <Typography.Title level={4} style={{ marginTop: 16 }}>
+              Loading...
+            </Typography.Title>
+          </div>
+        </section>
+      }
+    >
+      <CreatePurchaseOrderPageContent />
+    </Suspense>
   );
 }
