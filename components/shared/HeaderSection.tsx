@@ -52,9 +52,11 @@ const HeaderSection = ({
         )}
       </Space>
     </Space>
-    <Button type="primary" onClick={onAddNew} icon={buttonIcon}>
-      {buttonText || `New ${title}`}
-    </Button>
+    {buttonText && (
+      <Button type="primary" onClick={onAddNew} icon={buttonIcon}>
+        {buttonText || `New ${title}`}
+      </Button>
+    )}
   </Space>
 );
 

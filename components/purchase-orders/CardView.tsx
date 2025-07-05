@@ -1,12 +1,16 @@
-import { PurchaseOrderType } from "@/types/purchase-order/po.type";
+import { GetPurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
 import {
   DollarOutlined,
+  EditOutlined,
   EllipsisOutlined,
+  EyeOutlined,
   InfoOutlined,
 } from "@ant-design/icons";
+import type { MenuProps } from "antd";
 import {
   Button,
   Col,
+  Dropdown,
   Flex,
   Pagination,
   Progress,
@@ -16,14 +20,37 @@ import {
 } from "antd";
 import StatusBadge from "./StatusBadge";
 
-export default function CardView({ data }: { data: PurchaseOrderType[] }) {
+const items: MenuProps["items"] = [
+  {
+    label: <div className="text-sm !w-32">View</div>,
+    key: "view",
+    icon: <EyeOutlined />,
+  },
+  {
+    label: <span className="text-sm !w-32">Edit</span>,
+    key: "edit",
+    icon: <EditOutlined />,
+  },
+];
+
+export default function CardView({
+  data,
+  pagination,
+  total,
+  paginationChangeHandler,
+}: {
+  data: GetPurchaseOrderDto[];
+  pagination: { page: number; pageSize: number };
+  total: number;
+  paginationChangeHandler: (page: number, pageSize?: number) => void;
+}) {
   return (
     <section className="py-4">
       <div className="flex flex-wrap gap-4">
-        {data.map((item: PurchaseOrderType) => (
+        {data.map((item: GetPurchaseOrderDto) => (
           <div
             key={item.id}
-            className="border-2 border-[#F5F5F5] rounded-[16px] w-[300px]"
+            className="border-2 border-[#F5F5F5] rounded-[16px] w-[320px]"
           >
             <div
               className="py-3 rounded-t-[14px]"
@@ -49,7 +76,7 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
                 </Col>
                 <Col span={12}>
                   <Typography.Text className="!text-xl !font-semibold">
-                    {item.id}
+                    {item.purchase_order_no}
                   </Typography.Text>
                   <div className="flex items-center gap-1.5">
                     <Typography.Text
@@ -62,7 +89,13 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
                   </div>
                 </Col>
                 <Col span={6} className="!grid !place-items-center">
-                  <Button icon={<EllipsisOutlined />} />
+                  <Dropdown
+                    menu={{ items }}
+                    trigger={["click"]}
+                    placement="bottomRight"
+                  >
+                    <Button icon={<EllipsisOutlined />} />
+                  </Dropdown>
                 </Col>
               </Row>
             </div>
@@ -73,7 +106,7 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
                   className="text-[30px] font-[500] m-0"
                   style={{ lineHeight: "32px" }}
                 >
-                  {item.amount.toLocaleString()} THB
+                  {item.amount.toLocaleString()} {item.currency_code}
                 </p>
                 <Typography.Text type="secondary">
                   (${item.amount})
@@ -129,7 +162,10 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
                     </Tooltip>
                   </Typography.Text>
                   <p className="m-0 font-medium text-base">
-                    {item.total_invoice_amount.toLocaleString()} THB
+                    $
+                    {item.invoiced_amount
+                      ? item.invoiced_amount.toLocaleString()
+                      : 0}
                   </p>
                 </Col>
                 <Col span={12}>
@@ -149,12 +185,15 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
                     </Tooltip>
                   </Typography.Text>
                   <p className="m-0 font-medium text-base">
-                    {item.total_allocated_amount.toLocaleString()} THB
+                    $
+                    {item.invoiced_amount
+                      ? item.invoiced_amount.toLocaleString()
+                      : 0}
                   </p>
                 </Col>
               </Row>
               <Row>
-                <Progress percent={30} />
+                <Progress percent={item.invoiced_amount} />
               </Row>
               <Row>
                 <Col span={12}>
@@ -174,7 +213,10 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
                     </Tooltip>
                   </Typography.Text>
                   <p className="m-0 font-medium text-base">
-                    {item.total_invoice_amount.toLocaleString()} THB
+                    $
+                    {item.allocated_amount
+                      ? item.allocated_amount.toLocaleString()
+                      : 0}
                   </p>
                 </Col>
                 <Col span={12}>
@@ -194,12 +236,15 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
                     </Tooltip>
                   </Typography.Text>
                   <p className="m-0 font-medium text-base">
-                    {item.total_allocated_amount.toLocaleString()} THB
+                    $
+                    {item.allocated_amount
+                      ? item.allocated_amount.toLocaleString()
+                      : 0}
                   </p>
                 </Col>
               </Row>
               <Row>
-                <Progress percent={30} />
+                <Progress percent={item.allocated_amount} />
               </Row>
             </div>
           </div>
@@ -207,9 +252,17 @@ export default function CardView({ data }: { data: PurchaseOrderType[] }) {
       </div>
       <Flex justify="space-between" align="center" className="!pb-10 !pt-6">
         <div>
-          <Typography.Text type="secondary">Total 12 items</Typography.Text>
+          <Typography.Text type="secondary">
+            Total {total} items
+          </Typography.Text>
         </div>
-        <Pagination defaultCurrent={1} total={data.length} />
+        <Pagination
+          defaultCurrent={1}
+          current={pagination.page}
+          pageSize={pagination.pageSize}
+          total={total}
+          onChange={paginationChangeHandler}
+        />
       </Flex>
     </section>
   );

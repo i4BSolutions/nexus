@@ -10,4 +10,5 @@ export type StatItem = {
   tooltip?: string;
   prefix?: string;
   suffix?: string;
+  total_approved?: number;
 };

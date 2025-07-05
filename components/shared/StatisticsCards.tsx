@@ -34,7 +34,11 @@ const StatisticsCards = ({ stats }: { stats: StatItem[] }) => (
               )}
             </Typography.Text>
             <Statistic
-              value={item.value}
+              value={
+                item.title === "Total POs"
+                  ? item.value
+                  : item.value.toLocaleString()
+              }
               prefix={item.prefix}
               suffix={item.suffix}
             />
@@ -55,9 +59,9 @@ const StatisticsCards = ({ stats }: { stats: StatItem[] }) => (
             {item.icon}
           </div>
         </Space>
-        {stats[0].title === "Total POs" && index !== 0 && (
+        {index !== 0 && (
           <Typography.Text type="secondary">
-            Across {stats[0].value} approved POs
+            Across {stats[0].total_approved || 0} approved POs
           </Typography.Text>
         )}
       </Card>

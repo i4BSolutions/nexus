@@ -1,21 +1,31 @@
-import { PurchaseOrderType } from "@/types/purchase-order/po.type";
+import { GetPurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
 import { CalendarOutlined } from "@ant-design/icons";
 import {
   Button,
   Divider,
+  Flex,
   Pagination,
-  Space,
   Table,
   TableProps,
   Typography,
 } from "antd";
 import StatusBadge from "./StatusBadge";
 
-export default function TableView({ data }: { data: PurchaseOrderType[] }) {
-  const columns: TableProps<PurchaseOrderType>["columns"] = [
+export default function TableView({
+  data,
+  total,
+  pagination,
+  paginationChangeHandler,
+}: {
+  data: GetPurchaseOrderDto[];
+  total: number;
+  pagination: { page: number; pageSize: number };
+  paginationChangeHandler: (page: number, pageSize?: number) => void;
+}) {
+  const columns: TableProps<GetPurchaseOrderDto>["columns"] = [
     {
       title: "PURCHASE ORDER",
-      dataIndex: "id",
+      dataIndex: "purchase_order_no",
       key: "id",
       render: (text) => <a>{text}</a>,
     },
@@ -28,6 +38,9 @@ export default function TableView({ data }: { data: PurchaseOrderType[] }) {
       title: "ORDER DATE",
       dataIndex: "order_date",
       key: "order_date",
+      defaultSortOrder: "descend",
+      sorter: (a, b) =>
+        new Date(a.order_date).getTime() - new Date(b.order_date).getTime(),
       render: (order_date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />
@@ -50,10 +63,12 @@ export default function TableView({ data }: { data: PurchaseOrderType[] }) {
       title: "AMOUNT",
       dataIndex: "amount",
       key: "amount",
-      render: (amount) => (
+      render: (amount, record) => (
         <div>
           <div>
-            <Typography.Text>${amount.toFixed(2)}</Typography.Text>
+            <Typography.Text>
+              {amount.toFixed(2)} {record.currency_code}
+            </Typography.Text>
           </div>
           <div>
             <Typography.Text type="secondary">
@@ -72,20 +87,27 @@ export default function TableView({ data }: { data: PurchaseOrderType[] }) {
     {
       title: "Actions",
       key: "actions",
+      width: 120,
       render: (_, record) => (
-        <Space size="middle">
-          <Button type="link">View</Button>
+        <Flex justify="start" align="center" gap={4}>
+          <Button style={{ padding: 0 }} type="link">
+            View
+          </Button>
           <Divider type="vertical" />
-          <Button type="link">Edit</Button>
-        </Space>
+          <Button style={{ padding: 0 }} type="link">
+            Edit
+          </Button>
+        </Flex>
       ),
     },
   ];
+
   return (
     <section className="py-4">
-      <Table<PurchaseOrderType>
+      <Table<GetPurchaseOrderDto>
         columns={columns}
         dataSource={data}
+        showSorterTooltip={{ target: "sorter-icon" }}
         rowKey={"id"}
         style={{ border: "2px solid #F5F5F5", borderRadius: "8px" }}
         pagination={false}
@@ -94,7 +116,12 @@ export default function TableView({ data }: { data: PurchaseOrderType[] }) {
             <Typography.Text type="secondary">
               Total {data.length} items
             </Typography.Text>
-            <Pagination defaultCurrent={1} total={data.length} />
+            <Pagination
+              defaultCurrent={1}
+              current={pagination.page}
+              total={total}
+              onChange={paginationChangeHandler}
+            />
           </div>
         )}
       />

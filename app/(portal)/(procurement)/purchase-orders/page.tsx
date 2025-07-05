@@ -5,7 +5,11 @@ import TableView from "@/components/purchase-orders/TableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import StatisticsCards from "@/components/shared/StatisticsCards";
-import { PurchaseOrderType } from "@/types/purchase-order/po.type";
+import { useList } from "@/hooks/react-query/useList";
+import {
+  GetPurchaseOrderDto,
+  GetPurchaseOrderResponse,
+} from "@/types/purchase-order/purchase-order.type";
 import { StatItem } from "@/types/shared/stat-item.type";
 import {
   DollarOutlined,
@@ -13,124 +17,133 @@ import {
   ShoppingCartOutlined,
   UpCircleOutlined,
 } from "@ant-design/icons";
-import { Button, Flex, Input, Segmented, Select } from "antd";
+import { Button, Flex, Input, Segmented, Select, Spin } from "antd";
 import { SearchProps } from "antd/es/input";
-import { useState } from "react";
-
-const initialStatItems = [
-  {
-    title: "Total POs",
-    value: 12,
-    icon: <ShoppingCartOutlined />,
-    bgColor: "#40A9FF",
-    gradient: "linear-gradient(90deg, #E6F7FF 0%, #FFF 100%)",
-    borderColor: "#91d5ff",
-    tooltip: "Total number of purchase orders",
-  },
-  {
-    title: "Total USD Value",
-    value: 25000,
-    icon: <DollarOutlined />,
-    bgColor: "#36CFC9",
-    gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFF 100%)",
-    borderColor: "#87E8DE",
-    tooltip: "Total value of all purchase orders",
-    prefix: "$",
-  },
-  {
-    title: "% Invoiced",
-    value: 75,
-    icon: <DollarOutlined />,
-    bgColor: "#597EF7",
-    gradient: "linear-gradient(90deg, #F0F5FF 0%, #FFF 100%)",
-    borderColor: "#ADC6FF",
-    tooltip: "Percentage of total POs that have been invoiced",
-    suffix: "%",
-  },
-  {
-    title: "% Allocated",
-    value: 50,
-    icon: <UpCircleOutlined />,
-    bgColor: "#9254DE",
-    gradient: "linear-gradient(90deg, #F9F0FF 0%, #FFF 100%)",
-    borderColor: "#D3ADF7",
-    tooltip: "Percentage of total POs that have been allocated",
-    suffix: "%",
-  },
-];
-
-const dummyData: PurchaseOrderType[] = [
-  {
-    id: "PO-2025-1234",
-    order_date: "2025-01-15",
-    status: "Draft",
-    amount: 150000,
-    contact_person: "John Doe",
-    expected_delivery_date: "2025-02-01",
-    total_invoice_amount: 0,
-    total_allocated_amount: 0,
-  },
-  {
-    id: "PO-2025-1235",
-    order_date: "2025-01-20",
-    status: "Approved",
-    amount: 3000,
-    contact_person: "Jane Smith",
-    expected_delivery_date: "2025-02-05",
-    total_invoice_amount: 1500,
-    total_allocated_amount: 1500,
-  },
-  {
-    id: "PO-2025-1236",
-    order_date: "2025-01-25",
-    status: "Draft",
-    amount: 2000,
-    contact_person: "Alice Johnson",
-    expected_delivery_date: "2025-02-10",
-    total_invoice_amount: 0,
-    total_allocated_amount: 0,
-  },
-  {
-    id: "PO-2025-1237",
-    order_date: "2025-01-30",
-    status: "Approved",
-    amount: 5000,
-    contact_person: "Bob Brown",
-    expected_delivery_date: "2025-02-15",
-    total_invoice_amount: 5000,
-    total_allocated_amount: 5000,
-  },
-  {
-    id: "PO-2025-1238",
-    order_date: "2025-02-05",
-    status: "Draft",
-    amount: 2500,
-    contact_person: "Charlie Green",
-    expected_delivery_date: "2025-02-20",
-    total_invoice_amount: 0,
-    total_allocated_amount: 0,
-  },
-];
+import { SortOrder } from "antd/es/table/interface";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PurchaseOrdersPage() {
-  const [statItems, setStatItems] = useState<StatItem[]>(initialStatItems);
+  const [statItems, setStatItems] = useState<StatItem[]>();
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
-  const [data, setData] = useState<PurchaseOrderType[]>(dummyData);
+  const [data, setData] = useState<GetPurchaseOrderDto[]>();
+  const [status, setStatus] = useState<string | undefined>(undefined);
+  const [searchText, setSearchText] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+  const [total, setTotal] = useState<number>(0);
 
-  const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) =>
-    console.log(info?.source, value);
+  const router = useRouter();
+  const { data: poData, isPending } = useList<GetPurchaseOrderResponse>(
+    "purchase-orders",
+    {
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      sort: sortOrder
+        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
+        : undefined,
+      status: status,
+      q: searchText,
+    }
+  );
+
+  useEffect(() => {
+    if (poData) {
+      const data = poData.dto.map((item) => ({
+        id: item.id,
+        purchase_order_no: item.purchase_order_no,
+        order_date: item.order_date,
+        status: item.status,
+        amount: item.amount,
+        currency_code: item.currency_code,
+        usd_exchange_rate: item.usd_exchange_rate,
+        contact_person: item.contact_person,
+        expected_delivery_date: item.expected_delivery_date,
+        total_invoice_amount: item.invoiced_amount || 0,
+        total_allocated_amount: item.allocated_amount || 0,
+      }));
+      setData(data);
+      setTotal(poData.total);
+      setStatItems([
+        {
+          title: "Total POs",
+          value: poData.statistics.total,
+          icon: <ShoppingCartOutlined />,
+          bgColor: "#40A9FF",
+          gradient: "linear-gradient(90deg, #E6F7FF 0%, #FFF 100%)",
+          borderColor: "#91d5ff",
+          tooltip: "Total number of purchase orders",
+          total_approved: poData.statistics.total_approved,
+        },
+        {
+          title: "Total USD Value",
+          value: poData.statistics.total_usd_value,
+          icon: <DollarOutlined />,
+          bgColor: "#36CFC9",
+          gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFF 100%)",
+          borderColor: "#87E8DE",
+          tooltip: "Total value of all purchase orders",
+          prefix: "$",
+        },
+        {
+          title: "% Invoiced",
+          value: poData.statistics.invoiced_percentage,
+          icon: <DollarOutlined />,
+          bgColor: "#597EF7",
+          gradient: "linear-gradient(90deg, #F0F5FF 0%, #FFF 100%)",
+          borderColor: "#ADC6FF",
+          tooltip: "Percentage of total POs that have been invoiced",
+          suffix: "%",
+        },
+        {
+          title: "% Allocated",
+          value: poData.statistics.allocated_percentage,
+          icon: <UpCircleOutlined />,
+          bgColor: "#9254DE",
+          gradient: "linear-gradient(90deg, #F9F0FF 0%, #FFF 100%)",
+          borderColor: "#D3ADF7",
+          tooltip: "Percentage of total POs that have been allocated",
+          suffix: "%",
+        },
+      ]);
+    }
+  }, [poData]);
+
+  if (isPending) {
+    return (
+      <Flex justify="center" align="center" style={{ height: "100vh" }}>
+        <Spin />
+      </Flex>
+    );
+  }
+  if (!data) return null;
+  if (!statItems) return null;
+
+  const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) => {
+    setSearchText(value);
+  };
 
   const onSortHandler = (value: string) => {
-    console.log(`selected ${value}`);
+    setSortOrder(value === "Date (Newest First)" ? "descend" : "ascend");
   };
 
   const statusChangeHandler = (value: string) => {
-    console.log(`selected ${value}`);
+    setStatus(value === "All Status" ? undefined : value);
   };
 
   const viewChangeHandler = (value: "Card" | "Table") => {
     setViewMode(value);
-    console.log(`View changed to ${value}`);
+  };
+
+  const clearFiltersHandler = () => {
+    setStatus(undefined);
+    setSearchText("");
+    setSortOrder(undefined);
+    setPagination({ page: 1, pageSize: 10 });
+  };
+
+  const paginationChangeHandler = (page: number, pageSize?: number) => {
+    setPagination({ page, pageSize: pageSize || 10 });
   };
 
   return (
@@ -142,7 +155,7 @@ export default function PurchaseOrdersPage() {
         title="Purchase Orders"
         description="Manage and track all purchase orders"
         icon={<ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />}
-        onAddNew={() => console.log("Add New Purchase Order")}
+        onAddNew={() => router.push("/purchase-orders/create")}
         buttonText="New Purchase Order"
         buttonIcon={<PlusOutlined />}
       />
@@ -153,25 +166,32 @@ export default function PurchaseOrdersPage() {
           allowClear
           onSearch={onSearchHandler}
         />
-        <Flex justify="center" align="center" gap={12}>
-          <span>Sort:</span>
-          <Select
-            defaultValue="Date (Newest First)"
-            style={{ width: 160 }}
-            onChange={onSortHandler}
-            options={[
-              {
-                value: "Date (Newest First)",
-                label: "Date (Newest First)",
-              },
-              {
-                value: "Date (Oldest First)",
-                label: "Date (Oldest First)",
-              },
-            ]}
-          />
-        </Flex>
-        <div className="bg-[#D9D9D9] w-[1px] h-7" />
+        {viewMode === "Card" ? (
+          <>
+            <Flex justify="center" align="center" gap={12}>
+              <span>Sort:</span>
+              <Select
+                defaultValue="Date (Newest First)"
+                style={{ width: 160 }}
+                onChange={onSortHandler}
+                options={[
+                  {
+                    value: "Date (Newest First)",
+                    label: "Date (Newest First)",
+                  },
+                  {
+                    value: "Date (Oldest First)",
+                    label: "Date (Oldest First)",
+                  },
+                ]}
+              />
+            </Flex>
+
+            <div className="bg-[#D9D9D9] w-[1px] h-7" />
+          </>
+        ) : (
+          <div className="bg-transparent w-[425px] h-7" />
+        )}
         <Flex justify="center" align="center" gap={12}>
           <span>Filter(s):</span>
           <Select
@@ -196,7 +216,7 @@ export default function PurchaseOrdersPage() {
           <Button
             type="link"
             style={{ padding: 0 }}
-            onClick={() => console.log("Clear Filters")}
+            onClick={clearFiltersHandler}
           >
             Clear Filter(s)
           </Button>
@@ -209,9 +229,19 @@ export default function PurchaseOrdersPage() {
         />
       </Flex>
       {viewMode === "Card" ? (
-        <CardView data={data} />
+        <CardView
+          data={data}
+          pagination={pagination}
+          paginationChangeHandler={paginationChangeHandler}
+          total={total}
+        />
       ) : (
-        <TableView data={data} />
+        <TableView
+          data={data}
+          pagination={pagination}
+          paginationChangeHandler={paginationChangeHandler}
+          total={total}
+        />
       )}
     </section>
   );
