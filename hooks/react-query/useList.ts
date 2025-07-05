@@ -5,13 +5,16 @@ export function useList<T>(
   resource: string,
   { page = 1, pageSize = 10, q = "", status = "", sort = "" } = {}
 ) {
-  const queryString = new URLSearchParams({
+  const queryParams: Record<string, string> = {
     page: String(page),
     pageSize: String(pageSize),
-    q,
-    status,
-    sort,
-  }).toString();
+  };
+
+  if (q) queryParams.q = q;
+  if (status) queryParams.status = status;
+  if (sort) queryParams.sort = sort;
+
+  const queryString = new URLSearchParams(queryParams).toString();
 
   return useQuery({
     queryKey: [resource, "list", page, pageSize, q, status, sort],
