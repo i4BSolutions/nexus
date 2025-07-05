@@ -106,20 +106,6 @@ export default function BudgetsPage() {
       </div>
     );
 
-  if (stats.length === 0 || budgets.items.length === 0 || !stats || !budgets)
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100%",
-        }}
-      >
-        <Empty />
-      </div>
-    );
-
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <Breadcrumbs
@@ -135,75 +121,83 @@ export default function BudgetsPage() {
         buttonIcon={<PlusOutlined />}
       />
 
-      <BudgetStatsCard stats={stats} />
-
-      <Flex
-        justify="center"
-        align="center"
-        gap={12}
-        style={{ marginTop: 12, marginBottom: 12 }}
-      >
-        <Input.Search
-          placeholder="Search By Project or Budget Name"
-          allowClear
-          onSearch={onSearchHandler}
-        />
-        <Flex justify="center" align="center" gap={12}>
-          <span>Sort:</span>
-          <Select
-            defaultValue="Project Name (Z-A)"
-            style={{ width: 160 }}
-            onChange={onSortHandler}
-            options={[
-              { value: "project_name_asc", label: "Project Name (A-Z)" },
-              { value: "project_name_desc", label: "Project Name (Z-A)" },
-              { value: "budget_name_asc", label: "Budget Name (A-Z)" },
-              { value: "budget_name_desc", label: "Budget Name (Z-A)" },
-            ]}
-          />
-        </Flex>
-        <div className="bg-[#D9D9D9] w-[1px] h-7" />
-        <Flex justify="center" align="center" gap={12}>
-          <span>Filter(s):</span>
-          <Select
-            defaultValue="All Status"
-            style={{ width: 160 }}
-            onChange={statusChangeHandler}
-            allowClear
-            options={[
-              {
-                value: "All Status",
-                label: "All Status",
-              },
-              {
-                value: "Active",
-                label: "Active",
-              },
-              {
-                value: "Inactive",
-                label: "Inactive",
-              },
-            ]}
-          />
-          <Button
-            type="link"
-            style={{ padding: 0 }}
-            onClick={handleClearFilters}
-          >
-            Clear Filter(s)
-          </Button>
-        </Flex>
-        <div className="bg-[#D9D9D9] w-[1px] h-7" />
-        <Segmented<"Card" | "Table">
-          options={["Card", "Table"]}
-          style={{ borderRadius: 9, border: "1px solid #D9D9D9" }}
-          onChange={viewChangeHandler}
-        />
-      </Flex>
-      {viewMode === "Card" ? (
-        <BudgetCard data={budgets} />
+      {stats.length === 0 ||
+      budgets.items.length === 0 ||
+      !stats ||
+      !budgets ? (
+        <Empty />
       ) : (
-        <TableView data={budgets.items} />
+        <>
+          <BudgetStatsCard stats={stats} />
+          <Flex
+            justify="center"
+            align="center"
+            gap={12}
+            style={{ marginTop: 12, marginBottom: 12 }}
+          >
+            <Input.Search
+              placeholder="Search By Project or Budget Name"
+              allowClear
+              onSearch={onSearchHandler}
+            />
+            <Flex justify="center" align="center" gap={12}>
+              <span>Sort:</span>
+              <Select
+                defaultValue="Project Name (Z-A)"
+                style={{ width: 160 }}
+                onChange={onSortHandler}
+                options={[
+                  { value: "project_name_asc", label: "Project Name (A-Z)" },
+                  { value: "project_name_desc", label: "Project Name (Z-A)" },
+                  { value: "budget_name_asc", label: "Budget Name (A-Z)" },
+                  { value: "budget_name_desc", label: "Budget Name (Z-A)" },
+                ]}
+              />
+            </Flex>
+            <div className="bg-[#D9D9D9] w-[1px] h-7" />
+            <Flex justify="center" align="center" gap={12}>
+              <span>Filter(s):</span>
+              <Select
+                defaultValue="All Status"
+                style={{ width: 160 }}
+                onChange={statusChangeHandler}
+                allowClear
+                options={[
+                  {
+                    value: "All Status",
+                    label: "All Status",
+                  },
+                  {
+                    value: "Active",
+                    label: "Active",
+                  },
+                  {
+                    value: "Inactive",
+                    label: "Inactive",
+                  },
+                ]}
+              />
+              <Button
+                type="link"
+                style={{ padding: 0 }}
+                onClick={handleClearFilters}
+              >
+                Clear Filter(s)
+              </Button>
+            </Flex>
+            <div className="bg-[#D9D9D9] w-[1px] h-7" />
+            <Segmented<"Card" | "Table">
+              options={["Card", "Table"]}
+              style={{ borderRadius: 9, border: "1px solid #D9D9D9" }}
+              onChange={viewChangeHandler}
+            />
+          </Flex>
+          {viewMode === "Card" ? (
+            <BudgetCard data={budgets} />
+          ) : (
+            <TableView data={budgets.items} />
+          )}
+        </>
       )}
     </section>
   );
