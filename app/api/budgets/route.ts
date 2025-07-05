@@ -16,7 +16,7 @@ export async function GET(
   const q = searchParams.get("q")?.trim().toLowerCase() || "";
   const statusFilter = searchParams.get("status");
   const sortParam = searchParams.get("sort");
-  console.log(sortParam);
+
   let sortField: "created_at" | "project_name" | "budget_name" = "created_at";
   let sortDirection: "asc" | "desc" = "desc";
 

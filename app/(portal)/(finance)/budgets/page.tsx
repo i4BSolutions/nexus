@@ -121,14 +121,16 @@ export default function BudgetsPage() {
         buttonIcon={<PlusOutlined />}
       />
 
-      {stats.length === 0 ||
-      budgets.items.length === 0 ||
-      !stats ||
-      !budgets ? (
+      {stats.length === 0 || !stats ? (
+        <Empty />
+      ) : (
+        <BudgetStatsCard stats={stats} />
+      )}
+
+      {budgets.items.length === 0 || !budgets ? (
         <Empty />
       ) : (
         <>
-          <BudgetStatsCard stats={stats} />
           <Flex
             justify="center"
             align="center"
@@ -161,7 +163,6 @@ export default function BudgetsPage() {
                 defaultValue="All Status"
                 style={{ width: 160 }}
                 onChange={statusChangeHandler}
-                allowClear
                 options={[
                   {
                     value: "All Status",

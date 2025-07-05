@@ -37,6 +37,7 @@ const CreateBudgetPage = () => {
       currentStepRef.current.submitForm();
     }
   };
+  const isSubmitting = currentStepRef.current?.isSubmitting ?? false;
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -116,23 +117,25 @@ const CreateBudgetPage = () => {
           justifyContent: "space-between",
         }}
       >
-        <Button type="default" onClick={handleCancel}>
+        <Button type="default" onClick={handleCancel} disabled={isSubmitting}>
           Cancel
         </Button>
         <Space>
           <Button
             type="default"
-            disabled={currentStep === 0}
+            disabled={currentStep === 0 || isSubmitting}
             onClick={handleBack}
           >
             Previous
           </Button>
           <Button
             type="primary"
-            disabled={currentStep === 4}
+            // disabled={currentStep === 2}
+            disabled={isSubmitting}
+            loading={isSubmitting}
             onClick={handleNextClick}
           >
-            {currentStep === 4 ? "Create" : "Next"}
+            {currentStep === 2 ? "Create" : "Next"}
           </Button>
         </Space>
       </Space>

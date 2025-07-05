@@ -16,6 +16,7 @@ interface StepReviewSubmitProps {
 
 export interface StepReviewSubmitRef {
   submitForm: () => void;
+  isSubmitting?: boolean;
 }
 
 const StepReviewAndSubmit = forwardRef<
@@ -37,6 +38,7 @@ const StepReviewAndSubmit = forwardRef<
         console.error(error);
       }
     },
+    isSubmitting: createBudget.isPending,
   }));
 
   return (
