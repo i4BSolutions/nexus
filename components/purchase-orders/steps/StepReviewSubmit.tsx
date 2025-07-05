@@ -98,10 +98,8 @@ const StepReviewSubmit = forwardRef(function StepReviewSubmit(
   };
 
   const getTotal = () => {
-    const items = (form.getFieldValue("items") as any[]) || [];
-    const exchangeRate = form.getFieldValue("exchange_rate")
-      ? Number(form.getFieldValue("exchange_rate"))
-      : 0;
+    const items = formData.items;
+    const exchangeRate = formData.exchange_rate;
     let totalLocal = 0;
 
     items.forEach((item: any) => {
