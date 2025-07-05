@@ -1,12 +1,16 @@
 import { GetPurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
 import {
   DollarOutlined,
+  EditOutlined,
   EllipsisOutlined,
+  EyeOutlined,
   InfoOutlined,
 } from "@ant-design/icons";
+import type { MenuProps } from "antd";
 import {
   Button,
   Col,
+  Dropdown,
   Flex,
   Pagination,
   Progress,
@@ -15,6 +19,19 @@ import {
   Typography,
 } from "antd";
 import StatusBadge from "./StatusBadge";
+
+const items: MenuProps["items"] = [
+  {
+    label: <div className="text-sm !w-32">View</div>,
+    key: "view",
+    icon: <EyeOutlined />,
+  },
+  {
+    label: <span className="text-sm !w-32">Edit</span>,
+    key: "edit",
+    icon: <EditOutlined />,
+  },
+];
 
 export default function CardView({
   data,
@@ -29,7 +46,7 @@ export default function CardView({
         {data.map((item: GetPurchaseOrderDto) => (
           <div
             key={item.id}
-            className="border-2 border-[#F5F5F5] rounded-[16px] w-[300px]"
+            className="border-2 border-[#F5F5F5] rounded-[16px] w-[320px]"
           >
             <div
               className="py-3 rounded-t-[14px]"
@@ -68,7 +85,13 @@ export default function CardView({
                   </div>
                 </Col>
                 <Col span={6} className="!grid !place-items-center">
-                  <Button icon={<EllipsisOutlined />} />
+                  <Dropdown
+                    menu={{ items }}
+                    trigger={["click"]}
+                    placement="bottomRight"
+                  >
+                    <Button icon={<EllipsisOutlined />} />
+                  </Dropdown>
                 </Col>
               </Row>
             </div>
