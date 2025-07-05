@@ -13,7 +13,7 @@ CREATE UNIQUE INDEX purchase_order_items_pkey ON public.purchase_order_items USI
 
 alter table "public"."purchase_order_items" add constraint "purchase_order_items_pkey" PRIMARY KEY using index "purchase_order_items_pkey";
 
-alter table "public"."purchase_order_items" add constraint "purchase_order_items_product_id_fkey" FOREIGN KEY (product_id) REFERENCES purchase_order_region(id) ON DELETE RESTRICT not valid;
+alter table "public"."purchase_order_items" add constraint "purchase_order_items_product_id_fkey" FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE RESTRICT not valid;
 
 alter table "public"."purchase_order_items" validate constraint "purchase_order_items_product_id_fkey";
 
