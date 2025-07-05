@@ -149,9 +149,11 @@ const StepContactPersons = forwardRef<
             allowClear
             showSearch
             filterOption={(input, option) => {
-              return (option?.label as string)
-                ?.toLowerCase()
-                .includes(input.toLowerCase());
+              const label = option?.label;
+              if (typeof label === "string") {
+                return label.toLowerCase().includes(input.toLowerCase());
+              }
+              return false;
             }}
             options={[
               ...(getFilteredOptions([signPerson, authorizedSignPerson]) || []),
@@ -214,9 +216,11 @@ const StepContactPersons = forwardRef<
                 allowClear
                 showSearch
                 filterOption={(input, option) => {
-                  return (option?.label as string)
-                    ?.toLowerCase()
-                    .includes(input.toLowerCase());
+                  const label = option?.label;
+                  if (typeof label === "string") {
+                    return label.toLowerCase().includes(input.toLowerCase());
+                  }
+                  return false;
                 }}
                 options={[
                   ...(getFilteredOptions([
@@ -281,9 +285,11 @@ const StepContactPersons = forwardRef<
                 allowClear
                 showSearch
                 filterOption={(input, option) => {
-                  return (option?.label as string)
-                    ?.toLowerCase()
-                    .includes(input.toLowerCase());
+                  const label = option?.label;
+                  if (typeof label === "string") {
+                    return label.toLowerCase().includes(input.toLowerCase());
+                  }
+                  return false;
                 }}
                 options={[
                   ...(getFilteredOptions([contactPerson, signPerson]) || []),
