@@ -1,9 +1,12 @@
 "use client";
 
-import { BudgetFormInput } from "@/schemas/budgets/budgets.schema";
+import {
+  BudgetFormInput,
+  BudgetSchema,
+} from "@/schemas/budgets/budgets.schema";
 import { ProductCurrencyInterface } from "@/types/product/product.type";
 import { useQuery } from "@tanstack/react-query";
-import { Form, InputNumber, Select, Row, Col, Typography } from "antd";
+import { Form, InputNumber, Select, Row, Col, Typography, message } from "antd";
 import React, {
   forwardRef,
   useEffect,
@@ -76,7 +79,12 @@ const StepFinancialParameters = forwardRef<
                 <Form.Item
                   name="currency_code"
                   noStyle
-                  rules={[{ required: true, message: "Currency is required" }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Currency and Planned Amount is required",
+                    },
+                  ]}
                 >
                   <Select
                     loading={currenciesLoading}
@@ -120,6 +128,7 @@ const StepFinancialParameters = forwardRef<
             label="Exchange Rate (to USD)"
             name="exchange_rate_usd"
             required
+            rules={[{ required: true, message: "Exchange rate is required" }]}
           >
             <InputNumber
               min={0}
