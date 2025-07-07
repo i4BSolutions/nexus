@@ -151,7 +151,6 @@ export async function POST(
   const body = await req.json();
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
   const user = await getAuthenticatedUser(supabase);
-  const userId = user.id;
 
   if (!body.planned_amount || !body.exchange_rate_usd) {
     return NextResponse.json(error("Invalid data", 400), { status: 400 });
@@ -161,7 +160,7 @@ export async function POST(
   const { planned_amount_usd, ...payload } = body;
   const fullPayload = {
     ...payload,
-    created_by: userId,
+    created_by: user.id,
   };
 
   const { data: created, error: dbError } = await supabase
@@ -171,7 +170,7 @@ export async function POST(
     .single();
 
   if (dbError)
-    return NextResponse.json(error("Failed to create budget", 500), {
+    return NextResponse.json(error(dbError.message, 500), {
       status: 500,
     });
 
@@ -180,7 +179,7 @@ export async function POST(
       budget_id: created.id,
       action: "CREATE",
       changes: { new: fullPayload },
-      performed_by: userId,
+      performed_by: user.id,
       ip_address: ip,
     },
   ]);
