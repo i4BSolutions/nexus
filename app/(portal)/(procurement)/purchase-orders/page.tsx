@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { PlusOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
 
 import CardView from "@/components/purchase-orders/CardView";
 import TableView from "@/components/purchase-orders/TableView";
@@ -23,8 +22,7 @@ import {
 import { Button, Flex, Input, Segmented, Select, Spin } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+
 import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
 
 export default function PurchaseOrdersPage() {
@@ -36,8 +34,8 @@ export default function PurchaseOrdersPage() {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const router = useRouter();
   const { data: poData, isPending } = useList<GetPurchaseOrderResponse>(
     "purchase-orders",
     {
@@ -149,7 +147,6 @@ export default function PurchaseOrdersPage() {
   const paginationChangeHandler = (page: number, pageSize?: number) => {
     setPagination({ page, pageSize: pageSize || 10 });
   };
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   return (
     <section className="px-6">
@@ -165,11 +162,6 @@ export default function PurchaseOrdersPage() {
         buttonIcon={<PlusOutlined />}
       />
 
-      {/* Create Options Modal */}
-      <CreateOptionsModal
-        open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-      />
       <StatisticsCards stats={statItems} />
       <Flex justify="center" align="center" gap={12}>
         <Input.Search
@@ -254,6 +246,12 @@ export default function PurchaseOrdersPage() {
           total={total}
         />
       )}
+
+      {/* Create Options Modal */}
+      <CreateOptionsModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
     </section>
   );
 }
