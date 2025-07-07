@@ -1,3 +1,4 @@
+import { getAuthenticatedUser } from "@/helper/getUser";
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { ApiResponse } from "@/types/api-response-type";
@@ -149,7 +150,7 @@ export async function POST(
   const supabase = await createClient();
   const body = await req.json();
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
-  const userId = body.created_by || "system";
+  const user = await getAuthenticatedUser(supabase);
 
   if (!body.planned_amount || !body.exchange_rate_usd) {
     return NextResponse.json(error("Invalid data", 400), { status: 400 });
@@ -157,15 +158,19 @@ export async function POST(
 
   // const planned_amount_usd = body.planned_amount / body.exchange_rate_usd;
   const { planned_amount_usd, ...payload } = body;
+  const fullPayload = {
+    ...payload,
+    created_by: user.id,
+  };
 
   const { data: created, error: dbError } = await supabase
     .from("budgets")
-    .insert([payload])
+    .insert([fullPayload])
     .select()
     .single();
 
   if (dbError)
-    return NextResponse.json(error("Failed to create budget", 500), {
+    return NextResponse.json(error(dbError.message, 500), {
       status: 500,
     });
 
@@ -173,8 +178,8 @@ export async function POST(
     {
       budget_id: created.id,
       action: "CREATE",
-      changes: { new: payload },
-      performed_by: userId,
+      changes: { new: fullPayload },
+      performed_by: user.id,
       ip_address: ip,
     },
   ]);
