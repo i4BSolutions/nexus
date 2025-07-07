@@ -73,18 +73,34 @@ const StepFinancialParameters = forwardRef<
       <Row gutter={16}>
         {/* Planned Budget */}
         <Col xs={24} md={12}>
-          <Form.Item label="Planned Budget" name="planned_amount" required>
+          <Form.Item
+            label="Planned Budget"
+            name="planned_amount"
+            required
+            rules={[
+              { required: true, message: "Planned budget is required" },
+              {
+                pattern: /^[1-9]\d*$/,
+                message: "Unit price cannot be 0",
+              },
+              {
+                validator: (_, value) => {
+                  if (value && parseFloat(value) <= 0) {
+                    return Promise.reject(
+                      new Error("Planned budget must be greater than 0")
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
             <InputNumber
               addonBefore={
                 <Form.Item
                   name="currency_code"
                   noStyle
-                  rules={[
-                    {
-                      required: true,
-                      message: "Currency and Planned Amount is required",
-                    },
-                  ]}
+                  rules={[{ required: true, message: "Currency is required" }]}
                 >
                   <Select
                     loading={currenciesLoading}
@@ -104,8 +120,8 @@ const StepFinancialParameters = forwardRef<
                   </Select>
                 </Form.Item>
               }
-              style={{ width: "100%" }}
               min={0}
+              style={{ width: "100%" }}
               placeholder="Enter planned budget"
               value={plannedAmount === 0 ? undefined : plannedAmount}
               onChange={(val) => setPlannedAmount(val ?? 0)}
@@ -117,7 +133,9 @@ const StepFinancialParameters = forwardRef<
                     })}`
                   : ""
               }
-              parser={(value) => parseFloat(value?.replace(/,/g, "") ?? "0")}
+              parser={(value) =>
+                parseFloat(value?.replace(/[^\d.]/g, "") || "0")
+              }
             />
           </Form.Item>
         </Col>
@@ -128,7 +146,24 @@ const StepFinancialParameters = forwardRef<
             label="Exchange Rate (to USD)"
             name="exchange_rate_usd"
             required
-            rules={[{ required: true, message: "Exchange rate is required" }]}
+            rules={[
+              { required: true, message: "Exchange rate is required" },
+              {
+                pattern: /^\d+(\.\d{1,4})?$/,
+                message:
+                  "Exchange rate must be a positive number with up to 4 decimal places",
+              },
+              {
+                validator: (_, value) => {
+                  if (value && parseFloat(value) <= 0) {
+                    return Promise.reject(
+                      new Error("Exchange rate must be greater than 0")
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
           >
             <InputNumber
               min={0}
@@ -137,6 +172,18 @@ const StepFinancialParameters = forwardRef<
               value={exchangeRate}
               onChange={(val) => setExchangeRate(val ?? 1)}
               placeholder="Enter exchange rate(USD)"
+              parser={(value) => {
+                const parsed = value?.replace(/[^\d.]/g, "") ?? "";
+                return parsed ? parseFloat(parsed) : NaN;
+              }}
+              formatter={(value) =>
+                value
+                  ? `${Number(value).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`
+                  : ""
+              }
             />
           </Form.Item>
         </Col>
