@@ -27,6 +27,7 @@ interface StepSupplierRegionProps {
 
 export interface StepSupplierRegionRef {
   submitForm: () => void;
+  getFormData: () => any;
 }
 
 const fetchRegions = async () => {
@@ -118,8 +119,8 @@ const StepSupplierRegion = forwardRef<
 
   const handleRegionCreate = (values: any) => {
     createRegion(values, {
-      onSuccess: () => {
-        form.setFieldValue("region", values.name);
+      onSuccess: (data: any) => {
+        form.setFieldValue("region", data.id);
         setIsRegionModalOpen(false);
         refetchRegions();
       },
@@ -128,8 +129,8 @@ const StepSupplierRegion = forwardRef<
 
   const handleSupplierCreate = (values: any) => {
     createSupplier(values, {
-      onSuccess: () => {
-        form.setFieldValue("supplier", values.id);
+      onSuccess: (data: any) => {
+        form.setFieldValue("supplier", data.id);
         setIsSupplierModalOpen(false);
         refetchSuppliers();
       },
@@ -139,6 +140,7 @@ const StepSupplierRegion = forwardRef<
   // Expose submitForm method to parent component
   useImperativeHandle(ref, () => ({
     submitForm: handleNext,
+    getFormData: () => form.getFieldsValue(),
   }));
 
   return (
@@ -231,12 +233,11 @@ const StepSupplierRegion = forwardRef<
                   label: s.name,
                 })) || []),
                 {
-                  value: "create_new",
                   label: (
-                    <span onClick={() => setIsSupplierModalOpen(true)}>
+                    <div onClick={() => setIsSupplierModalOpen(true)}>
                       <PlusCircleOutlined style={{ marginRight: 8 }} />
                       Create New Supplier
-                    </span>
+                    </div>
                   ),
                 },
               ]}
@@ -292,12 +293,11 @@ const StepSupplierRegion = forwardRef<
               options={[
                 ...regionOptions,
                 {
-                  value: "create_new",
                   label: (
-                    <span onClick={() => setIsRegionModalOpen(true)}>
+                    <div onClick={() => setIsRegionModalOpen(true)}>
                       <PlusCircleOutlined style={{ marginRight: 8 }} />
                       Create New Region
-                    </span>
+                    </div>
                   ),
                 },
               ]}
