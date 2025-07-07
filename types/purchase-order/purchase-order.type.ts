@@ -1,4 +1,4 @@
-import { PurchaseOrderItemDetailInterface } from "./purchase-order-item.type";
+import { PurchaseOrderItemInterface } from "./purchase-order-item.type";
 
 export interface PurchaseOrderInterface {
   id: number;
@@ -15,41 +15,8 @@ export interface PurchaseOrderInterface {
   status: string;
   note: string;
   expected_delivery_date: string;
-  items: PurchaseOrderItemDetailInterface[];
+  items: PurchaseOrderItemInterface[];
   created_at: string;
-}
-
-export interface PurchaseOrderDetailInterface extends PurchaseOrderInterface {
-  supplier: {
-    name: string;
-    contact_person: string;
-    email: string;
-    phone: string;
-    address: string;
-    status: boolean;
-  };
-  region: {
-    name: string;
-  };
-  currency: {
-    currency_code: string;
-    currency_name: string;
-  };
-  budget?: {
-    budget_name: string;
-    project_name: string;
-    description: string;
-    status: string;
-  };
-  contact_person: {
-    name: string;
-  };
-  sign_person?: {
-    name: string;
-  };
-  authorized_signer?: {
-    name: string;
-  };
 }
 
 export interface GetPurchaseOrderDto {
@@ -78,4 +45,23 @@ export interface GetPurchaseOrderResponse {
     invoiced_percentage: number;
     allocated_percentage: number;
   };
+}
+
+export interface GetPurchaseOrderDetailDto {
+  id: number;
+  purchase_order_no: string;
+  supplier: string;
+  region: string;
+  order_date: string;
+  expected_delivery_date: string;
+  budget: string;
+  currency_code: string;
+  usd_exchange_rate: number;
+  product_items: PurchaseOrderItemInterface[];
+  total_amount_local: number;
+  total_amount_usd: number;
+  contact_person: string;
+  sign_person?: string;
+  authorized_sign_person?: string;
+  note?: string;
 }
