@@ -6,7 +6,7 @@ interface UploadResult {
   error?: string;
 }
 
-export async function uploadFileToBucket(
+export async function uploadTransferEvidenceImage(
   bucket: string,
   allocationId: number,
   file: File
