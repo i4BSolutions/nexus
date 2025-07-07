@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, forwardRef, useImperativeHandle } from "react";
-import { Space, Typography, Form, Row, Col, Tag, App } from "antd";
+import { Space, Typography, Form, Row, Col, Tag, App, Skeleton } from "antd";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 
 // Hooks
@@ -17,6 +17,7 @@ import {
   ProductResponse,
 } from "@/types/product/product.type";
 import { PersonInterface } from "@/types/person/person.type";
+import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
 
 interface StepReviewSubmitProps {
   onNext: (values: any) => void;
@@ -47,12 +48,43 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
       formData?.currency
     );
 
+    const { data: budgetData, isLoading: budgetLoading } = useGetById(
+      "budgets",
+      formData?.budget
+    );
+
     const { data: productsData = [] } = useList("products", {
       page: 1,
       pageSize: "all" as any,
     });
 
     const { data: personsData = [] } = useList("persons");
+
+    const getTotal = () => {
+      const items = formData.items;
+      const exchangeRate = formData.exchange_rate;
+      let totalLocal = 0;
+
+      items.forEach((item: any) => {
+        if (!item || !item.product) return;
+        const price = item.unit_price || 0;
+        totalLocal += (item.quantity || 0) * price;
+      });
+
+      const totalUSD = exchangeRate
+        ? (totalLocal / exchangeRate).toFixed(2)
+        : "0.00";
+
+      return {
+        totalLocal: totalLocal.toLocaleString(),
+        totalUSD: totalUSD.toLocaleString(),
+      };
+    };
+
+    const isSufficient =
+      (budgetData as Budget)?.planned_amount_usd -
+        Number(getTotal()?.totalUSD) >
+      0;
 
     useEffect(() => {
       // Pre-populate form with existing data
@@ -99,27 +131,6 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
       } catch (error: any) {
         message.error(error.message || "Failed to create purchase order");
       }
-    };
-
-    const getTotal = () => {
-      const items = formData.items;
-      const exchangeRate = formData.exchange_rate;
-      let totalLocal = 0;
-
-      items.forEach((item: any) => {
-        if (!item || !item.product) return;
-        const price = item.unit_price || 0;
-        totalLocal += (item.quantity || 0) * price;
-      });
-
-      const totalUSD = exchangeRate
-        ? (totalLocal / exchangeRate).toFixed(2)
-        : "0.00";
-
-      return {
-        totalLocal: totalLocal.toLocaleString(),
-        totalUSD: totalUSD.toLocaleString(),
-      };
     };
 
     return (
@@ -208,10 +219,47 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
                     <Space>
                       <Typography.Text type="secondary">Budget</Typography.Text>
                     </Space>
-                    <Space>
-                      <Typography.Title level={5}>
-                        {formData?.budget_name || "-"}
+                    <Space direction="vertical" size={0}>
+                      {budgetLoading && <Skeleton active />}
+                      <Typography.Title level={5} style={{ margin: 0 }}>
+                        {(budgetData as Budget)?.budget_name} (
+                        {(budgetData as Budget)?.project_name})
                       </Typography.Title>
+                      <Space>
+                        <Typography.Text type="secondary">
+                          Available:{" "}
+                          {(
+                            (budgetData as Budget)?.planned_amount_usd || 0
+                          ).toLocaleString()}{" "}
+                          USD
+                        </Typography.Text>
+                        <Space
+                          style={{ display: "flex", alignItems: "center" }}
+                        >
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: 6,
+                              height: 6,
+                              borderRadius: "50%",
+                              background: isSufficient ? "#4CD964" : "#FF4D4F",
+                              marginRight: 2,
+                              marginBottom: 2,
+                            }}
+                          />
+                          <Typography.Text
+                            style={{
+                              fontWeight: 400,
+                              color: "#222",
+                              margin: 0,
+                            }}
+                          >
+                            {isSufficient
+                              ? "Sufficient Amount"
+                              : "Insufficient Amount"}
+                          </Typography.Text>
+                        </Space>
+                      </Space>
                     </Space>
                   </Space>
                 </Space>
