@@ -179,7 +179,7 @@ export async function POST(
     {
       budget_id: created.id,
       action: "CREATE",
-      changes: { new: payload },
+      changes: { new: fullPayload },
       performed_by: userId,
       ip_address: ip,
     },
