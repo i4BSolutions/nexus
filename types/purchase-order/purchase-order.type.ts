@@ -1,4 +1,4 @@
-import { PurchaseOrderItemInterface } from "./purchase-order-item.type";
+import { PurchaseOrderItemDetailInterface } from "./purchase-order-item.type";
 
 export interface PurchaseOrderInterface {
   id: number;
@@ -15,8 +15,41 @@ export interface PurchaseOrderInterface {
   status: string;
   note: string;
   expected_delivery_date: string;
-  items: PurchaseOrderItemInterface[];
+  items: PurchaseOrderItemDetailInterface[];
   created_at: string;
+}
+
+export interface PurchaseOrderDetailInterface extends PurchaseOrderInterface {
+  supplier: {
+    name: string;
+    contact_person: string;
+    email: string;
+    phone: string;
+    address: string;
+    status: boolean;
+  };
+  region: {
+    name: string;
+  };
+  currency: {
+    currency_code: string;
+    currency_name: string;
+  };
+  budget?: {
+    budget_name: string;
+    project_name: string;
+    description: string;
+    status: string;
+  };
+  contact_person: {
+    name: string;
+  };
+  sign_person?: {
+    name: string;
+  };
+  authorized_signer?: {
+    name: string;
+  };
 }
 
 export interface GetPurchaseOrderDto {

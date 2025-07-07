@@ -7,3 +7,12 @@ export interface PurchaseOrderItemInterface {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface PurchaseOrderItemDetailInterface
+  extends PurchaseOrderItemInterface {
+  product?: {
+    name: string;
+    sku: string;
+    description: string;
+  };
+}
