@@ -2,6 +2,7 @@ import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
+import dayjs from "dayjs";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -14,6 +15,20 @@ export async function GET(
   const pageSize = parseInt(searchParams.get("pageSize") || "10");
   const q = searchParams.get("q")?.trim().toLowerCase() || "";
   const statusFilter = searchParams.get("status");
+  const sortParam = searchParams.get("sort");
+
+  let sortField: "created_at" | "project_name" | "budget_name" = "created_at";
+  let sortDirection: "asc" | "desc" = "desc";
+
+  if (sortParam) {
+    const lastUnderscoreIndex = sortParam.lastIndexOf("_");
+    const field = sortParam.substring(0, lastUnderscoreIndex);
+    const direction = sortParam.substring(lastUnderscoreIndex + 1);
+    if (["project_name", "budget_name", "created_at"].includes(field)) {
+      sortField = field as typeof sortField;
+      sortDirection = direction === "asc" ? "asc" : "desc";
+    }
+  }
 
   try {
     // 1. Fetch all budgets
@@ -35,10 +50,22 @@ export async function GET(
       return matchSearch && matchStatus;
     });
 
-    const paginated = filteredBudgets.slice(
-      (page - 1) * pageSize,
-      page * pageSize
-    );
+    const sorted = [...filteredBudgets].sort((a, b) => {
+      if (sortField === "created_at") {
+        return sortDirection === "asc"
+          ? dayjs(a.created_at).unix() - dayjs(b.created_at).unix()
+          : dayjs(b.created_at).unix() - dayjs(a.created_at).unix();
+      }
+
+      const valA = String(a[sortField] ?? "").toLowerCase();
+      const valB = String(b[sortField] ?? "").toLowerCase();
+
+      return sortDirection === "asc"
+        ? valA.localeCompare(valB)
+        : valB.localeCompare(valA);
+    });
+
+    const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
     const budgetIds = paginated.map((b) => b.id);
 
     // 3. Fetch related allocations and invoices
@@ -124,8 +151,12 @@ export async function POST(
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
   const userId = body.created_by || "system";
 
-  const planned_amount_usd = body.planned_amount / body.exchange_rate_usd;
-  const payload = { ...body, planned_amount_usd };
+  if (!body.planned_amount || !body.exchange_rate_usd) {
+    return NextResponse.json(error("Invalid data", 400), { status: 400 });
+  }
+
+  // const planned_amount_usd = body.planned_amount / body.exchange_rate_usd;
+  const { planned_amount_usd, ...payload } = body;
 
   const { data: created, error: dbError } = await supabase
     .from("budgets")

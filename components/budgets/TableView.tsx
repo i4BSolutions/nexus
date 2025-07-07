@@ -17,8 +17,8 @@ export default function TableView({ data }: { data: Budget[] }) {
   const columns: TableProps<Budget>["columns"] = [
     {
       title: "BUDGET NAME",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "budget_name",
+      key: "budget_name",
       render: (text) => <a>{text}</a>,
     },
     {
