@@ -44,7 +44,7 @@ export default function PurchaseOrdersPage() {
       page: pagination.page,
       pageSize: pagination.pageSize,
       sort: sortOrder
-        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
+        ? `id_${sortOrder === "ascend" ? "asc" : "desc"}`
         : undefined,
       status: status,
       q: searchText,

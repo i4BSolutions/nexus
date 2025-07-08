@@ -139,7 +139,7 @@ export async function GET(
   }
 
   query = query.order("id", {
-    ascending: sortParam === "order_date_asc",
+    ascending: sortParam === "id_asc",
   });
 
   if (typeof to === "number") {
