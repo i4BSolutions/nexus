@@ -106,14 +106,14 @@ export async function GET(
   const { data: purchaseOrder, error: poError } =
     await fetchPurchaseOrderWithJoins(supabase, idStr);
 
-  if (poError) {
-    return NextResponse.json(error(poError.message), { status: 500 });
-  }
-
   if (!purchaseOrder) {
     return NextResponse.json(error("Purchase order not found"), {
       status: 404,
     });
+  }
+
+  if (poError) {
+    return NextResponse.json(error(poError.message), { status: 500 });
   }
 
   // Get purchase order items with product information
@@ -228,14 +228,14 @@ export async function PUT(
     .eq("id", idStr)
     .single();
 
-  if (currentError) {
-    return NextResponse.json(error(currentError.message), { status: 500 });
-  }
-
   if (!currentOrder) {
     return NextResponse.json(error("Purchase order not found"), {
       status: 404,
     });
+  }
+
+  if (currentError) {
+    return NextResponse.json(error(currentError.message), { status: 500 });
   }
 
   // List of fields that can be updated (excluding purchase_order_no)
@@ -276,14 +276,14 @@ export async function PUT(
     .select()
     .single();
 
-  if (updateError) {
-    return NextResponse.json(error(updateError.message), { status: 500 });
-  }
-
   if (!updatedOrder) {
     return NextResponse.json(error("Purchase order not found"), {
       status: 404,
     });
+  }
+
+  if (updateError) {
+    return NextResponse.json(error(updateError.message), { status: 500 });
   }
 
   // Audit log: log all changed fields
@@ -336,5 +336,61 @@ export async function PUT(
   return NextResponse.json(
     success(result, "Purchase order updated successfully"),
     { status: 200 }
+  );
+}
+
+/**
+ * This API route deletes a purchase order by ID.
+ * The system will not allow deletion if the purchase order has any associated invoices.
+ * @param _req - NextRequest object
+ * @param context - Context object
+ * @returns NextResponse ApiResponse<null>
+ */
+// TODO: Should not be able to delete if there are associated invoices.
+export async function DELETE(
+  _req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse<ApiResponse<null>>> {
+  const supabase = await createClient();
+  const { id: idStr } = await context.params;
+
+  const { data: purchaseOrder, error: poError } =
+    await fetchPurchaseOrderWithJoins(supabase, idStr);
+
+  if (!purchaseOrder) {
+    return NextResponse.json(error("Purchase order not found"), {
+      status: 404,
+    });
+  }
+
+  if (poError) {
+    return NextResponse.json(error(poError.message), { status: 500 });
+  }
+
+  // Delete all related purchase_order_items first
+  const { error: itemsDeleteError } = await supabase
+    .from("purchase_order_items")
+    .delete()
+    .eq("purchase_order_id", idStr);
+
+  if (itemsDeleteError) {
+    return NextResponse.json(error(itemsDeleteError.message), { status: 500 });
+  }
+
+  // Now delete the purchase order itself
+  const { error: deleteError } = await supabase
+    .from("purchase_order")
+    .delete()
+    .eq("id", idStr);
+
+  if (deleteError) {
+    return NextResponse.json(error(deleteError.message), { status: 500 });
+  }
+
+  return NextResponse.json(
+    success(null, "Purchase order and related items deleted successfully"),
+    {
+      status: 200,
+    }
   );
 }
