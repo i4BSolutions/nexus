@@ -1,72 +1,44 @@
-import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
+import { PoBudgetAllocationInterface } from "@/types/purchase-order/purchase-order-detail.type";
 import { CalendarOutlined } from "@ant-design/icons";
-import {
-  Button,
-  Divider,
-  Flex,
-  Pagination,
-  Table,
-  TableProps,
-  Typography,
-} from "antd";
+import { Button, Flex, Pagination, Table, TableProps, Typography } from "antd";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import StatusBadge from "./StatusBadge";
+import StatusBadge from "../StatusBadge";
 
-export default function TableView({
+export default function PoBudgetAllocationTable({
   data,
   total,
   pagination,
   paginationChangeHandler,
 }: {
-  data: PurchaseOrderDto[];
+  data: PoBudgetAllocationInterface[];
   total: number;
   pagination: { page: number; pageSize: number };
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
   const router = useRouter();
-
-  const columns: TableProps<PurchaseOrderDto>["columns"] = [
+  const columns: TableProps<PoBudgetAllocationInterface>["columns"] = [
     {
-      title: "PURCHASE ORDER",
-      dataIndex: "purchase_order_no",
-      key: "id",
+      title: "BUDGET ALLOCATIONS",
+      dataIndex: "budget_no",
+      key: "budget_no",
       render: (text) => <a>{text}</a>,
     },
     {
-      title: "CONTACT PERSON",
-      dataIndex: "contact_person",
-      key: "contact_person",
-    },
-    {
-      title: "ORDER DATE",
-      dataIndex: "order_date",
-      key: "order_date",
-      defaultSortOrder: "descend",
-      sorter: (a, b) =>
-        new Date(a.order_date).getTime() - new Date(b.order_date).getTime(),
-      render: (order_date) => (
+      title: "DATE",
+      dataIndex: "allocation_date",
+      key: "allocation_date",
+      render: (allocation_date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />
-          {dayjs(order_date).format("MMM D, YYYY")}
-        </div>
-      ),
-    },
-    {
-      title: "EXPECTED DELIVERY DATE",
-      dataIndex: "expected_delivery_date",
-      key: "expected_delivery_date",
-      render: (expected_delivery_date) => (
-        <div>
-          <CalendarOutlined style={{ marginRight: 6 }} />
-          {dayjs(expected_delivery_date).format("MMM D, YYYY")}
+          {dayjs(allocation_date).format("MMM D, YYYY")}
         </div>
       ),
     },
     {
       title: "AMOUNT",
-      dataIndex: "amount",
-      key: "amount",
+      dataIndex: "allocated_amount_local",
+      key: "allocated_amount_local",
       render: (amount, record) => (
         <div>
           <div>
@@ -76,7 +48,7 @@ export default function TableView({
           </div>
           <div>
             <Typography.Text type="secondary">
-              (${amount.toLocaleString("en-US")})
+              (${record.allocated_amount_usd.toLocaleString("en-US")})
             </Typography.Text>
           </div>
         </div>
@@ -98,20 +70,10 @@ export default function TableView({
             style={{ padding: 0 }}
             type="link"
             onClick={() =>
-              router.push(`/purchase-orders/${record.purchase_order_no}`)
+              router.push(`/budget-allocations/${record.budget_no}`)
             }
           >
             View
-          </Button>
-          <Divider type="vertical" />
-          <Button
-            style={{ padding: 0 }}
-            type="link"
-            onClick={() =>
-              router.push(`/purchase-orders/${record.purchase_order_no}/edit`)
-            }
-          >
-            Edit
           </Button>
         </Flex>
       ),
@@ -119,8 +81,8 @@ export default function TableView({
   ];
 
   return (
-    <section className="py-4">
-      <Table<PurchaseOrderDto>
+    <section className="py-4 px-6 mb-4">
+      <Table<PoBudgetAllocationInterface>
         columns={columns}
         dataSource={data}
         showSorterTooltip={{ target: "sorter-icon" }}
