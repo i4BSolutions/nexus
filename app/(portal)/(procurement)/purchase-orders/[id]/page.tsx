@@ -1,5 +1,6 @@
 "use client";
 
+import PoDetailPDF from "@/components/purchase-orders/detail/PoDetailPdf";
 import PoDetailView from "@/components/purchase-orders/detail/PoDetailView";
 import PoUsageHistory from "@/components/purchase-orders/detail/PoUsageHistory";
 import StatusBadge from "@/components/purchase-orders/StatusBadge";
@@ -13,6 +14,7 @@ import {
   EllipsisOutlined,
   StopOutlined,
 } from "@ant-design/icons";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import {
   Button,
   Dropdown,
@@ -111,7 +113,14 @@ export default function PurchaseOrderDetailPage() {
 
           {/* Right Header */}
           <Flex align="center" gap={8}>
-            <Button icon={<DownloadOutlined />}>Download PDF</Button>
+            <Button icon={<DownloadOutlined />}>
+              <PDFDownloadLink
+                document={<PoDetailPDF data={detailData} />}
+                fileName={`PO_${detailData.id}.pdf`}
+              >
+                Download PDF
+              </PDFDownloadLink>
+            </Button>
             <Button
               type="primary"
               icon={<EditOutlined />}
