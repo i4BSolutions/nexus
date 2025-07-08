@@ -26,7 +26,8 @@ export interface PurchaseOrderDto {
   status: string;
   currency_code: string;
   usd_exchange_rate: number;
-  amount: number;
+  amount_local: number;
+  amount_usd: number;
   contact_person: string;
   expected_delivery_date: string;
   invoiced_amount?: number;

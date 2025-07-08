@@ -21,7 +21,7 @@ import {
 import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
 
-export default function CardView({
+export default function PoCardView({
   data,
   pagination,
   total,
@@ -115,10 +115,10 @@ export default function CardView({
                     className="text-[30px] font-[500] m-0"
                     style={{ lineHeight: "32px" }}
                   >
-                    {item.amount.toLocaleString()} {item.currency_code}
+                    {item.amount_local.toLocaleString()} {item.currency_code}
                   </p>
                   <Typography.Text type="secondary">
-                    (${item.amount})
+                    (${item.amount_usd.toLocaleString()})
                   </Typography.Text>
                 </div>
                 <Flex

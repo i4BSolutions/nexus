@@ -13,7 +13,7 @@ import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
 
-export default function TableView({
+export default function PoTableView({
   data,
   total,
   pagination,
@@ -43,8 +43,7 @@ export default function TableView({
       dataIndex: "order_date",
       key: "order_date",
       defaultSortOrder: "descend",
-      sorter: (a, b) =>
-        new Date(a.order_date).getTime() - new Date(b.order_date).getTime(),
+      sorter: (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
       render: (order_date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />
@@ -65,8 +64,8 @@ export default function TableView({
     },
     {
       title: "AMOUNT",
-      dataIndex: "amount",
-      key: "amount",
+      dataIndex: "amount_local",
+      key: "amount_local",
       render: (amount, record) => (
         <div>
           <div>
@@ -76,7 +75,7 @@ export default function TableView({
           </div>
           <div>
             <Typography.Text type="secondary">
-              (${amount.toLocaleString("en-US")})
+              (${record.amount_usd.toLocaleString("en-US")})
             </Typography.Text>
           </div>
         </div>
