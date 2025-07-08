@@ -19,7 +19,7 @@ export interface PurchaseOrderInterface {
   created_at: string;
 }
 
-export interface GetPurchaseOrderDto {
+export interface PurchaseOrderDto {
   id: number;
   purchase_order_no: string;
   order_date: string;
@@ -33,8 +33,8 @@ export interface GetPurchaseOrderDto {
   allocated_amount?: number;
 }
 
-export interface GetPurchaseOrderResponse {
-  dto: GetPurchaseOrderDto[];
+export interface PurchaseOrderResponse {
+  dto: PurchaseOrderDto[];
   total: number;
   page: number;
   pageSize: number;
