@@ -22,7 +22,6 @@ export async function GET(
   const { id: idStr } = await context.params;
 
   // Get purchase order with joined data
-  // TODO: Add budget data - budget:budget_id(budget_name, project_name, description, status),
   const { data: purchaseOrder, error: poError } = await supabase
     .from("purchase_order")
     .select(
@@ -31,6 +30,7 @@ export async function GET(
       supplier:supplier_id(name, contact_person, email, phone, address, status),
       region:region_id(name),
       currency:currency_id(currency_code, currency_name),
+      budget:budget_id(budget_name, project_name, description, status),
       contact_person:contact_person_id(name),
       sign_person:sign_person_id(name),
       authorized_signer:authorized_signer_id(name)
@@ -95,7 +95,7 @@ export async function GET(
     region: purchaseOrder.region?.name || "Unknown Region",
     order_date: purchaseOrder.order_date,
     expected_delivery_date: purchaseOrder.expected_delivery_date,
-    budget: purchaseOrder.budget_id,
+    budget: purchaseOrder.budget?.budget_name || "Unknown Budget",
     currency_code: purchaseOrder.currency?.currency_code || "USD",
     usd_exchange_rate: purchaseOrder.usd_exchange_rate,
     product_items: formattedItems,

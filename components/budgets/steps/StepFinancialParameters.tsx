@@ -57,10 +57,7 @@ const StepFinancialParameters = forwardRef<
 
   const handleNext = () => {
     form.validateFields().then((values) => {
-      onNext({
-        ...values,
-        planned_amount_usd: usdEquivalent,
-      });
+      onNext(values);
     });
   };
 
