@@ -1,4 +1,4 @@
-import { GetPurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
+import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
 import { CalendarOutlined } from "@ant-design/icons";
 import {
   Button,
@@ -9,20 +9,21 @@ import {
   TableProps,
   Typography,
 } from "antd";
+import dayjs from "dayjs";
 import StatusBadge from "./StatusBadge";
 
-export default function TableView({
+export default function PoTableView({
   data,
   total,
   pagination,
   paginationChangeHandler,
 }: {
-  data: GetPurchaseOrderDto[];
+  data: PurchaseOrderDto[];
   total: number;
   pagination: { page: number; pageSize: number };
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
-  const columns: TableProps<GetPurchaseOrderDto>["columns"] = [
+  const columns: TableProps<PurchaseOrderDto>["columns"] = [
     {
       title: "PURCHASE ORDER",
       dataIndex: "purchase_order_no",
@@ -39,12 +40,11 @@ export default function TableView({
       dataIndex: "order_date",
       key: "order_date",
       defaultSortOrder: "descend",
-      sorter: (a, b) =>
-        new Date(a.order_date).getTime() - new Date(b.order_date).getTime(),
+      sorter: (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
       render: (order_date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />
-          <span>{new Date(order_date).toLocaleDateString()}</span>
+          {dayjs(order_date).format("MMM D, YYYY")}
         </div>
       ),
     },
@@ -55,14 +55,14 @@ export default function TableView({
       render: (expected_delivery_date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />
-          <span>{new Date(expected_delivery_date).toLocaleDateString()}</span>
+          {dayjs(expected_delivery_date).format("MMM D, YYYY")}
         </div>
       ),
     },
     {
       title: "AMOUNT",
-      dataIndex: "amount",
-      key: "amount",
+      dataIndex: "amount_local",
+      key: "amount_local",
       render: (amount, record) => (
         <div>
           <div>
@@ -72,7 +72,7 @@ export default function TableView({
           </div>
           <div>
             <Typography.Text type="secondary">
-              (${amount.toLocaleString("en-US")})
+              (${record.amount_usd.toLocaleString("en-US")})
             </Typography.Text>
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function TableView({
 
   return (
     <section className="py-4">
-      <Table<GetPurchaseOrderDto>
+      <Table<PurchaseOrderDto>
         columns={columns}
         dataSource={data}
         showSorterTooltip={{ target: "sorter-icon" }}

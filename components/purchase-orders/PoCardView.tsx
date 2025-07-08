@@ -1,4 +1,4 @@
-import { GetPurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
+import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
 import {
   DollarOutlined,
   EditOutlined,
@@ -18,6 +18,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import dayjs from "dayjs";
 import StatusBadge from "./StatusBadge";
 
 const items: MenuProps["items"] = [
@@ -33,13 +34,13 @@ const items: MenuProps["items"] = [
   },
 ];
 
-export default function CardView({
+export default function PoCardView({
   data,
   pagination,
   total,
   paginationChangeHandler,
 }: {
-  data: GetPurchaseOrderDto[];
+  data: PurchaseOrderDto[];
   pagination: { page: number; pageSize: number };
   total: number;
   paginationChangeHandler: (page: number, pageSize?: number) => void;
@@ -47,10 +48,10 @@ export default function CardView({
   return (
     <section className="py-4">
       <div className="flex flex-wrap gap-4">
-        {data.map((item: GetPurchaseOrderDto) => (
+        {data.map((item: PurchaseOrderDto) => (
           <div
             key={item.id}
-            className="border-2 border-[#F5F5F5] rounded-[16px] w-[320px]"
+            className="border-2 border-[#F5F5F5] rounded-[16px] w-[325px]"
           >
             <div
               className="py-3 rounded-t-[14px]"
@@ -83,7 +84,7 @@ export default function CardView({
                       className="text-sm"
                       style={{ color: "rgba(0, 0, 0, 0.45)" }}
                     >
-                      {item.order_date}
+                      {dayjs(item.order_date).format("MMM D, YYYY")}
                     </Typography.Text>
                     <StatusBadge status={item.status} />
                   </div>
@@ -106,10 +107,10 @@ export default function CardView({
                   className="text-[30px] font-[500] m-0"
                   style={{ lineHeight: "32px" }}
                 >
-                  {item.amount.toLocaleString()} {item.currency_code}
+                  {item.amount_local.toLocaleString()} {item.currency_code}
                 </p>
                 <Typography.Text type="secondary">
-                  (${item.amount})
+                  (${item.amount_usd.toLocaleString()})
                 </Typography.Text>
               </div>
               <Flex
@@ -140,7 +141,7 @@ export default function CardView({
                 </div>
                 <div>
                   <p className="m-0 font-medium text-base">
-                    {item.expected_delivery_date}
+                    {dayjs(item.expected_delivery_date).format("MMM D, YYYY")}
                   </p>
                 </div>
               </Flex>

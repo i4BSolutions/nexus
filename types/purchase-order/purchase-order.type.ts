@@ -19,22 +19,23 @@ export interface PurchaseOrderInterface {
   created_at: string;
 }
 
-export interface GetPurchaseOrderDto {
+export interface PurchaseOrderDto {
   id: number;
   purchase_order_no: string;
   order_date: string;
   status: string;
   currency_code: string;
   usd_exchange_rate: number;
-  amount: number;
+  amount_local: number;
+  amount_usd: number;
   contact_person: string;
   expected_delivery_date: string;
   invoiced_amount?: number;
   allocated_amount?: number;
 }
 
-export interface GetPurchaseOrderResponse {
-  dto: GetPurchaseOrderDto[];
+export interface PurchaseOrderResponse {
+  dto: PurchaseOrderDto[];
   total: number;
   page: number;
   pageSize: number;

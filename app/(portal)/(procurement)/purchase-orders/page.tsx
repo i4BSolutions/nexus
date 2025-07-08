@@ -1,14 +1,14 @@
 "use client";
 
-import CardView from "@/components/purchase-orders/CardView";
-import TableView from "@/components/purchase-orders/TableView";
+import PoCardView from "@/components/purchase-orders/PoCardView";
+import PoTableView from "@/components/purchase-orders/PoTableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import StatisticsCards from "@/components/shared/StatisticsCards";
 import { useList } from "@/hooks/react-query/useList";
 import {
-  GetPurchaseOrderDto,
-  GetPurchaseOrderResponse,
+  PurchaseOrderDto,
+  PurchaseOrderResponse,
 } from "@/types/purchase-order/purchase-order.type";
 import { StatItem } from "@/types/shared/stat-item.type";
 import {
@@ -26,7 +26,7 @@ import { useEffect, useState } from "react";
 export default function PurchaseOrdersPage() {
   const [statItems, setStatItems] = useState<StatItem[]>();
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
-  const [data, setData] = useState<GetPurchaseOrderDto[]>();
+  const [data, setData] = useState<PurchaseOrderDto[]>();
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
@@ -34,7 +34,7 @@ export default function PurchaseOrdersPage() {
   const [total, setTotal] = useState<number>(0);
 
   const router = useRouter();
-  const { data: poData, isPending } = useList<GetPurchaseOrderResponse>(
+  const { data: poData, isPending } = useList<PurchaseOrderResponse>(
     "purchase-orders",
     {
       page: pagination.page,
@@ -54,7 +54,8 @@ export default function PurchaseOrdersPage() {
         purchase_order_no: item.purchase_order_no,
         order_date: item.order_date,
         status: item.status,
-        amount: item.amount,
+        amount_local: item.amount_local,
+        amount_usd: item.amount_usd,
         currency_code: item.currency_code,
         usd_exchange_rate: item.usd_exchange_rate,
         contact_person: item.contact_person,
@@ -229,14 +230,14 @@ export default function PurchaseOrdersPage() {
         />
       </Flex>
       {viewMode === "Card" ? (
-        <CardView
+        <PoCardView
           data={data}
           pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
           total={total}
         />
       ) : (
-        <TableView
+        <PoTableView
           data={data}
           pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PurchaseOrderInterface } from "@/types/purchase-order/purchase-order.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
 import { NextRequest, NextResponse } from "next/server";
-import { GetPurchaseOrderResponse } from "../../../types/purchase-order/purchase-order.type";
+import { PurchaseOrderResponse } from "../../../types/purchase-order/purchase-order.type";
 
 /**
  * This API route creates a purchase order.
@@ -92,17 +92,15 @@ export async function POST(
 export async function GET(
   req: NextRequest
 ): Promise<
-  NextResponse<ApiResponse<GetPurchaseOrderResponse> | ApiResponse<null>>
+  NextResponse<ApiResponse<PurchaseOrderResponse> | ApiResponse<null>>
 > {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
-
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSizeParam = searchParams.get("pageSize") || "10";
   const pageSize = parseInt(pageSizeParam, 10);
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
-
   const poNumber = searchParams.get("q") || "";
   const statusParam = searchParams.get("status");
   const sortParam = searchParams.get("sort");
@@ -139,7 +137,7 @@ export async function GET(
     query = query.eq("status", statusParam);
   }
 
-  query = query.order("order_date", {
+  query = query.order("id", {
     ascending: sortParam === "order_date_asc",
   });
 
@@ -170,16 +168,22 @@ export async function GET(
     usd_exchange_rate: order.usd_exchange_rate,
     currency_code: order.product_currency.currency_code,
     contact_person: order.contact_person.name,
-    amount: order.purchase_order_items.reduce(
+    amount_local: order.purchase_order_items.reduce(
       (total: number, item: { quantity: number; unit_price_local: number }) =>
         total + item.quantity * item.unit_price_local,
+      0
+    ),
+    amount_usd: order.purchase_order_items.reduce(
+      (total: number, item: { quantity: number; unit_price_local: number }) =>
+        total +
+        (item.quantity * item.unit_price_local) / order.usd_exchange_rate,
       0
     ),
     invoiced_amount: 0,
     allocated_amount: 0,
   }));
 
-  const GetPurchaseOrderResponse: GetPurchaseOrderResponse = {
+  const GetPurchaseOrderResponse: PurchaseOrderResponse = {
     dto: orders || [],
     total: count || 0,
     page,
@@ -190,10 +194,7 @@ export async function GET(
         ? orders.filter((order) => order.status === "Approved").length
         : 0,
       total_usd_value: orders
-        ? orders.reduce(
-            (total, order) => total + order.amount / order.usd_exchange_rate,
-            0
-          )
+        ? orders.reduce((total, order) => total + order.amount_usd, 0)
         : 0,
       invoiced_percentage: 0,
       allocated_percentage: 0,
@@ -201,7 +202,7 @@ export async function GET(
   };
 
   return NextResponse.json(
-    success<GetPurchaseOrderResponse>(
+    success<PurchaseOrderResponse>(
       GetPurchaseOrderResponse,
       "Purchase orders retrieved successfully"
     ),
