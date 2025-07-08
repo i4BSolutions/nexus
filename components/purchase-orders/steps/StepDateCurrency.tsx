@@ -1,15 +1,20 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 
 // Ant Design
 import { Space, Typography, Form, DatePicker, Select, Input } from "antd";
 
+// Day.js
+import dayjs from "dayjs";
+
 // React Query
 import { useQuery } from "@tanstack/react-query";
+import { useList } from "@/hooks/react-query/useList";
 
 // Types
 import { ProductCurrencyInterface } from "@/types/product/product.type";
+import { BudgetResponse } from "@/types/budgets/budgets.type";
 
 interface StepDateCurrencyProps {
   onNext: (values: any) => void;
@@ -19,15 +24,8 @@ interface StepDateCurrencyProps {
 
 export interface StepDateCurrencyRef {
   submitForm: () => void;
+  getFormData: () => any;
 }
-
-// TODO: Fetch budgets
-// const fetchBudgets = async () => {
-// const res = await fetch("/api/purchase-orders/purchase-orders-budgets");
-// if (!res.ok) throw new Error("Failed to fetch budgets");
-// const json = await res.json();
-// return { items: json.data };
-// };
 
 const fetchCurrencies = async () => {
   const res = await fetch("/api/products/get-product-currencies");
@@ -39,11 +37,20 @@ const fetchCurrencies = async () => {
 const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
   ({ onNext, onBack, formData }, ref) => {
     const [form] = Form.useForm();
+    const [orderDate, setOrderDate] = useState<dayjs.Dayjs | null>(null);
 
     const { data: currenciesData, isLoading: currenciesLoading } = useQuery({
       queryKey: ["currencies"],
       queryFn: fetchCurrencies,
     });
+
+    const { data: budgetsData, isLoading: budgetsLoading } = useList(
+      "budgets",
+      {
+        pageSize: "all" as any,
+        status: "Active",
+      }
+    );
 
     useEffect(() => {
       // Pre-populate form with existing data
@@ -60,6 +67,7 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
 
     useImperativeHandle(ref, () => ({
       submitForm: handleNext,
+      getFormData: () => form.getFieldsValue(),
     }));
 
     return (
@@ -100,7 +108,23 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                 name="order_date"
                 rules={[{ required: true, message: "Order date is required" }]}
               >
-                <DatePicker size="large" style={{ width: "100%" }} />
+                <DatePicker
+                  size="large"
+                  style={{ width: "100%" }}
+                  disabledDate={(current) =>
+                    current && current < dayjs().startOf("day")
+                  }
+                  onChange={(date) => {
+                    setOrderDate(date);
+                    // Optionally reset expected_delivery_date if it's before new order_date
+                    const expected = form.getFieldValue(
+                      "expected_delivery_date"
+                    );
+                    if (date && expected && expected < date) {
+                      form.setFieldValue("expected_delivery_date", null);
+                    }
+                  }}
+                />
               </Form.Item>
 
               <Form.Item
@@ -129,7 +153,17 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                   },
                 ]}
               >
-                <DatePicker size="large" style={{ width: "100%" }} />
+                <DatePicker
+                  size="large"
+                  style={{ width: "100%" }}
+                  disabledDate={(current) => {
+                    // Disable before today and before selected order date
+                    const minDate = orderDate
+                      ? orderDate.startOf("day")
+                      : dayjs().startOf("day");
+                    return current && current < minDate;
+                  }}
+                />
               </Form.Item>
             </Space>
 
@@ -160,12 +194,24 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
               >
                 <Select
                   size="large"
-                  placeholder="Select budget"
-                  options={[
-                    { value: "1", label: "Budget 1" },
-                    { value: "2", label: "Budget 2" },
-                    { value: "3", label: "Budget 3" },
-                  ]}
+                  placeholder={
+                    budgetsLoading ? "Loading budgets..." : "Select budget"
+                  }
+                  loading={budgetsLoading}
+                  showSearch
+                  filterOption={(input, option) => {
+                    const label = option?.label;
+                    if (typeof label === "string") {
+                      return label.toLowerCase().includes(input.toLowerCase());
+                    }
+                    return false;
+                  }}
+                  options={
+                    (budgetsData as BudgetResponse)?.items?.map((budget) => ({
+                      value: budget.id,
+                      label: budget.budget_name,
+                    })) || []
+                  }
                 />
               </Form.Item>
               <Space
@@ -231,6 +277,21 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                   name="exchange_rate"
                   rules={[
                     { required: true, message: "Exchange rate is required" },
+                    {
+                      pattern: /^\d+(\.\d{1,4})?$/,
+                      message:
+                        "Exchange rate must be a positive number with up to 4 decimal places",
+                    },
+                    {
+                      validator: (_, value) => {
+                        if (value && parseFloat(value) <= 0) {
+                          return Promise.reject(
+                            new Error("Exchange rate must be greater than 0")
+                          );
+                        }
+                        return Promise.resolve();
+                      },
+                    },
                   ]}
                 >
                   <Input size="large" placeholder="Enter exchange rate" />

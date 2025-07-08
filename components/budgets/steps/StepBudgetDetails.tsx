@@ -34,7 +34,7 @@ const StepBudgetDetails = forwardRef<
       }
       form.setFieldsValue(initialValues);
     }
-  }, [formData]);
+  }, [formData, form]);
 
   const handleNext = () => {
     form.validateFields().then((values) => {

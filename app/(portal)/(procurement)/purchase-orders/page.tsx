@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import CardView from "@/components/purchase-orders/CardView";
 import TableView from "@/components/purchase-orders/TableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -20,8 +22,8 @@ import {
 import { Button, Flex, Input, Segmented, Select, Spin } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+
+import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
 
 export default function PurchaseOrdersPage() {
   const [statItems, setStatItems] = useState<StatItem[]>();
@@ -32,9 +34,12 @@ export default function PurchaseOrdersPage() {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const router = useRouter();
+  
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
+
     "purchase-orders",
     {
       page: pagination.page,
@@ -155,10 +160,11 @@ export default function PurchaseOrdersPage() {
         title="Purchase Orders"
         description="Manage and track all purchase orders"
         icon={<ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />}
-        onAddNew={() => router.push("/purchase-orders/create")}
+        onAddNew={() => setShowCreateModal(true)}
         buttonText="New Purchase Order"
         buttonIcon={<PlusOutlined />}
       />
+
       <StatisticsCards stats={statItems} />
       <Flex justify="center" align="center" gap={12}>
         <Input.Search
@@ -243,6 +249,12 @@ export default function PurchaseOrdersPage() {
           total={total}
         />
       )}
+
+      {/* Create Options Modal */}
+      <CreateOptionsModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
     </section>
   );
 }
