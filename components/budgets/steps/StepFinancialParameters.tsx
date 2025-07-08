@@ -47,6 +47,7 @@ const StepFinancialParameters = forwardRef<
 
   const plannedAmountValue = parseFloat(plannedAmount) || 0;
   const exchangeRateValue = parseFloat(exchangeRate) || 1;
+
   const usdEquivalent =
     exchangeRateValue > 0 ? plannedAmountValue / exchangeRateValue : 0;
 
@@ -75,6 +76,7 @@ const StepFinancialParameters = forwardRef<
   return (
     <Form form={form} layout="vertical">
       <Row gutter={16}>
+        {/* Planned Budget */}
         <Col xs={24} md={12}>
           <Form.Item
             label="Planned Budget"
@@ -83,10 +85,10 @@ const StepFinancialParameters = forwardRef<
               { required: true, message: "Planned budget is required" },
               {
                 validator: (_, value) => {
-                  const num = parseFloat(plannedAmount);
+                  const num = parseFloat(value);
                   if (isNaN(num) || num <= 0) {
                     return Promise.reject(
-                      new Error("Must be a positive number")
+                      new Error("Must be a positive number greater than 0")
                     );
                   }
                   return Promise.resolve();
@@ -128,6 +130,7 @@ const StepFinancialParameters = forwardRef<
           </Form.Item>
         </Col>
 
+        {/* Exchange Rate */}
         <Col xs={24} md={12}>
           <Form.Item
             label="Exchange Rate (to USD)"
@@ -136,10 +139,10 @@ const StepFinancialParameters = forwardRef<
               { required: true, message: "Exchange rate is required" },
               {
                 validator: (_, value) => {
-                  const num = parseFloat(exchangeRate);
+                  const num = parseFloat(value);
                   if (isNaN(num) || num <= 0) {
                     return Promise.reject(
-                      new Error("Must be a positive number")
+                      new Error("Must be a positive number greater than 0")
                     );
                   }
                   return Promise.resolve();
@@ -160,7 +163,7 @@ const StepFinancialParameters = forwardRef<
 
       <Text strong>Planned Budget (USD Equivalent)</Text>
       <div style={{ fontSize: 20, marginTop: 8 }}>
-        ${" "}
+        {" "}
         {usdEquivalent.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
