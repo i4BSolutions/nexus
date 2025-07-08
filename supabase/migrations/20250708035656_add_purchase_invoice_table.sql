@@ -6,6 +6,7 @@ create table "public"."purchase_invoice" (
     "currency_id" bigint not null,
     "exchange_rate_to_usd" double precision not null,
     "purchase_order_id" bigint not null,
+    "status" text not null default 'Pending'::text,
     "created_at" timestamp with time zone not null default now(),
     "updated_at" timestamp with time zone not null default now()
 );
