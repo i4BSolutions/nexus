@@ -24,6 +24,7 @@ import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 
 import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
+import { useRouter } from "next/navigation";
 
 export default function PurchaseOrdersPage() {
   const [statItems, setStatItems] = useState<StatItem[]>();
@@ -37,9 +38,8 @@ export default function PurchaseOrdersPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const router = useRouter();
-  
-  const { data: poData, isPending } = useList<PurchaseOrderResponse>(
 
+  const { data: poData, isPending } = useList<PurchaseOrderResponse>(
     "purchase-orders",
     {
       page: pagination.page,
