@@ -1,72 +1,60 @@
-import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
+import { PoInvoiceInterface } from "@/types/purchase-order/purchase-order-detail.type";
 import { CalendarOutlined } from "@ant-design/icons";
-import {
-  Button,
-  Divider,
-  Flex,
-  Pagination,
-  Table,
-  TableProps,
-  Typography,
-} from "antd";
+import { Button, Flex, Pagination, Table, TableProps, Typography } from "antd";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import StatusBadge from "./StatusBadge";
+import StatusBadge from "../StatusBadge";
 
-export default function TableView({
+export default function PoInvoiceTable({
   data,
   total,
   pagination,
   paginationChangeHandler,
 }: {
-  data: PurchaseOrderDto[];
+  data: PoInvoiceInterface[];
   total: number;
   pagination: { page: number; pageSize: number };
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
   const router = useRouter();
-
-  const columns: TableProps<PurchaseOrderDto>["columns"] = [
+  const columns: TableProps<PoInvoiceInterface>["columns"] = [
     {
-      title: "PURCHASE ORDER",
-      dataIndex: "purchase_order_no",
-      key: "id",
+      title: "INVOICES",
+      dataIndex: "invoice_no",
+      key: "invoice_no",
       render: (text) => <a>{text}</a>,
     },
     {
-      title: "CONTACT PERSON",
-      dataIndex: "contact_person",
-      key: "contact_person",
+      title: "SUPPLIER",
+      dataIndex: "supplier",
+      key: "supplier",
     },
     {
-      title: "ORDER DATE",
-      dataIndex: "order_date",
-      key: "order_date",
-      defaultSortOrder: "descend",
-      sorter: (a, b) =>
-        new Date(a.order_date).getTime() - new Date(b.order_date).getTime(),
-      render: (order_date) => (
+      title: "INVOICE DATE",
+      dataIndex: "invoice_date",
+      key: "invoice_date",
+      render: (invoice_date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />
-          {dayjs(order_date).format("MMM D, YYYY")}
+          {dayjs(invoice_date).format("MMM D, YYYY")}
         </div>
       ),
     },
     {
-      title: "EXPECTED DELIVERY DATE",
-      dataIndex: "expected_delivery_date",
-      key: "expected_delivery_date",
-      render: (expected_delivery_date) => (
+      title: "DUE DATE",
+      dataIndex: "due_date",
+      key: "due_date",
+      render: (due_date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />
-          {dayjs(expected_delivery_date).format("MMM D, YYYY")}
+          {dayjs(due_date).format("MMM D, YYYY")}
         </div>
       ),
     },
     {
       title: "AMOUNT",
-      dataIndex: "amount",
-      key: "amount",
+      dataIndex: "amount_local",
+      key: "amount_local",
       render: (amount, record) => (
         <div>
           <div>
@@ -76,7 +64,7 @@ export default function TableView({
           </div>
           <div>
             <Typography.Text type="secondary">
-              (${amount.toLocaleString("en-US")})
+              (${record.amount_usd.toLocaleString("en-US")})
             </Typography.Text>
           </div>
         </div>
@@ -97,21 +85,9 @@ export default function TableView({
           <Button
             style={{ padding: 0 }}
             type="link"
-            onClick={() =>
-              router.push(`/purchase-orders/${record.purchase_order_no}`)
-            }
+            onClick={() => router.push(`/purchase-orders/${record.invoice_no}`)}
           >
             View
-          </Button>
-          <Divider type="vertical" />
-          <Button
-            style={{ padding: 0 }}
-            type="link"
-            onClick={() =>
-              router.push(`/purchase-orders/${record.purchase_order_no}/edit`)
-            }
-          >
-            Edit
           </Button>
         </Flex>
       ),
@@ -119,8 +95,8 @@ export default function TableView({
   ];
 
   return (
-    <section className="py-4">
-      <Table<PurchaseOrderDto>
+    <section className="py-4 px-6 mb-4">
+      <Table<PoInvoiceInterface>
         columns={columns}
         dataSource={data}
         showSorterTooltip={{ target: "sorter-icon" }}

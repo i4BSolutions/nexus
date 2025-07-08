@@ -2,8 +2,9 @@ import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { PurchaseOrderInterface } from "@/types/purchase-order/purchase-order.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
+import dayjs from "dayjs";
 import { NextRequest, NextResponse } from "next/server";
-import { GetPurchaseOrderResponse } from "../../../types/purchase-order/purchase-order.type";
+import { PurchaseOrderResponse } from "../../../types/purchase-order/purchase-order.type";
 
 /**
  * This API route creates a purchase order.
@@ -92,7 +93,7 @@ export async function POST(
 export async function GET(
   req: NextRequest
 ): Promise<
-  NextResponse<ApiResponse<GetPurchaseOrderResponse> | ApiResponse<null>>
+  NextResponse<ApiResponse<PurchaseOrderResponse> | ApiResponse<null>>
 > {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
@@ -164,9 +165,11 @@ export async function GET(
   const orders = data?.map((order) => ({
     id: order.id,
     purchase_order_no: order.purchase_order_no,
-    order_date: order.order_date,
+    order_date: dayjs(order.order_date).format("MMM D, YYYY"),
     status: order.status,
-    expected_delivery_date: order.expected_delivery_date,
+    expected_delivery_date: dayjs(order.expected_delivery_date).format(
+      "MMM D, YYYY"
+    ),
     usd_exchange_rate: order.usd_exchange_rate,
     currency_code: order.product_currency.currency_code,
     contact_person: order.contact_person.name,
@@ -179,7 +182,7 @@ export async function GET(
     allocated_amount: 0,
   }));
 
-  const GetPurchaseOrderResponse: GetPurchaseOrderResponse = {
+  const GetPurchaseOrderResponse: PurchaseOrderResponse = {
     dto: orders || [],
     total: count || 0,
     page,
@@ -201,7 +204,7 @@ export async function GET(
   };
 
   return NextResponse.json(
-    success<GetPurchaseOrderResponse>(
+    success<PurchaseOrderResponse>(
       GetPurchaseOrderResponse,
       "Purchase orders retrieved successfully"
     ),
