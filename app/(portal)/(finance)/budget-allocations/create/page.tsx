@@ -1,5 +1,6 @@
 "use client";
 
+import BudgetAllocationForm from "@/components/budget-allocations/BudgetAllocationForm";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
@@ -33,6 +34,7 @@ const CreateBudgetAllocationsPage = () => {
           </Space>
         </Space>
       </Space>
+      <BudgetAllocationForm />
     </section>
   );
 };
