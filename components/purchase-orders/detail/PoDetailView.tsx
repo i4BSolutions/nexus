@@ -54,7 +54,9 @@ export default function PoDetailView({
                   <Typography.Text type="secondary">Supplier</Typography.Text>
                 </Space>
                 <Space>
-                  <Typography.Title level={5}>{data.supplier}</Typography.Title>
+                  <Typography.Title level={5}>
+                    {data.supplier.name}
+                  </Typography.Title>
                 </Space>
               </Space>
               <Space direction="vertical" size={0}>
@@ -72,7 +74,9 @@ export default function PoDetailView({
                   <Typography.Text type="secondary">Budget</Typography.Text>
                 </Space>
                 <Space>
-                  <Typography.Title level={5}>{data.budget}</Typography.Title>
+                  <Typography.Title level={5}>
+                    {data.budget.name}
+                  </Typography.Title>
                 </Space>
               </Space>
             </Space>
@@ -84,7 +88,9 @@ export default function PoDetailView({
                   <Typography.Text type="secondary">Region</Typography.Text>
                 </Space>
                 <Space>
-                  <Typography.Title level={5}>{data.region}</Typography.Title>
+                  <Typography.Title level={5}>
+                    {data.region.name}
+                  </Typography.Title>
                 </Space>
               </Space>
               <Space direction="vertical" size={0}>
@@ -105,11 +111,11 @@ export default function PoDetailView({
                 </Space>
                 <Space style={{ display: "flex", alignItems: "center" }}>
                   <Typography.Title level={5} style={{ marginBottom: 0 }}>
-                    {data.currency_code}
+                    {data.currency.currency_code}
                   </Typography.Title>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     (1USD = {data.usd_exchange_rate?.toLocaleString()}{" "}
-                    {data.currency_code})
+                    {data.currency.currency_code}
                   </Typography.Text>
                 </Space>
               </Space>
@@ -172,7 +178,8 @@ export default function PoDetailView({
                 <Col span={4}>{item.quantity}</Col>
 
                 <Col span={7}>
-                  {item.unit_price_local.toLocaleString()} {data.currency_code}
+                  {item.unit_price_local.toLocaleString()}{" "}
+                  {data.currency.currency_code}
                   <br />
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     ({item.unit_price_usd.toLocaleString()} USD)
@@ -180,7 +187,8 @@ export default function PoDetailView({
                 </Col>
 
                 <Col span={7} style={{ textAlign: "right" }}>
-                  {item.sub_total_local.toLocaleString()} {data.currency_code}
+                  {item.sub_total_local.toLocaleString()}{" "}
+                  {data.currency.currency_code}
                   <br />
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     ({item.sub_total_usd.toLocaleString()} USD)
@@ -202,7 +210,8 @@ export default function PoDetailView({
           >
             <Typography.Text type="secondary">Total Amount</Typography.Text>
             <Typography.Title level={3} style={{ margin: 0 }}>
-              {data.total_amount_local.toLocaleString()} {data.currency_code}
+              {data.total_amount_local.toLocaleString()}{" "}
+              {data.currency.currency_code}
             </Typography.Title>
             <Typography.Text type="secondary">
               ({data.total_amount_usd.toLocaleString()} USD)
@@ -215,14 +224,14 @@ export default function PoDetailView({
           <Col span={12} style={{ marginBottom: 12 }}>
             <Typography.Text type="secondary">Contact Person</Typography.Text>
             <div style={{ fontSize: 16, fontWeight: 600 }}>
-              {data.contact_person}
+              {data.contact_person?.name}
             </div>
           </Col>
           <Col span={12} style={{ marginBottom: 12 }}>
             <Typography.Text type="secondary">Sign Person</Typography.Text>
             <div style={{ fontSize: 16, fontWeight: 600 }}>
               {data.sign_person ? (
-                data.sign_person
+                data.sign_person.name
               ) : (
                 <Typography.Text type="secondary">
                   No sign person
@@ -236,7 +245,7 @@ export default function PoDetailView({
             </Typography.Text>
             <div style={{ fontSize: 16, fontWeight: 600 }}>
               {data.authorized_sign_person ? (
-                data.authorized_sign_person
+                data.authorized_sign_person.name
               ) : (
                 <Typography.Text type="secondary">
                   No authorized sign person

@@ -147,7 +147,7 @@ export default function PoDetailPDF({
         <View style={styles.section}>
           <View style={styles.row}>
             <Text style={styles.label}>Supplier:</Text>
-            <Text>{data.supplier}</Text>
+            <Text>{data.supplier.name}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Order Date:</Text>
@@ -155,11 +155,11 @@ export default function PoDetailPDF({
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Budget:</Text>
-            <Text>{data.budget}</Text>
+            <Text>{data.budget.name}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Region:</Text>
-            <Text>{data.region}</Text>
+            <Text>{data.region.name}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Expected Delivery Date:</Text>
@@ -168,8 +168,9 @@ export default function PoDetailPDF({
           <View style={styles.row}>
             <Text style={styles.label}>Currency:</Text>
             <Text>
-              {data.currency_code} (1 USD ={" "}
-              {data.usd_exchange_rate?.toLocaleString()} {data.currency_code})
+              {data.currency.currency_code} (1 USD ={" "}
+              {data.usd_exchange_rate?.toLocaleString()}{" "}
+              {data.currency.currency_code})
             </Text>
           </View>
         </View>
@@ -191,7 +192,8 @@ export default function PoDetailPDF({
               <Text style={styles.col}>{item.quantity}</Text>
               <View style={styles.col}>
                 <Text>
-                  {item.unit_price_local.toLocaleString()} {data.currency_code}
+                  {item.unit_price_local.toLocaleString()}{" "}
+                  {data.currency.currency_code}
                 </Text>
                 <Text style={{ fontSize: 9, color: "#666" }}>
                   ({item.unit_price_usd.toLocaleString()} USD)
@@ -199,7 +201,8 @@ export default function PoDetailPDF({
               </View>
               <View style={styles.colRight}>
                 <Text>
-                  {item.sub_total_local.toLocaleString()} {data.currency_code}
+                  {item.sub_total_local.toLocaleString()}{" "}
+                  {data.currency.currency_code}
                 </Text>
                 <Text style={{ fontSize: 9, color: "#666" }}>
                   ({item.sub_total_usd.toLocaleString()} USD)
@@ -213,7 +216,8 @@ export default function PoDetailPDF({
         <View style={styles.totalSection}>
           <Text style={styles.label}>Total Amount</Text>
           <Text style={{ fontSize: 14, fontWeight: "bold" }}>
-            {data.total_amount_local.toLocaleString()} {data.currency_code}
+            {data.total_amount_local.toLocaleString()}{" "}
+            {data.currency.currency_code}
           </Text>
           <Text style={{ fontSize: 10, color: "#666" }}>
             ({data.total_amount_usd.toLocaleString()} USD)
@@ -224,16 +228,16 @@ export default function PoDetailPDF({
         <View style={styles.bottomSection}>
           <View style={styles.row}>
             <Text style={styles.label}>Contact Person:</Text>
-            <Text>{data.contact_person}</Text>
+            <Text>{data.contact_person?.name}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Sign Person:</Text>
-            <Text>{data.sign_person || "No sign person"}</Text>
+            <Text>{data.sign_person?.name || "No sign person"}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Authorized Sign Person:</Text>
             <Text>
-              {data.authorized_sign_person || "No authorized sign person"}
+              {data.authorized_sign_person?.name || "No authorized sign person"}
             </Text>
           </View>
           <View style={styles.row}>

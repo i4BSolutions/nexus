@@ -1,24 +1,21 @@
 import { getAuthenticatedUser } from "@/helper/getUser";
-import { createClient } from "@/lib/supabase/server";
-
-import { NextRequest, NextResponse } from "next/server";
-
-import { ApiResponse } from "@/types/shared/api-response-type";
-
 import { error, success } from "@/lib/api-response";
+import { createClient } from "@/lib/supabase/server";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { NextRequest, NextResponse } from "next/server";
 
 // Helper: Fetch purchase order with joined data
 async function fetchPurchaseOrderWithJoins(supabase: any, idStr: string) {
   const selectFields = [
     "*",
-    "supplier:supplier_id(name, contact_person, email, phone, address, status)",
-    "region:region_id(name)",
-    "currency:currency_id(currency_code, currency_name)",
-    "contact_person:contact_person_id(name)",
-    "sign_person:sign_person_id(name)",
-    "authorized_signer:authorized_signer_id(name)",
-    "budget:budget_id(budget_name, project_name, description, status)",
+    "supplier:supplier_id(id, name, contact_person, email, phone, address, status)",
+    "region:region_id(id, name)",
+    "currency:currency_id(id, currency_code, currency_name)",
+    "contact_person:contact_person_id(id, name)",
+    "sign_person:sign_person_id(id, name)",
+    "authorized_signer:authorized_signer_id(id, name)",
+    "budget:budget_id(id, budget_name, project_name, description, status)",
   ];
 
   return await supabase
@@ -72,19 +69,47 @@ function buildPurchaseOrderDetailDto(
   return {
     id: purchaseOrder.id,
     purchase_order_no: purchaseOrder.purchase_order_no,
-    supplier: purchaseOrder.supplier?.name || "Unknown Supplier",
-    region: purchaseOrder.region?.name || "Unknown Region",
+    supplier: {
+      id: purchaseOrder.supplier?.id || 0,
+      name: purchaseOrder.supplier?.name || "Unknown Supplier",
+    },
+    region: {
+      id: purchaseOrder.region?.id || 0,
+      name: purchaseOrder.region?.name || "Unknown Region",
+    },
     order_date: purchaseOrder.order_date,
     expected_delivery_date: purchaseOrder.expected_delivery_date,
-    budget: purchaseOrder.budget?.budget_name || "Unknown Budget",
-    currency_code: purchaseOrder.currency?.currency_code || "USD",
+    budget: {
+      id: purchaseOrder.budget?.id || 0,
+      name: purchaseOrder.budget?.budget_name || "Unknown Budget",
+    },
+    currency: {
+      id: purchaseOrder.currency?.id,
+      currency_code: purchaseOrder.currency?.currency_code,
+      currency_name: purchaseOrder.currency?.currency_name,
+    },
     usd_exchange_rate: purchaseOrder.usd_exchange_rate,
     product_items: formattedItems,
     total_amount_local: totalAmountLocal,
     total_amount_usd: totalAmountUSD,
-    contact_person: purchaseOrder.contact_person?.name || "Not specified",
-    sign_person: purchaseOrder.sign_person?.name,
-    authorized_sign_person: purchaseOrder.authorized_signer?.name,
+    contact_person: purchaseOrder.contact_person
+      ? {
+          id: purchaseOrder.contact_person.id,
+          name: purchaseOrder.contact_person.name,
+        }
+      : null,
+    sign_person: purchaseOrder.sign_person
+      ? {
+          id: purchaseOrder.sign_person?.id,
+          name: purchaseOrder.sign_person?.name,
+        }
+      : null,
+    authorized_sign_person: purchaseOrder.authorized_signer
+      ? {
+          id: purchaseOrder.authorized_signer?.id,
+          name: purchaseOrder.authorized_signer?.name,
+        }
+      : null,
     note: purchaseOrder.note,
   };
 }
@@ -145,7 +170,7 @@ export async function GET(
     totalAmountLocal,
     totalAmountUSD
   );
-
+  console.log("Purchase Order Detail:", result);
   return NextResponse.json(success(result), { status: 200 });
 }
 
