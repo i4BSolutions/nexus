@@ -40,7 +40,8 @@ export default function PoTableView({
       dataIndex: "order_date",
       key: "order_date",
       defaultSortOrder: "descend",
-      sorter: (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
+      sorter: (a, b) =>
+        new Date(a.order_date).getTime() - new Date(b.order_date).getTime(),
       render: (order_date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />

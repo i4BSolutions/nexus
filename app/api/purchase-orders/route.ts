@@ -137,7 +137,7 @@ export async function GET(
     query = query.eq("status", statusParam);
   }
 
-  query = query.order("id", {
+  query = query.order("order_date", {
     ascending: sortParam === "order_date_asc",
   });
 
