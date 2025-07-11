@@ -4,9 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 import { ApiResponse } from "@/types/shared/api-response-type";
-import { GetPurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order.type";
 
 import { error, success } from "@/lib/api-response";
+import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 
 // Helper: Fetch purchase order with joined data
 async function fetchPurchaseOrderWithJoins(supabase: any, idStr: string) {
@@ -68,7 +68,7 @@ function buildPurchaseOrderDetailDto(
   formattedItems: any[],
   totalAmountLocal: number,
   totalAmountUSD: number
-): GetPurchaseOrderDetailDto {
+): PurchaseOrderDetailDto {
   return {
     id: purchaseOrder.id,
     purchase_order_no: purchaseOrder.purchase_order_no,
@@ -98,7 +98,7 @@ function buildPurchaseOrderDetailDto(
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
-): Promise<NextResponse<ApiResponse<GetPurchaseOrderDetailDto | null>>> {
+): Promise<NextResponse<ApiResponse<PurchaseOrderDetailDto | null>>> {
   const supabase = await createClient();
   const { id: idStr } = await context.params;
 
@@ -106,14 +106,14 @@ export async function GET(
   const { data: purchaseOrder, error: poError } =
     await fetchPurchaseOrderWithJoins(supabase, idStr);
 
+  if (poError) {
+    return NextResponse.json(error(poError.message), { status: 500 });
+  }
+
   if (!purchaseOrder) {
     return NextResponse.json(error("Purchase order not found"), {
       status: 404,
     });
-  }
-
-  if (poError) {
-    return NextResponse.json(error(poError.message), { status: 500 });
   }
 
   // Get purchase order items with product information
@@ -198,7 +198,7 @@ async function createPurchaseOrderAuditLogEntries(
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
-): Promise<NextResponse<ApiResponse<GetPurchaseOrderDetailDto | null>>> {
+): Promise<NextResponse<ApiResponse<PurchaseOrderDetailDto | null>>> {
   const supabase = await createClient();
   const { id: idStr } = await context.params;
   const body = await req.json();

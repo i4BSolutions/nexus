@@ -8,7 +8,6 @@ export default function PoDetailView({
 }: {
   data: PurchaseOrderDetailDto;
 }) {
-  console.log("DetailView data:", data);
   return (
     <section className="w-full rounded-2xl border-2 border-[#F5F5F5]">
       {/* Detail Header */}

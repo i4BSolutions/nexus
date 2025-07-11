@@ -96,9 +96,7 @@ export default function PoTableView({
           <Button
             style={{ padding: 0 }}
             type="link"
-            onClick={() =>
-              router.push(`/purchase-orders/${record.purchase_order_no}`)
-            }
+            onClick={() => router.push(`/purchase-orders/${record.id}`)}
           >
             View
           </Button>
@@ -106,9 +104,7 @@ export default function PoTableView({
           <Button
             style={{ padding: 0 }}
             type="link"
-            onClick={() =>
-              router.push(`/purchase-orders/${record.purchase_order_no}/edit`)
-            }
+            onClick={() => router.push(`/purchase-orders/${record.id}/edit`)}
           >
             Edit
           </Button>
