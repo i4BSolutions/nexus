@@ -9,7 +9,7 @@ import {
 } from "@/types/budget-allocations/budget-allocations.type";
 import { uploadTransferEvidenceImage } from "@/utils/uploadTransferEvidence";
 
-const bucket = "allocation-transfer-evidence";
+const bucket = "core-orbit";
 
 export async function GET(
   req: NextRequest
@@ -40,9 +40,31 @@ export async function GET(
 
   if (queryError) return NextResponse.json(error(queryError.message, 500));
 
+  const signedData = await Promise.all(
+    (data || []).map(async (item) => {
+      if (item.transfer_evidence) {
+        const { data: signedUrlData, error: signedUrlError } =
+          await supabase.storage
+            .from(bucket)
+            .createSignedUrl(item.transfer_evidence, 60 * 60); // 1 hour expiry
+
+        if (signedUrlError) {
+          console.error("Signed URL error:", signedUrlError.message);
+        }
+
+        return {
+          ...item,
+          transfer_evidence_url: signedUrlData?.signedUrl || null,
+        };
+      }
+
+      return { ...item, transfer_evidence_url: null };
+    })
+  );
+
   return NextResponse.json(
     success({
-      items: data || [],
+      items: signedData || [],
       total: count || 0,
       page,
       pageSize,
@@ -70,7 +92,7 @@ export async function POST(
     .from("purchase_order")
     .select("budget_id")
     .eq("id", po_id)
-    .single();
+    .maybeSingle();
 
   if (poError) return NextResponse.json(error(poError.message, 500));
 
@@ -92,6 +114,7 @@ export async function POST(
         exchange_rate_usd,
         transfer_evidence: "",
         status: "Pending",
+        created_by: user.id,
       },
     ])
     .select()
@@ -107,6 +130,7 @@ export async function POST(
     allocationId,
     file
   );
+
   if (!uploadResult.success)
     return NextResponse.json(
       error(uploadResult.error || "Upload image error", 400)
