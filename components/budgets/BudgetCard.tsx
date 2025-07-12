@@ -1,6 +1,6 @@
 "use client";
 
-import { BudgetResponse } from "@/types/budgets/budgets.type";
+import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
 import {
   Card,
   Tag,
@@ -10,20 +10,27 @@ import {
   Col,
   Empty,
   Typography,
+  Popover,
 } from "antd";
 import {
   InfoCircleOutlined,
   DollarCircleOutlined,
   EllipsisOutlined,
+  StopOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { useState } from "react";
 
 type BudgetsSectionProps = {
   data: BudgetResponse;
+  onStatusChange: (budget: Budget) => void;
 };
 
-const BudgetCard = ({ data }: BudgetsSectionProps) => {
+const BudgetCard = ({ data, onStatusChange }: BudgetsSectionProps) => {
   const budgets = data.items;
+
+  const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
 
   if (budgets.length === 0) {
     return <Empty description="No budgets found" />;
@@ -77,14 +84,39 @@ const BudgetCard = ({ data }: BudgetsSectionProps) => {
                       {budget.project_name}
                       <Tag
                         style={{ borderRadius: 8 }}
-                        color={budget.status === "Active" ? "green" : "red"}
+                        color={budget.status ? "green" : "red"}
                       >
-                        {budget.status}
+                        {budget.status ? "Active" : "Inactive"}
                       </Tag>
                     </div>
                   </div>
                 </div>
-                <div>
+                <Popover
+                  content={
+                    <div style={{ width: 160 }}>
+                      <div
+                        onClick={() => {
+                          onStatusChange?.(budget);
+                          setOpenPopoverId(null);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <StopOutlined style={{ marginRight: 8 }} />
+                        <span>{budget.status ? "Inactive" : "Active"}</span>
+                      </div>
+                    </div>
+                  }
+                  open={openPopoverId === budget.id}
+                  onOpenChange={(visible) => {
+                    setOpenPopoverId(visible ? budget.id : null);
+                  }}
+                  trigger="click"
+                  placement="bottomRight"
+                >
                   <EllipsisOutlined
                     style={{
                       cursor: "pointer",
@@ -92,11 +124,12 @@ const BudgetCard = ({ data }: BudgetsSectionProps) => {
                       height: 32,
                       borderRadius: 8,
                       border: "1px solid #d9d9d9",
+                      display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   />
-                </div>
+                </Popover>
               </div>
 
               {/* Card Body */}
