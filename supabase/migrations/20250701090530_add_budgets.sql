@@ -20,7 +20,7 @@ create table "public"."budgets" (
     "exchange_rate_usd" numeric(8,4) not null,
     "planned_amount" numeric not null,
     "planned_amount_usd" numeric generated always as ((planned_amount / exchange_rate_usd)) stored,
-    "status" text not null default 'Inactive'::text,
+    "status" boolean not null default true,
     "created_by" uuid,
     "created_at" timestamp with time zone not null default timezone('utc'::text, now()),
     "updated_at" timestamp with time zone not null default timezone('utc'::text, now())
