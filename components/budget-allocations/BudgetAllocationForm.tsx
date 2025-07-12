@@ -19,7 +19,10 @@ import {
   Button,
 } from "antd";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import React, { useState } from "react";
+
+dayjs.extend(utc);
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -31,7 +34,11 @@ const fetchCurrencies = async () => {
   return json.data;
 };
 
-const BudgetAllocationForm = () => {
+const BudgetAllocationForm = ({
+  onSubmit,
+}: {
+  onSubmit: (formData: FormData) => void;
+}) => {
   const [form] = Form.useForm();
   const [allocatedAmount, setAllocatedAmount] = useState("");
   const [exchangeRate, setExchangeRate] = useState("");
@@ -99,18 +106,36 @@ const BudgetAllocationForm = () => {
     },
   };
 
+  const handleSubmit = async (values: any) => {
+    const formData = new FormData();
+    formData.append("po_id", values.po_id);
+    formData.append("allocation_number", values.allocation_number);
+    formData.append(
+      "allocation_date",
+      dayjs.utc(values.allocation_date.$d).format("YYYY-MM-DD")
+    );
+    formData.append("allocation_amount", allocatedAmount);
+    formData.append("currency_code", values.currency_code);
+    formData.append("exchange_rate_usd", exchangeRate);
+    formData.append("allocated_by", values.allocated_by);
+    formData.append("note", values.note || "");
+
+    if (fileList[0]?.originFileObj) {
+      formData.append("file", fileList[0].originFileObj);
+    } else {
+      message.error("Please upload a transfer proof image");
+      return;
+    }
+
+    onSubmit(formData);
+    form.resetFields();
+  };
+
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={(values) => {
-        console.log("Form Submitted:", {
-          ...values,
-          allocated_amount: allocatedAmount,
-          exchange_rate_usd: exchangeRate,
-          file_list: fileList, // your uploaded files
-        });
-      }}
+      onFinish={handleSubmit}
       style={{ maxWidth: "100%" }}
     >
       <Card
@@ -181,8 +206,8 @@ const BudgetAllocationForm = () => {
           rules={[{ required: true, message: "Please select purchase order" }]}
         >
           <Select placeholder="Select Purchase Order" allowClear>
-            <Option value="po-1">PO-001</Option>
-            <Option value="po-2">PO-002</Option>
+            <Option value={5}>PO-001</Option>
+            <Option value={6}>PO-002</Option>
             {/* Replace with actual PO options */}
           </Select>
         </Form.Item>

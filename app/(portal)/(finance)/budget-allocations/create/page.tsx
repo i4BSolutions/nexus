@@ -1,13 +1,37 @@
 "use client";
 
 import BudgetAllocationForm from "@/components/budget-allocations/BudgetAllocationForm";
+import { useCreate } from "@/hooks/react-query/useCreate";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { Space, Typography } from "antd";
+import { useMutation } from "@tanstack/react-query";
+import { message, Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
+
+const createAllocation = async (formData: FormData) => {
+  const res = await fetch("/api/budget-allocations", {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to create allocation");
+  return data;
+};
 
 const CreateBudgetAllocationsPage = () => {
   const router = useRouter();
+
+  const mutation = useMutation({
+    mutationFn: createAllocation,
+    onSuccess: () => {
+      message.success("Allocation created successfully!");
+      router.push("/budget-allocations");
+    },
+    onError: (error: any) => {
+      message.error(error.message || "Unexpected error");
+    },
+  });
+
   return (
     <section className="max-w-7xl mx-auto py-4 px-6">
       <Space
@@ -34,7 +58,9 @@ const CreateBudgetAllocationsPage = () => {
           </Space>
         </Space>
       </Space>
-      <BudgetAllocationForm />
+      <BudgetAllocationForm
+        onSubmit={(formData) => mutation.mutateAsync(formData)}
+      />
     </section>
   );
 };

@@ -25,7 +25,7 @@ export async function uploadTransferEvidenceImage(
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const filename = `${allocationId}/${file.name}`;
+  const filename = `budget-allocation-transfer-evidence/${allocationId}/${file.name}`;
 
   // Upload to specified bucket
   const { error } = await supabase.storage
