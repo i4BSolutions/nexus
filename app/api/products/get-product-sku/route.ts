@@ -1,6 +1,6 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
-import { ApiResponse } from "@/types/api-response-type";
+import { ApiResponse } from "@/types/shared/api-response-type";
 import { generateSKU } from "@/utils/generateSKU";
 import { NextResponse } from "next/server";
 

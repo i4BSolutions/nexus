@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
 import { error, success } from "@/lib/api-response";
-import { ApiResponse } from "@/types/api-response-type";
-import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { ProductCurrencyInterface } from "@/types/product/product.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _req: NextRequest

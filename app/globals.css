@@ -14,6 +14,12 @@
   border-right: 3px solid #722ed1;
 }
 
+.ant-segmented-group,
+.ant-segmented-item,
+.ant-segmented-thumb {
+  border-radius: 8px !important;
+}
+
 .ant-form-item-required::after {
   display: none !important;
 }

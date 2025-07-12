@@ -1,9 +1,9 @@
 import { getAuthenticatedUser } from "@/helper/getUser";
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
-import { ApiResponse } from "@/types/api-response-type";
 import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
 import dayjs from "dayjs";
+import { ApiResponse } from "@/types/shared/api-response-type";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(

@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { ApiResponse } from "@/types/api-response-type";
-import { SupplierInterface } from "@/types/supplier/supplier.type";
 import { getAuthenticatedUser } from "@/helper/getUser";
+import { error, success } from "@/lib/api-response";
+import { createClient } from "@/lib/supabase/server";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { SupplierInterface } from "@/types/supplier/supplier.type";
+import { NextRequest, NextResponse } from "next/server";
 
 // function to validate supplier ID
 function validateSupplierId(idStr: string): number {
