@@ -70,7 +70,7 @@ const StepReviewAndSubmit = forwardRef<
                 {formData.project_name}
               </Typography.Text>
             </Col>
-            <Tag color="green">{formData.status}</Tag>
+            <Tag color="green">{formData.status ? "Active" : ""}</Tag>
           </Row>
         </Col>
       </Row>

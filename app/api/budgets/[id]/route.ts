@@ -127,15 +127,21 @@ export async function DELETE(
     .eq("id", id)
     .single();
 
+  if (!old) {
+    return NextResponse.json(error("Budget not found", 404), { status: 404 });
+  }
+
+  const toggledStatus = !old.status;
+
   const { data: updated, error: dbError } = await supabase
     .from("budgets")
-    .update({ status: "Inactive" })
+    .update({ status: toggledStatus })
     .eq("id", id)
     .select()
     .single();
-
+  console.log(dbError?.message);
   if (dbError)
-    return NextResponse.json(error("Failed to delete (soft) budget", 500), {
+    return NextResponse.json(error(dbError.message, 500), {
       status: 500,
     });
 

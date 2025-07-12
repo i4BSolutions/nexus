@@ -12,8 +12,7 @@ export async function GET(): Promise<
   try {
     const { data: budgets } = await supabase
       .from("budgets")
-      .select("id, planned_amount_usd")
-      .eq("status", "Active");
+      .select("id, planned_amount_usd, status");
 
     const { data: allocations } = await supabase
       .from("budget_allocations")
