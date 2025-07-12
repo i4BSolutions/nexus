@@ -273,60 +273,70 @@ async function updatePurchaseOrderItems(
   supabase: any,
   purchaseOrderId: string,
   items: Array<{
-    id: number;
-    product_id?: number;
-    quantity?: number;
-    unit_price_local?: number;
+    id?: number; // optional for new items
+    product_id: number;
+    quantity: number;
+    unit_price_local: number;
   }>
 ) {
-  // Validate items structure
-  if (!Array.isArray(items)) {
-    throw new Error("Items must be an array");
-  }
-
-  // Fetch existing items for this purchase order
   const { data: existingItems, error: fetchError } = await supabase
     .from("purchase_order_items")
-    .select("id")
+    .select("*") // select all fields for audit logging
     .eq("purchase_order_id", purchaseOrderId);
 
   if (fetchError) {
-    return NextResponse.json(error(fetchError.message), { status: 500 });
+    throw new Error(fetchError.message);
   }
 
-  // Create a Set of valid existing item IDs
+  const updatedItems: any[] = [];
+  const newItems: any[] = [];
+
   const existingIds = new Set(
     (existingItems || []).map((item: any) => item.id)
   );
 
-  // For each item in the payload, update if it exists
   for (const item of items) {
-    if (!item.id || !existingIds.has(item.id)) {
-      // Skip items that do not exist in DB
-      continue;
-    }
+    const isExisting = item.id && existingIds.has(item.id);
 
-    // Build update object with only provided fields
-    const updateObj: Record<string, any> = {};
+    if (isExisting) {
+      const updateObj = {
+        ...(item.product_id !== undefined && { product_id: item.product_id }),
+        ...(item.quantity !== undefined && { quantity: item.quantity }),
+        ...(item.unit_price_local !== undefined && {
+          unit_price_local: item.unit_price_local,
+        }),
+      };
 
-    if (item.product_id !== undefined) updateObj.product_id = item.product_id;
+      if (Object.keys(updateObj).length > 0) {
+        const { error: updateError } = await supabase
+          .from("purchase_order_items")
+          .update(updateObj)
+          .eq("id", item.id);
 
-    if (item.quantity !== undefined) updateObj.quantity = item.quantity;
+        if (updateError) throw new Error(updateError.message);
 
-    if (item.unit_price_local !== undefined)
-      updateObj.unit_price_local = item.unit_price_local;
+        updatedItems.push({ ...item, id: item.id });
+      }
+    } else {
+      const newItem = {
+        purchase_order_id: Number(purchaseOrderId),
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price_local: item.unit_price_local,
+      };
 
-    if (Object.keys(updateObj).length === 0) continue; // nothing to update
+      const { data: inserted, error: insertError } = await supabase
+        .from("purchase_order_items")
+        .insert([newItem])
+        .select();
 
-    const { error: updateError } = await supabase
-      .from("purchase_order_items")
-      .update(updateObj)
-      .eq("id", item.id);
-    if (updateError) {
-      return NextResponse.json(error(updateError.message), { status: 500 });
+      if (insertError) throw new Error(insertError.message);
+
+      if (inserted && inserted.length > 0) newItems.push(inserted[0]);
     }
   }
-  return { success: true };
+
+  return { updatedItems, newItems, existingItems };
 }
 
 /**
@@ -456,6 +466,15 @@ export async function PUT(
   if (body.items && Array.isArray(body.items)) {
     try {
       await updatePurchaseOrderItems(supabase, idStr, body.items);
+
+      // Audit log: log all changed fields for items
+      await createPurchaseOrderItemAuditLogEntries(
+        supabase,
+        Number(idStr),
+        user?.id || "system",
+        currentItems,
+        body.items
+      );
     } catch (updateError: unknown) {
       const errorMessage =
         updateError instanceof Error
@@ -468,14 +487,6 @@ export async function PUT(
         }
       );
     }
-    // Audit log: log all changed fields for items
-    await createPurchaseOrderItemAuditLogEntries(
-      supabase,
-      Number(idStr),
-      user?.id || "system",
-      currentItems,
-      body.items
-    );
   }
 
   // Fetch the updated purchase order with joined data
