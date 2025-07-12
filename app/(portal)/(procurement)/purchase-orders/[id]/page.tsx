@@ -79,10 +79,6 @@ export default function PurchaseOrderDetailPage() {
     },
   ];
 
-  const onChange = (key: string) => {
-    console.log(key);
-  };
-
   return (
     <section className="px-4">
       {/* Header Section */}
@@ -145,7 +141,6 @@ export default function PurchaseOrderDetailPage() {
         tabBarStyle={{
           padding: "0 28px",
         }}
-        onChange={onChange}
         size="large"
       />
     </section>

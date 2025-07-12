@@ -29,7 +29,7 @@ async function fetchPurchaseOrderWithJoins(supabase: any, idStr: string) {
 async function fetchPurchaseOrderItems(supabase: any, idStr: string) {
   return await supabase
     .from("purchase_order_items")
-    .select("*, product:product_id(name, sku, description)")
+    .select("*, product:product_id(id, name, sku, description)")
     .eq("purchase_order_id", idStr);
 }
 
@@ -38,7 +38,8 @@ function formatPurchaseOrderItems(items: any[], usdExchangeRate: number) {
   return (
     items?.map((item) => ({
       id: item.id,
-      product_name: item.product?.name || `Product ID: ${item.product_id}`,
+      product: item.product.id,
+      product_name: item.product?.name,
       quantity: item.quantity,
       unit_price_local: item.unit_price_local,
       unit_price_usd: item.unit_price_local / usdExchangeRate,
