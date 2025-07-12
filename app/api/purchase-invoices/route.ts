@@ -2,10 +2,12 @@ import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-import { PurchaseInvoiceInterface } from "@/types/purchase-invoice/purchase-invoice.type";
+import {
+  PurchaseInvoiceInterface,
+  PurchaseInvoiceResponse,
+} from "@/types/purchase-invoice/purchase-invoice.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
 import { PurchaseOrderItemInterface } from "@/types/purchase-order/purchase-order-item.type";
-import { PurchaseInvoiceItemInterface } from "@/types/purchase-invoice/purchase-invoice-item.type";
 
 // Step 1: Get Purchase Order Items Quantity
 async function getPurchaseOrderItems(
@@ -168,3 +170,147 @@ export async function POST(
     { status: 200 }
   );
 }
+
+/**
+ * This API route retrieves all purchase invoices from the database with
+ * pagination support
+ * descending order by default
+ * and optional filtering by status
+ * sorting by invoice number, date, or amount
+ * @param req - NextRequest object
+ * @returns NextResponse ApiResponse<PurchaseInvoiceResponse>
+ */
+export async function GET(
+  req: NextRequest
+): Promise<
+  NextResponse<ApiResponse<PurchaseInvoiceResponse> | ApiResponse<any>>
+> {
+  const supabase = await createClient();
+  const { searchParams } = new URL(req.url);
+
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const pageSizeParam = searchParams.get("pageSize") || "10";
+  const pageSize = parseInt(pageSizeParam, 10);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const search = searchParams.get("q") || "";
+
+  const status = searchParams.get("status");
+  const dateSort = searchParams.get("dateSort");
+  const amountSort = searchParams.get("amountSort");
+
+  // Build the query
+  let query = supabase.from("purchase_invoice").select(
+    `
+      id,
+      purchase_invoice_number,
+      purchase_order_no:purchase_order (purchase_order_no),
+      invoice_date,
+      due_date,
+      product_currency (
+        currency_code
+      ),
+      exchange_rate_to_usd,
+      status,
+      note,
+      invoice_items:purchase_invoice_item (
+        product_id,
+        quantity,
+        unit_price_local
+      )
+    `,
+    { count: "exact" }
+  );
+
+  if (search) {
+    query = query.ilike("purchase_invoice_number", `%${search}%`);
+  }
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  if (dateSort === "date_asc") {
+    query = query.order("invoice_date", { ascending: true });
+  } else if (dateSort === "date_desc") {
+    query = query.order("invoice_date", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+
+  const needAmountSort =
+    amountSort === "amount_asc" || amountSort === "amount_desc";
+
+  if (!needAmountSort) {
+    query = query.range(from, to); // apply DB pagination only if sorting by date
+  }
+
+  const {
+    data: invoices,
+    count,
+    error: dbError,
+  } = (await query) as unknown as {
+    data: any[] | null;
+    count: number | null;
+    error: Error | null;
+  };
+
+  if (dbError) {
+    return NextResponse.json(error(dbError.message), { status: 500 });
+  }
+
+  let formatDto: any = invoices?.map((invoice) => ({
+    id: invoice.id,
+    purchase_invoice_number: invoice.purchase_invoice_number,
+    purchase_order_no: invoice.purchase_order_no.purchase_order_no,
+    invoice_date: invoice.invoice_date,
+    due_date: invoice.due_date,
+    currency_code: invoice.product_currency.currency_code,
+    usd_exchange_rate: invoice.exchange_rate_to_usd,
+    total_amount_local: invoice.invoice_items.reduce(
+      (total: number, item: { quantity: number; unit_price_local: number }) =>
+        total + item.quantity * item.unit_price_local,
+      0
+    ),
+    total_amount_usd: invoice.invoice_items.reduce(
+      (total: number, item: { quantity: number; unit_price_local: number }) =>
+        total +
+        (item.quantity * item.unit_price_local) / invoice.exchange_rate_to_usd,
+      0
+    ),
+    status: invoice.status,
+    note: invoice.note || "",
+  }));
+
+  if (amountSort === "amount_asc") {
+    formatDto.sort((a: any, b: any) => a.total_amount_usd - b.total_amount_usd);
+  } else if (amountSort === "amount_desc") {
+    formatDto.sort((a: any, b: any) => b.total_amount_usd - a.total_amount_usd);
+  }
+
+  if (needAmountSort) {
+    formatDto = formatDto.slice(from, to + 1);
+  }
+
+  const data = {
+    items: formatDto,
+    total: count || 0,
+    page,
+    pageSize: pageSize,
+    statistics: {
+      total_invoices: count || 0,
+      total_usd: formatDto.reduce(
+        (total: number, item: any) => total + item.total_amount_usd,
+        0
+      ),
+      delivered: 0,
+    },
+  };
+
+  return NextResponse.json(
+    success(data, "Purchase invoice retrived successfully"),
+    { status: 200 }
+  );
+}
+
