@@ -208,14 +208,135 @@ async function createPurchaseOrderAuditLogEntries(
     const { error: auditError } = await supabase
       .from("pruchase_orders_audit_log")
       .insert(auditEntries);
+
     if (auditError) {
-      console.error("Failed to log purchase order audit entries:", auditError);
+      return NextResponse.json(error(auditError.message), { status: 500 });
     }
   }
 }
 
+// Helper function to create audit log entries for purchase order item updates
+async function createPurchaseOrderItemAuditLogEntries(
+  supabase: any,
+  purchaseOrderId: number,
+  userId: string,
+  currentItems: any[], // Array of current DB items
+  updatedItems: any[] // Array of updated payload items
+) {
+  const auditEntries: Array<{
+    purchase_order_id: number;
+    purchase_order_item_id: number;
+    changed_by: string;
+    changed_field: string;
+    old_values: string;
+    new_values: string;
+    changed_at?: string;
+  }> = [];
+
+  for (const updatedItem of updatedItems) {
+    const currentItem = currentItems.find((ci) => ci.id === updatedItem.id);
+    if (!currentItem) continue;
+    for (const key of Object.keys(updatedItem)) {
+      if (
+        key !== "updated_at" &&
+        key !== "id" &&
+        updatedItem[key] !== undefined &&
+        currentItem[key] !== updatedItem[key]
+      ) {
+        auditEntries.push({
+          purchase_order_id: purchaseOrderId,
+          purchase_order_item_id: updatedItem.id,
+          changed_by: userId,
+          changed_field: key,
+          old_values: String(currentItem[key]),
+          new_values: String(updatedItem[key]),
+          changed_at: new Date().toISOString(),
+        });
+      }
+    }
+  }
+
+  if (auditEntries.length > 0) {
+    const { error: auditError } = await supabase
+      .from("pruchase_orders_item_audit_log")
+      .insert(auditEntries);
+
+    if (auditError) {
+      return NextResponse.json(error(auditError.message), { status: 500 });
+    }
+  }
+}
+
+// Helper function to update purchase order items
+async function updatePurchaseOrderItems(
+  supabase: any,
+  purchaseOrderId: string,
+  items: Array<{
+    id: number;
+    product_id?: number;
+    quantity?: number;
+    unit_price_local?: number;
+  }>
+) {
+  // Validate items structure
+  if (!Array.isArray(items)) {
+    throw new Error("Items must be an array");
+  }
+
+  // Fetch existing items for this purchase order
+  const { data: existingItems, error: fetchError } = await supabase
+    .from("purchase_order_items")
+    .select("id")
+    .eq("purchase_order_id", purchaseOrderId);
+
+  if (fetchError) {
+    return NextResponse.json(error(fetchError.message), { status: 500 });
+  }
+
+  // Create a Set of valid existing item IDs
+  const existingIds = new Set(
+    (existingItems || []).map((item: any) => item.id)
+  );
+
+  // For each item in the payload, update if it exists
+  for (const item of items) {
+    if (!item.id || !existingIds.has(item.id)) {
+      // Skip items that do not exist in DB
+      continue;
+    }
+
+    // Build update object with only provided fields
+    const updateObj: Record<string, any> = {};
+
+    if (item.product_id !== undefined) updateObj.product_id = item.product_id;
+
+    if (item.quantity !== undefined) updateObj.quantity = item.quantity;
+
+    if (item.unit_price_local !== undefined)
+      updateObj.unit_price_local = item.unit_price_local;
+
+    if (Object.keys(updateObj).length === 0) continue; // nothing to update
+
+    const { error: updateError } = await supabase
+      .from("purchase_order_items")
+      .update(updateObj)
+      .eq("id", item.id);
+    if (updateError) {
+      return NextResponse.json(error(updateError.message), { status: 500 });
+    }
+  }
+  return { success: true };
+}
+
 /**
  * This API route updates a purchase order by ID.
+ *
+ * Request body can include:
+ * - reason: string (required) - Reason for the update
+ * - items: Array<{product_id: number, quantity: number, unit_price_local: number}> (optional) - Updated items
+ * - Any of the updatable fields: supplier_id, region_id, budget_id, order_date, currency_id,
+ *   usd_exchange_rate, contact_person_id, sign_person_id, authorized_signer_id, status, note, expected_delivery_date
+ *
  * @param req - NextRequest object
  * @param context - Context object
  * @returns NextResponse ApiResponse<GetPurchaseOrderDetailDto | null>
@@ -320,7 +441,43 @@ export async function PUT(
     { ...currentOrder, ...updateData }
   );
 
-  // Fetch the updated purchase order with joined data (reuse GET logic, but include budget join)
+  // Fetch current items before update
+  const { data: currentItems, error: currentItemsError } = await supabase
+    .from("purchase_order_items")
+    .select("*")
+    .eq("purchase_order_id", idStr);
+
+  if (currentItemsError) {
+    return NextResponse.json(error(currentItemsError.message), { status: 500 });
+  }
+
+  // Update purchase order items if provided in the body
+  if (body.items && Array.isArray(body.items)) {
+    try {
+      await updatePurchaseOrderItems(supabase, idStr, body.items);
+    } catch (updateError: unknown) {
+      const errorMessage =
+        updateError instanceof Error
+          ? updateError.message
+          : "Unknown error occurred";
+      return NextResponse.json(
+        error(`Failed to update items: ${errorMessage}`),
+        {
+          status: 500,
+        }
+      );
+    }
+    // Audit log: log all changed fields for items
+    await createPurchaseOrderItemAuditLogEntries(
+      supabase,
+      Number(idStr),
+      user?.id || "system",
+      currentItems,
+      body.items
+    );
+  }
+
+  // Fetch the updated purchase order with joined data
   const { data: purchaseOrder, error: poError } =
     await fetchPurchaseOrderWithJoins(supabase, idStr);
 
