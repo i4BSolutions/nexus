@@ -2,6 +2,7 @@ import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-de
 import { PurchaseOrderItemInterface } from "@/types/purchase-order/purchase-order-item.type";
 import { TagOutlined } from "@ant-design/icons";
 import { Col, Flex, Row, Space, Typography } from "antd";
+import dayjs from "dayjs";
 
 export default function PoDetailView({
   data,
@@ -65,7 +66,7 @@ export default function PoDetailView({
                 </Space>
                 <Space>
                   <Typography.Title level={5}>
-                    {data.order_date}
+                    {dayjs(data.order_date).format("MMM DD YYYY")}
                   </Typography.Title>
                 </Space>
               </Space>
@@ -101,7 +102,7 @@ export default function PoDetailView({
                 </Space>
                 <Space>
                   <Typography.Title level={5}>
-                    {data.expected_delivery_date}
+                    {dayjs(data.expected_delivery_date).format("MMM DD YYYY")}
                   </Typography.Title>
                 </Space>
               </Space>
@@ -115,7 +116,7 @@ export default function PoDetailView({
                   </Typography.Title>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     (1USD = {data.usd_exchange_rate?.toLocaleString()}{" "}
-                    {data.currency.currency_code}
+                    {data.currency.currency_code})
                   </Typography.Text>
                 </Space>
               </Space>

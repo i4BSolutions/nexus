@@ -1,6 +1,8 @@
 "use client";
 
 import PersonCreateModal from "@/components/purchase-orders/PersonCreateModal";
+import RegionCreateModal from "@/components/purchase-orders/RegionCreateModal";
+import SupplierCreateModal from "@/components/suppliers/SupplierModal";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useGetAll } from "@/hooks/react-query/useGetAll";
 import { useList } from "@/hooks/react-query/useList";
@@ -49,11 +51,13 @@ export default function PoEditPage() {
   const { message } = App.useApp();
   const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
+  const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
 
   const forceUpdate = useForceUpdate();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [targetField, setTargetField] = useState<
+  const [isPersonCreateModalOpen, setIsPersonCreateModalOpen] = useState(false);
+  const [personCreateTargetField, setPersonCreateTargetField] = useState<
     | "contact_person"
     | "sign_person"
     | "authorized_sign_person"
@@ -64,7 +68,7 @@ export default function PoEditPage() {
 
   const { data: poDetailData, isLoading: poDetailLoading } =
     useGetAll<PurchaseOrderDetailDto>(`purchase-orders/${params.id}`, [
-      "purchase-order",
+      "purchase-orders",
       params.id as string,
     ]);
   const [totalAmount, setTotalAmount] = useState({
@@ -99,8 +103,12 @@ export default function PoEditPage() {
   const { mutate: createRegion } = useCreate(
     "purchase-orders/purchase-orders-regions"
   );
-  const updatePurchaseOrder = useUpdate("purchase-orders");
+  const updatePurchaseOrder = useUpdate("purchase-orders", [
+    "purchase-orders",
+    params.id as string,
+  ]);
 
+  // const DeletePurchaseOrderItem = useDelete("purchase-orders/");
   if (
     poDetailLoading ||
     suppliersLoading ||
@@ -138,34 +146,6 @@ export default function PoEditPage() {
     note: string;
   };
 
-  const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
-    console.log("Success:", values);
-    // try {
-    //   await updatePurchaseOrder.mutateAsync({
-    //     id: params.id as string,
-    //     data: {
-    //       supplier_id: values.supplier,
-    //       region_id: values.region,
-    //       budget_id: values.budget,
-    //       order_date: dayjs(values.order_date).format("YYYY-MM-DD"),
-    //       currency_id: values.currency,
-    //       usd_exchange_rate: values.usd_exchange_rate,
-    //       contact_person_id: values.contact_person,
-    //       sign_person_id: values.sign_person,
-    //       authorized_signer_id: values.authorized_sign_person,
-    //       note: values.note,
-    //       expected_delivery_date: dayjs(values.expected_delivery_date).format(
-    //         "YYYY-MM-DD"
-    //       ),
-    //     },
-    //   });
-    //   message.success("Purchase Order updated successfully!");
-    // } catch (err: any) {
-    //   message.error(err?.message || "Update failed");
-    // }
-    // message.success("Purchase Order updated successfully!");
-  };
-
   const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
     errorInfo
   ) => {
@@ -181,12 +161,26 @@ export default function PoEditPage() {
   const handlePersonCreate = (values: { name: string }) => {
     createPerson(values, {
       onSuccess: (data: unknown) => {
-        const createdPerson = data as PersonInterface;
-        if (targetField && createdPerson?.id) {
-          form.setFieldValue(targetField, createdPerson.id);
-        }
-        setIsModalOpen(false);
-        setTargetField(null);
+        setIsPersonCreateModalOpen(false);
+        setPersonCreateTargetField(null);
+      },
+    });
+  };
+
+  const handleRegionCreate = (values: any) => {
+    createRegion(values, {
+      onSuccess: (data: any) => {
+        form.setFieldValue("region", data.id);
+        setIsRegionModalOpen(false);
+      },
+    });
+  };
+
+  const handleSupplierCreate = (values: any) => {
+    createSupplier(values, {
+      onSuccess: (data: any) => {
+        form.setFieldValue("supplier", data.id);
+        setIsSupplierModalOpen(false);
       },
     });
   };
@@ -220,6 +214,7 @@ export default function PoEditPage() {
         },
       });
       message.success("Purchase Order updated successfully!");
+      router.push("/purchase-orders");
     } catch (err: any) {
       message.error(err?.message || "Update failed");
     }
@@ -268,10 +263,12 @@ export default function PoEditPage() {
             purchase_order_no: poDetailData?.purchase_order_no,
             supplier: poDetailData?.supplier.id,
             region: poDetailData?.region.id,
-            order_date: dayjs(poDetailData?.order_date).valueOf(),
-            expected_delivery_date: dayjs(
-              poDetailData?.expected_delivery_date
-            ).valueOf(),
+            order_date: poDetailData?.order_date
+              ? dayjs(poDetailData.order_date)
+              : null,
+            expected_delivery_date: poDetailData?.expected_delivery_date
+              ? dayjs(poDetailData.expected_delivery_date)
+              : null,
             budget: poDetailData?.budget.id,
             currency: poDetailData?.currency.id,
             usd_exchange_rate: poDetailData?.usd_exchange_rate,
@@ -294,7 +291,6 @@ export default function PoEditPage() {
               : null,
             note: poDetailData?.note || "",
           }}
-          onFinish={onFinish}
           labelCol={{ span: 24 }}
           onFinishFailed={onFinishFailed}
           onValuesChange={(changed, all) => {
@@ -350,8 +346,7 @@ export default function PoEditPage() {
 
                   <Typography.Link
                     onClick={() => {
-                      setIsModalOpen(true);
-                      setTargetField("supplier");
+                      setIsSupplierModalOpen(true);
                     }}
                     style={{ fontSize: 14, fontWeight: 500 }}
                   >
@@ -382,7 +377,7 @@ export default function PoEditPage() {
                   })) || []),
                   {
                     label: (
-                      <div onClick={() => setIsModalOpen(true)}>
+                      <div onClick={() => setIsPersonCreateModalOpen(true)}>
                         <PlusCircleOutlined style={{ marginRight: 8 }} />
                         Create New Supplier
                       </div>
@@ -409,8 +404,7 @@ export default function PoEditPage() {
 
                   <Typography.Link
                     onClick={() => {
-                      setIsModalOpen(true);
-                      setTargetField("supplier");
+                      setIsRegionModalOpen(true);
                     }}
                     style={{ fontSize: 14, fontWeight: 500 }}
                   >
@@ -442,7 +436,7 @@ export default function PoEditPage() {
                   })) || []),
                   {
                     label: (
-                      <div onClick={() => setIsModalOpen(true)}>
+                      <div onClick={() => setIsPersonCreateModalOpen(true)}>
                         <PlusCircleOutlined style={{ marginRight: 8 }} />
                         Create New Region
                       </div>
@@ -458,10 +452,6 @@ export default function PoEditPage() {
               name="order_date"
               label="Order Date"
               style={{ width: "100%" }}
-              getValueProps={(value) => ({
-                value: value && dayjs(Number(value)),
-              })}
-              normalize={(value) => value && `${dayjs(value).valueOf()}`}
               rules={[{ required: true, message: "Order date is required!" }]}
             >
               <DatePicker
@@ -475,10 +465,6 @@ export default function PoEditPage() {
               name="expected_delivery_date"
               label="Expected Delivery Date"
               style={{ width: "100%" }}
-              getValueProps={(value) => ({
-                value: value && dayjs(Number(value)),
-              })}
-              normalize={(value) => value && `${dayjs(value).valueOf()}`}
               rules={[
                 {
                   required: true,
@@ -825,6 +811,7 @@ export default function PoEditPage() {
               <div
                 style={{
                   width: "100%",
+                  marginTop: 16,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -837,8 +824,8 @@ export default function PoEditPage() {
                 </div>
                 <Typography.Link
                   onClick={() => {
-                    setTargetField("contact_person");
-                    setIsModalOpen(true);
+                    setPersonCreateTargetField("contact_person");
+                    setIsPersonCreateModalOpen(true);
                   }}
                   style={{
                     fontSize: 14,
@@ -879,8 +866,8 @@ export default function PoEditPage() {
                     <div
                       onClick={(e) => {
                         e.stopPropagation(); // Important to prevent dropdown closing too early
-                        setTargetField("contact_person");
-                        setIsModalOpen(true);
+                        setPersonCreateTargetField("contact_person");
+                        setIsPersonCreateModalOpen(true);
                       }}
                     >
                       <PlusCircleOutlined style={{ marginRight: 8 }} />
@@ -893,8 +880,8 @@ export default function PoEditPage() {
               onSelect={(value) => {
                 if (value === "create_new") {
                   // Optionally open modal here if you don’t handle it in onClick above
-                  setTargetField("contact_person");
-                  setIsModalOpen(true);
+                  setPersonCreateTargetField("contact_person");
+                  setIsPersonCreateModalOpen(true);
                 }
               }}
               style={{ width: "100%" }}
@@ -924,8 +911,8 @@ export default function PoEditPage() {
                   </Typography.Text>
                   <Typography.Link
                     onClick={() => {
-                      setTargetField("sign_person");
-                      setIsModalOpen(true);
+                      setPersonCreateTargetField("sign_person");
+                      setIsPersonCreateModalOpen(true);
                     }}
                     style={{ fontSize: 13 }}
                   >
@@ -960,8 +947,8 @@ export default function PoEditPage() {
                       <div
                         onClick={(e) => {
                           e.stopPropagation(); // Important to prevent dropdown closing too early
-                          setTargetField("sign_person");
-                          setIsModalOpen(true);
+                          setPersonCreateTargetField("sign_person");
+                          setIsPersonCreateModalOpen(true);
                         }}
                       >
                         <PlusCircleOutlined style={{ marginRight: 8 }} />
@@ -973,8 +960,8 @@ export default function PoEditPage() {
                 ]}
                 onSelect={(value) => {
                   if (value === "create_new") {
-                    setTargetField("sign_person");
-                    setIsModalOpen(true);
+                    setPersonCreateTargetField("sign_person");
+                    setIsPersonCreateModalOpen(true);
                   }
                 }}
                 style={{ width: "100%" }}
@@ -1000,8 +987,8 @@ export default function PoEditPage() {
                   </Typography.Text>
                   <Typography.Link
                     onClick={() => {
-                      setTargetField("authorized_sign_person");
-                      setIsModalOpen(true);
+                      setPersonCreateTargetField("authorized_sign_person");
+                      setIsPersonCreateModalOpen(true);
                     }}
                     style={{ fontSize: 13 }}
                   >
@@ -1039,21 +1026,21 @@ export default function PoEditPage() {
                       <div
                         onClick={(e) => {
                           e.stopPropagation();
-                          setTargetField("authorized_sign_person");
-                          setIsModalOpen(true);
+                          setPersonCreateTargetField("authorized_sign_person");
+                          setIsPersonCreateModalOpen(true);
                         }}
                       >
                         <PlusCircleOutlined style={{ marginRight: 8 }} />
                         Create New
                       </div>
                     ),
-                    value: "create_new", // A unique dummy value
+                    value: "create_new",
                   },
                 ]}
                 onSelect={(value) => {
                   if (value === "create_new") {
-                    setTargetField("authorized_sign_person");
-                    setIsModalOpen(true);
+                    setPersonCreateTargetField("authorized_sign_person");
+                    setIsPersonCreateModalOpen(true);
                   }
                 }}
                 style={{ width: "100%" }}
@@ -1108,12 +1095,28 @@ export default function PoEditPage() {
         </Form>
       </div>
       <PersonCreateModal
-        open={isModalOpen}
+        open={isPersonCreateModalOpen}
         onClose={() => {
-          setIsModalOpen(false);
-          setTargetField(null);
+          setIsPersonCreateModalOpen(false);
+          setPersonCreateTargetField(null);
         }}
         onSubmit={handlePersonCreate}
+      />
+      <RegionCreateModal
+        open={isRegionModalOpen}
+        onClose={() => setIsRegionModalOpen(false)}
+        onSubmit={(values) => {
+          handleRegionCreate(values);
+        }}
+      />
+
+      <SupplierCreateModal
+        open={isSupplierModalOpen}
+        isEdit={false}
+        onClose={() => setIsSupplierModalOpen(false)}
+        onSubmit={(values) => {
+          handleSupplierCreate(values);
+        }}
       />
     </section>
   );
