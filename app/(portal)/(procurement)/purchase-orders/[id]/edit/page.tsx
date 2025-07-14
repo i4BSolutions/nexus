@@ -1084,23 +1084,40 @@ export default function PoEditPage() {
             </Button>
           </Form.Item>
           <Modal
-            title="Save Changes"
-            closable={{ "aria-label": "Custom Close Button" }}
+            closable={false}
             open={isReasonModalOpen}
             onOk={onReasonModalOk}
-            okText="Save"
             onCancel={onReasonModalCancel}
+            footer={null}
+            centered
           >
-            <Typography.Text>
-              Let us know why you’re making this change.
-            </Typography.Text>
+            <div className="flex flex-col justify-center items-center mb-2">
+              <Typography.Title level={3} style={{ marginBottom: 4 }}>
+                Save Changes
+              </Typography.Title>
+              <Typography.Text type="secondary">
+                Let us know why you’re making this change.
+              </Typography.Text>
+            </div>
             <Input.TextArea
-              rows={4}
+              rows={2}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Enter comment"
               style={{ marginTop: 8 }}
             />
+            <div>
+              <div className="flex justify-center gap-4 mt-4">
+                <Button onClick={onReasonModalCancel}>Cancel</Button>
+                <Button
+                  type="primary"
+                  onClick={onReasonModalOk}
+                  disabled={!reason.trim()}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
           </Modal>
         </Form>
       </div>
