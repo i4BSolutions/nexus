@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { CategoryInterface } from "@/types/category/category.type";
-import { ApiResponse } from "@/types/api-response-type";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { useQuery } from "@tanstack/react-query";
 
 export const useCategories = () => {
   return useQuery<ApiResponse<CategoryInterface[]>>({
