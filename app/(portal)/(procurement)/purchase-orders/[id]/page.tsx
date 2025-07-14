@@ -1,9 +1,13 @@
 "use client";
 
+import PoCancelModal from "@/components/purchase-orders/detail/PoCancelModal";
+import PoDetailPDF from "@/components/purchase-orders/detail/PoDetailPdf";
 import PoDetailView from "@/components/purchase-orders/detail/PoDetailView";
 import PoUsageHistory from "@/components/purchase-orders/detail/PoUsageHistory";
 import StatusBadge from "@/components/purchase-orders/StatusBadge";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import { useGetById } from "@/hooks/react-query/useGetById";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 import {
   ArrowLeftOutlined,
@@ -12,11 +16,14 @@ import {
   EllipsisOutlined,
   StopOutlined,
 } from "@ant-design/icons";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import {
+  App,
   Button,
   Dropdown,
   Flex,
   MenuProps,
+  Spin,
   Tabs,
   TabsProps,
   Typography,
@@ -24,59 +31,48 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
-const initialDetailData: PurchaseOrderDetailDto = {
-  id: 1,
-  purchase_order_no: "PO-123456",
-  supplier: "Supplier Name",
-  region: "Region Name",
-  order_date: "2023-10-01",
-  expected_delivery_date: "2023-10-15",
-  budget: "Budget Name",
-  currency_code: "THB",
-  usd_exchange_rate: 33.5,
-  product_items: [
-    {
-      id: 1,
-      product_name: "Product A",
-      quantity: 10,
-      unit_price_local: 100,
-      unit_price_usd: 10,
-      sub_total_local: 1000,
-      sub_total_usd: 100,
-    },
-    {
-      id: 2,
-      product_name: "Product B",
-      quantity: 5,
-      unit_price_local: 200,
-      unit_price_usd: 20,
-      sub_total_local: 1000,
-      sub_total_usd: 100,
-    },
-  ],
-  total_amount_local: 2000,
-  total_amount_usd: 200,
-  contact_person: "John Doe",
-  sign_person: "",
-  authorized_sign_person: "Alice Johnson",
-  note: "This is a sample purchase order note.",
-};
-
 export default function PurchaseOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [detailData, setDetailData] =
-    useState<PurchaseOrderDetailDto>(initialDetailData);
+  const { message } = App.useApp();
+
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+
+  const { data: detailData, isLoading } = useGetById<PurchaseOrderDetailDto>(
+    "purchase-orders",
+    params.id as string,
+    !!params.id
+  );
+
+  const updatePurchaseOrder = useUpdate("purchase-orders", [
+    "purchase-orders",
+    params.id as string,
+  ]);
+
   const dropDownItems: MenuProps["items"] = [
     {
       label: <div className="text-sm !w-32 text-[#FF4D4F]">Cancel PO</div>,
       key: "cancelPO",
       icon: <StopOutlined style={{ color: "#FF4D4F" }} />,
-      onClick: () => {
-        alert("Cancel Purchase Order");
-      },
+      onClick: () => setCancelModalOpen(true),
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="grid place-items-center h-screen">
+        <Spin />
+      </div>
+    );
+  }
+
+  if (!detailData) {
+    return (
+      <div className="grid place-items-center h-screen">
+        Purchase Order not found
+      </div>
+    );
+  }
 
   const tabItems: TabsProps["items"] = [
     {
@@ -91,8 +87,18 @@ export default function PurchaseOrderDetailPage() {
     },
   ];
 
-  const onChange = (key: string) => {
-    console.log(key);
+  const onCancelPOHandler = async () => {
+    // try {
+    //   await updatePurchaseOrder.mutateAsync({
+    //     id: params.id as string,
+    //     data: { status: "Rejected", reason: "Rejected PO" },
+    //   });
+    //   message.success("Purchase Order cancelled successfully");
+    // } catch (error) {
+    //   message.error("Failed to cancel Purchase Order");
+    //   console.error("Error cancelling Purchase Order:", error);
+    // }
+    alert("This feature is not implemented yet.");
   };
 
   return (
@@ -102,8 +108,8 @@ export default function PurchaseOrderDetailPage() {
         <Breadcrumbs
           items={[
             { title: "Home", href: "/" },
-            { title: "Purchase Orders" },
-            { title: params.id || "Purchase Order Detail" },
+            { title: "Purchase Orders", href: "/purchase-orders" },
+            { title: detailData.purchase_order_no || "Purchase Order Detail" },
           ]}
         />
         <Flex justify="space-between" align="center" className="!mb-4">
@@ -117,15 +123,22 @@ export default function PurchaseOrderDetailPage() {
             </button>
             <div>
               <Typography.Title level={3} style={{ marginBottom: 1 }}>
-                {params.id || "Purchase Order Detail"}
+                {detailData.purchase_order_no || "Purchase Order Detail"}
               </Typography.Title>
-              <StatusBadge status={"Approved"} />
+              <StatusBadge status={detailData.status} />
             </div>
           </Flex>
 
           {/* Right Header */}
           <Flex align="center" gap={8}>
-            <Button icon={<DownloadOutlined />}>Download PDF</Button>
+            <Button icon={<DownloadOutlined />}>
+              <PDFDownloadLink
+                document={<PoDetailPDF data={detailData} />}
+                fileName={`PO_${detailData.id}.pdf`}
+              >
+                Download PDF
+              </PDFDownloadLink>
+            </Button>
             <Button
               type="primary"
               icon={<EditOutlined />}
@@ -150,8 +163,12 @@ export default function PurchaseOrderDetailPage() {
         tabBarStyle={{
           padding: "0 28px",
         }}
-        onChange={onChange}
         size="large"
+      />
+      <PoCancelModal
+        cancelModalOpen={cancelModalOpen}
+        setCancelModalOpen={setCancelModalOpen}
+        onProceedHandler={onCancelPOHandler}
       />
     </section>
   );

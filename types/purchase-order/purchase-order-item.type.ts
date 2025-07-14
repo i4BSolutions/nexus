@@ -1,5 +1,6 @@
 export interface PurchaseOrderItemInterface {
   id: number;
+  product: number;
   product_name: string;
   quantity: number;
   unit_price_local: number;

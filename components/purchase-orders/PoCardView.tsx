@@ -44,7 +44,7 @@ export default function PoCardView({
               key: "view",
               icon: <EyeOutlined />,
               onClick: () => {
-                router.push(`/purchase-orders/${item.purchase_order_no}`);
+                router.push(`/purchase-orders/${item.id}`);
               },
             },
             {
@@ -52,7 +52,7 @@ export default function PoCardView({
               key: "edit",
               icon: <EditOutlined />,
               onClick: () => {
-                router.push(`/purchase-orders/${item.purchase_order_no}/edit`);
+                router.push(`/purchase-orders/${item.id}/edit`);
               },
             },
           ];
