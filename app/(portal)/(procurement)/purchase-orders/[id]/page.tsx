@@ -88,16 +88,17 @@ export default function PurchaseOrderDetailPage() {
   ];
 
   const onCancelPOHandler = async () => {
-    try {
-      await updatePurchaseOrder.mutateAsync({
-        id: params.id as string,
-        data: { status: "Draft", reason: "Cancelled PO" },
-      });
-      message.success("Purchase Order cancelled successfully");
-    } catch (error) {
-      message.error("Failed to cancel Purchase Order");
-      console.error("Error cancelling Purchase Order:", error);
-    }
+    // try {
+    //   await updatePurchaseOrder.mutateAsync({
+    //     id: params.id as string,
+    //     data: { status: "Rejected", reason: "Rejected PO" },
+    //   });
+    //   message.success("Purchase Order cancelled successfully");
+    // } catch (error) {
+    //   message.error("Failed to cancel Purchase Order");
+    //   console.error("Error cancelling Purchase Order:", error);
+    // }
+    alert("This feature is not implemented yet.");
   };
 
   return (
