@@ -4,6 +4,7 @@ import PersonCreateModal from "@/components/purchase-orders/PersonCreateModal";
 import RegionCreateModal from "@/components/purchase-orders/RegionCreateModal";
 import SupplierCreateModal from "@/components/suppliers/SupplierModal";
 import { useCreate } from "@/hooks/react-query/useCreate";
+import { useDelete } from "@/hooks/react-query/useDelete";
 import { useGetAll } from "@/hooks/react-query/useGetAll";
 import { useList } from "@/hooks/react-query/useList";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
@@ -99,16 +100,22 @@ export default function PoEditPage() {
     useGetAll<PersonInterface>("persons", ["persons"]);
 
   const { mutate: createPerson } = useCreate("persons");
-  const { mutate: createSupplier } = useCreate("suppliers");
+  const { mutate: createSupplier } = useCreate("suppliers", ["suppliers"]);
   const { mutate: createRegion } = useCreate(
-    "purchase-orders/purchase-orders-regions"
+    "purchase-orders/purchase-orders-regions",
+    ["regions"]
   );
+
   const updatePurchaseOrder = useUpdate("purchase-orders", [
     "purchase-orders",
     params.id as string,
   ]);
 
-  // const DeletePurchaseOrderItem = useDelete("purchase-orders/");
+  const { mutate: deletePoItem } = useDelete(
+    "purchase-orders/delete-purchase-order-item",
+    ["purchase-orders", params.id as string]
+  );
+
   if (
     poDetailLoading ||
     suppliersLoading ||
@@ -759,7 +766,10 @@ export default function PoEditPage() {
                           <Button
                             type="link"
                             danger
-                            onClick={() => remove(name)}
+                            onClick={async () => {
+                              deletePoItem(items[name].id);
+                              remove(name);
+                            }}
                             style={{ padding: 0 }}
                           >
                             Remove
