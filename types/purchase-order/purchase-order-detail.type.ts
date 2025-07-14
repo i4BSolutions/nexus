@@ -14,6 +14,7 @@ export interface PoInvoiceInterface {
 
 export interface PurchaseOrderDetailDto {
   id: number;
+  status: string;
   purchase_order_no: string;
   supplier: {
     id: number;

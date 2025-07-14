@@ -1,11 +1,13 @@
 "use client";
 
+import PoCancelModal from "@/components/purchase-orders/detail/PoCancelModal";
 import PoDetailPDF from "@/components/purchase-orders/detail/PoDetailPdf";
 import PoDetailView from "@/components/purchase-orders/detail/PoDetailView";
 import PoUsageHistory from "@/components/purchase-orders/detail/PoUsageHistory";
 import StatusBadge from "@/components/purchase-orders/StatusBadge";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useGetById } from "@/hooks/react-query/useGetById";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 import {
   ArrowLeftOutlined,
@@ -16,6 +18,7 @@ import {
 } from "@ant-design/icons";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import {
+  App,
   Button,
   Dropdown,
   Flex,
@@ -26,12 +29,14 @@ import {
   Typography,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function PurchaseOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
-  // const [detailData, setDetailData] =
-  //   useState<PurchaseOrderDetailDto>(initialDetailData);
+  const { message } = App.useApp();
+
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
   const { data: detailData, isLoading } = useGetById<PurchaseOrderDetailDto>(
     "purchase-orders",
@@ -39,14 +44,17 @@ export default function PurchaseOrderDetailPage() {
     !!params.id
   );
 
+  const updatePurchaseOrder = useUpdate("purchase-orders", [
+    "purchase-orders",
+    params.id as string,
+  ]);
+
   const dropDownItems: MenuProps["items"] = [
     {
       label: <div className="text-sm !w-32 text-[#FF4D4F]">Cancel PO</div>,
       key: "cancelPO",
       icon: <StopOutlined style={{ color: "#FF4D4F" }} />,
-      onClick: () => {
-        alert("Cancel Purchase Order");
-      },
+      onClick: () => setCancelModalOpen(true),
     },
   ];
 
@@ -79,6 +87,19 @@ export default function PurchaseOrderDetailPage() {
     },
   ];
 
+  const onCancelPOHandler = async () => {
+    try {
+      await updatePurchaseOrder.mutateAsync({
+        id: params.id as string,
+        data: { status: "Draft", reason: "Cancelled PO" },
+      });
+      message.success("Purchase Order cancelled successfully");
+    } catch (error) {
+      message.error("Failed to cancel Purchase Order");
+      console.error("Error cancelling Purchase Order:", error);
+    }
+  };
+
   return (
     <section className="px-4">
       {/* Header Section */}
@@ -103,7 +124,7 @@ export default function PurchaseOrderDetailPage() {
               <Typography.Title level={3} style={{ marginBottom: 1 }}>
                 {detailData.purchase_order_no || "Purchase Order Detail"}
               </Typography.Title>
-              <StatusBadge status={"Approved"} />
+              <StatusBadge status={detailData.status} />
             </div>
           </Flex>
 
@@ -142,6 +163,11 @@ export default function PurchaseOrderDetailPage() {
           padding: "0 28px",
         }}
         size="large"
+      />
+      <PoCancelModal
+        cancelModalOpen={cancelModalOpen}
+        setCancelModalOpen={setCancelModalOpen}
+        onProceedHandler={onCancelPOHandler}
       />
     </section>
   );

@@ -69,6 +69,7 @@ function buildPurchaseOrderDetailDto(
 ): PurchaseOrderDetailDto {
   return {
     id: purchaseOrder.id,
+    status: purchaseOrder.status,
     purchase_order_no: purchaseOrder.purchase_order_no,
     supplier: {
       id: purchaseOrder.supplier?.id || 0,
