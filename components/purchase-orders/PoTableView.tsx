@@ -115,7 +115,7 @@ export default function PoTableView({
         footer={() => (
           <div className="flex justify-between">
             <Typography.Text type="secondary">
-              Total {data.length} items
+              Total {total} items
             </Typography.Text>
             <Pagination
               defaultCurrent={1}

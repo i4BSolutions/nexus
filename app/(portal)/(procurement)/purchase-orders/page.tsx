@@ -29,7 +29,7 @@ export default function PurchaseOrdersPage() {
   const [data, setData] = useState<PurchaseOrderDto[]>();
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [searchText, setSearchText] = useState("");
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
 
@@ -134,6 +134,12 @@ export default function PurchaseOrdersPage() {
 
   const viewChangeHandler = (value: "Card" | "Table") => {
     setViewMode(value);
+    if (value === "Card") {
+      setPagination({ page: 1, pageSize: 9 });
+    }
+    if (value === "Table") {
+      setPagination({ page: 1, pageSize: 10 });
+    }
   };
 
   const clearFiltersHandler = () => {
@@ -146,7 +152,7 @@ export default function PurchaseOrdersPage() {
   const paginationChangeHandler = (page: number, pageSize?: number) => {
     setPagination({ page, pageSize: pageSize || 10 });
   };
-
+  console.log("total", total);
   return (
     <section className="px-6">
       <Breadcrumbs

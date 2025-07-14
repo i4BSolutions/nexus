@@ -4,7 +4,7 @@ import {
   EditOutlined,
   EllipsisOutlined,
   EyeOutlined,
-  InfoOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import {
@@ -46,12 +46,20 @@ export default function PoCardView({
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
   return (
-    <section className="py-4">
-      <div className="flex flex-wrap gap-4">
+    <section className="py-6 flex flex-col justify-center items-center">
+      <div
+        style={{
+          display: "grid",
+          placeItems: "center",
+          gridTemplateColumns: "repeat(auto-fill, minmax(325px, 1fr))",
+          gap: "20px",
+          maxWidth: "1015px",
+        }}
+      >
         {data.map((item: PurchaseOrderDto) => (
           <div
             key={item.id}
-            className="border-2 border-[#F5F5F5] rounded-[16px] w-[325px]"
+            className="border-2 border-[#F5F5F5] rounded-[16px] !w-[325px]"
           >
             <div
               className="py-3 rounded-t-[14px]"
@@ -147,19 +155,10 @@ export default function PoCardView({
               </Flex>
               <Row>
                 <Col span={12}>
-                  <Typography.Text type="secondary">
+                  <Typography.Text type="secondary" className="align-middle">
                     Invoiced(USD){" "}
                     <Tooltip title="Total amount invoiced in USD">
-                      <InfoOutlined
-                        style={{
-                          cursor: "pointer",
-                          border: "1px solid #d9d9d9",
-                          borderRadius: "50%",
-                          padding: 2,
-                          width: 14,
-                          height: 14,
-                        }}
-                      />
+                      <InfoCircleOutlined />
                     </Tooltip>
                   </Typography.Text>
                   <p className="m-0 font-medium text-base">
@@ -170,19 +169,10 @@ export default function PoCardView({
                   </p>
                 </Col>
                 <Col span={12}>
-                  <Typography.Text type="secondary">
+                  <Typography.Text type="secondary" className="align-middle">
                     Remaining(USD){" "}
                     <Tooltip title="Total amount remaining in USD">
-                      <InfoOutlined
-                        style={{
-                          cursor: "pointer",
-                          border: "1px solid #d9d9d9",
-                          borderRadius: "50%",
-                          padding: 2,
-                          width: 14,
-                          height: 14,
-                        }}
-                      />
+                      <InfoCircleOutlined />
                     </Tooltip>
                   </Typography.Text>
                   <p className="m-0 font-medium text-base">
@@ -198,21 +188,13 @@ export default function PoCardView({
               </Row>
               <Row>
                 <Col span={12}>
-                  <Typography.Text type="secondary">
+                  <Typography.Text type="secondary" className="align-middle">
                     Allocated(USD){" "}
                     <Tooltip title="Total amount allocated in USD">
-                      <InfoOutlined
-                        style={{
-                          cursor: "pointer",
-                          border: "1px solid #d9d9d9",
-                          borderRadius: "50%",
-                          padding: 2,
-                          width: 14,
-                          height: 14,
-                        }}
-                      />
+                      <InfoCircleOutlined />
                     </Tooltip>
                   </Typography.Text>
+
                   <p className="m-0 font-medium text-base">
                     $
                     {item.allocated_amount
@@ -221,19 +203,10 @@ export default function PoCardView({
                   </p>
                 </Col>
                 <Col span={12}>
-                  <Typography.Text type="secondary">
+                  <Typography.Text type="secondary" className="align-middle">
                     Remaining(USD){" "}
                     <Tooltip title="Total amount remaining in USD">
-                      <InfoOutlined
-                        style={{
-                          cursor: "pointer",
-                          border: "1px solid #d9d9d9",
-                          borderRadius: "50%",
-                          padding: 2,
-                          width: 14,
-                          height: 14,
-                        }}
-                      />
+                      <InfoCircleOutlined />
                     </Tooltip>
                   </Typography.Text>
                   <p className="m-0 font-medium text-base">
@@ -251,7 +224,12 @@ export default function PoCardView({
           </div>
         ))}
       </div>
-      <Flex justify="space-between" align="center" className="!pb-10 !pt-6">
+      <Flex
+        justify="space-between"
+        align="center"
+        className="!pb-10 !pt-6"
+        style={{ alignSelf: "end" }}
+      >
         <div>
           <Typography.Text type="secondary">
             Total {total} items
