@@ -28,3 +28,17 @@ export interface ProductResponse {
   pageSize: number;
   counts: { total: number; lowStock: number; outOfStock: number };
 }
+
+export interface ProductPriceHistoryInterface {
+  id: number;
+  product_id: number;
+  old_price: number;
+  new_price: number;
+  reason: string;
+  updated_by: string;
+  created_at: string;
+}
+
+export interface ProductPriceHistoryResponse {
+  items: ProductPriceHistoryInterface[];
+}
