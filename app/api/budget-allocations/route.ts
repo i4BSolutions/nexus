@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthenticatedUser } from "@/helper/getUser";
 import { error, success } from "@/lib/api-response";
-import { ApiResponse } from "@/types/api-response-type";
 import {
   BudgetAllocationsInterface,
   BudgetAllocationsResponse,
 } from "@/types/budget-allocations/budget-allocations.type";
 import { uploadTransferEvidenceImage } from "@/utils/uploadTransferEvidence";
+import { ApiResponse } from "@/types/shared/api-response-type";
 
 const bucket = "core-orbit";
 
@@ -22,6 +22,7 @@ export async function GET(
   const poId = searchParams.get("po_id");
   const budgetId = searchParams.get("budget_id");
   const status = searchParams.get("status");
+  const includeStats = searchParams.get("stats") === "true";
 
   let query = supabase
     .from("budget_allocation")
@@ -62,12 +63,58 @@ export async function GET(
     })
   );
 
+  let statistics: BudgetAllocationsResponse["statistics"] = {
+    totalAllocations: 0,
+    totalAllocatedUSD: 0,
+    totalPendingUSD: 0,
+  };
+
+  if (includeStats) {
+    // Clone query without pagination to compute stats
+    let statQuery = supabase.from("budget_allocation").select("*");
+
+    if (poId) statQuery = statQuery.eq("po_id", poId);
+    if (budgetId) statQuery = statQuery.eq("budget_id", budgetId);
+    if (status) statQuery = statQuery.eq("status", status);
+
+    const { data: allAllocations, error: statsError } = await statQuery;
+    if (statsError) {
+      console.error("Stats error:", statsError.message);
+    }
+
+    const totalAllocatedUSD =
+      allAllocations?.reduce((sum, item) => {
+        const usd =
+          item.exchange_rate_usd > 0
+            ? item.allocation_amount / item.exchange_rate_usd
+            : 0;
+        return sum + usd;
+      }, 0) || 0;
+
+    const totalPendingUSD =
+      allAllocations?.reduce((sum, item) => {
+        const isPending = item.status === "Pending";
+        const usd =
+          item.exchange_rate_usd > 0
+            ? item.allocation_amount / item.exchange_rate_usd
+            : 0;
+        return isPending ? sum + usd : sum;
+      }, 0) || 0;
+
+    statistics = {
+      totalAllocations: allAllocations?.length || 0,
+      totalAllocatedUSD: Number(totalAllocatedUSD.toFixed(2)),
+      totalPendingUSD: Number(totalPendingUSD.toFixed(2)),
+    };
+  }
+
   return NextResponse.json(
     success({
       items: signedData || [],
       total: count || 0,
       page,
       pageSize,
+      statistics,
     })
   );
 }
@@ -150,7 +197,7 @@ export async function POST(
   await supabase.from("budget_allocation_activity_logs").insert([
     {
       user_id: user.id,
-      role: user.role,
+      role: user.name,
       action_type: "Create",
       po_id,
       allocation_id: allocationId,
