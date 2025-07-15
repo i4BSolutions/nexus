@@ -46,20 +46,12 @@ export default function PoCardView({
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
   return (
-    <section className="py-6 flex flex-col justify-center items-center">
-      <div
-        style={{
-          display: "grid",
-          placeItems: "center",
-          gridTemplateColumns: "repeat(auto-fill, minmax(325px, 1fr))",
-          gap: "20px",
-          maxWidth: "1015px",
-        }}
-      >
+    <section className="py-6 w-full max-w-[1140px]">
+      <div className="grid grid-cols-3 items-center w-full gap-5">
         {data.map((item: PurchaseOrderDto) => (
           <div
             key={item.id}
-            className="border-2 border-[#F5F5F5] rounded-[16px] !w-[325px]"
+            className="border-2 border-[#F5F5F5] rounded-[16px] w-full"
           >
             <div
               className="py-3 rounded-t-[14px]"

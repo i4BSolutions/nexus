@@ -104,7 +104,7 @@ export default function PoTableView({
   ];
 
   return (
-    <section className="py-4">
+    <section className="py-4 w-full max-w-[1140px]">
       <Table<PurchaseOrderDto>
         columns={columns}
         dataSource={data}
