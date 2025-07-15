@@ -89,6 +89,7 @@ export default function PurchaseOrdersPage() {
           borderColor: "#87E8DE",
           tooltip: "Total value of all purchase orders",
           prefix: "$",
+          approved_text: "approved POs",
         },
         {
           title: "% Invoiced",
