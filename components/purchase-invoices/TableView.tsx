@@ -35,12 +35,7 @@ export default function TableView({
       render: (text) => <a>{text}</a>,
     },
     {
-      title: "SUPPLIER",
-      dataIndex: "supplier_name",
-      key: "supplier_name",
-    },
-    {
-      title: "ORDER DATE",
+      title: "INVOICE DATE",
       dataIndex: "invoice_date",
       key: "invoice_date",
       defaultSortOrder: "descend",
@@ -54,16 +49,79 @@ export default function TableView({
       ),
     },
     {
-      title: "TOTAL AMOUNT",
-      dataIndex: "total_amount",
-      key: "total_amount",
-      render: (total_amount) => `$${total_amount.toFixed(2)}`,
+      title: "DUE DATE",
+      dataIndex: "due_date",
+      key: "due_date",
+      render: (due_date) => (
+        <div>
+          <CalendarOutlined style={{ marginRight: 6 }} />
+          {dayjs(due_date).format("MMM D, YYYY")}
+        </div>
+      ),
+    },
+    {
+      title: "AMOUNT",
+      key: "amount",
+      defaultSortOrder: "descend",
+      sorter: (a, b) => a.total_amount_usd - b.total_amount_usd,
+      render: (_, record) => (
+        <div>
+          <div>
+            <Typography.Text>
+              {record.total_amount_local.toFixed(2)} {record.currency_code}
+            </Typography.Text>
+          </div>
+          <div>
+            <Typography.Text type="secondary">
+              (${record.total_amount_usd.toLocaleString()})
+            </Typography.Text>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "EXCHANGE RATE",
+      dataIndex: "usd_exchange_rate",
+      key: "usd_exchange_rate",
+      render: (usd_exchange_rate, record) => (
+        <Typography.Text>
+          1 USD = {usd_exchange_rate.toFixed(2)} {record.currency_code}
+        </Typography.Text>
+      ),
     },
     {
       title: "STATUS",
       dataIndex: "status",
       key: "status",
       render: (status) => <StatusBadge status={status} />,
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 120,
+      render: (_, record) => (
+        <Flex justify="start" align="center" gap={4}>
+          <Button
+            style={{ padding: 0 }}
+            type="link"
+            onClick={() =>
+              router.push(`/purchase-invoice/${record.purchase_order_no}`)
+            }
+          >
+            View
+          </Button>
+          <Divider type="vertical" />
+          <Button
+            style={{ padding: 0 }}
+            type="link"
+            onClick={() =>
+              router.push(`/purchase-invoice/${record.purchase_order_no}/edit`)
+            }
+          >
+            Edit
+          </Button>
+        </Flex>
+      ),
     },
   ];
 
@@ -80,22 +138,23 @@ export default function TableView({
             router.push(`/purchase-invoices/${record.purchase_invoice_number}`);
           },
         })}
+        style={{ border: "2px solid #F5F5F5", borderRadius: "8px" }}
+        footer={() => (
+          <Flex justify="space-between" align="center" gap={4}>
+            <Typography.Text>
+              Showing {pagination.pageSize * (pagination.page - 1) + 1} to{" "}
+              {Math.min(pagination.pageSize * pagination.page, total)} of{" "}
+              {total} items
+            </Typography.Text>
+            <Pagination
+              current={pagination.page}
+              pageSize={pagination.pageSize}
+              total={total}
+              onChange={paginationChangeHandler}
+            />
+          </Flex>
+        )}
       />
-      <Flex justify="space-between" align="center" gap={4}>
-        <Typography.Text>
-          Showing {pagination.pageSize * (pagination.page - 1) + 1} to{" "}
-          {Math.min(pagination.pageSize * pagination.page, total)} of {total}{" "}
-          items
-        </Typography.Text>
-        <Pagination
-          current={pagination.page}
-          pageSize={pagination.pageSize}
-          total={total}
-          onChange={paginationChangeHandler}
-          showSizeChanger
-          pageSizeOptions={[10, 20, 50, 100]}
-        />
-      </Flex>
     </section>
   );
 }

@@ -36,8 +36,14 @@ export default function InvoicesPage() {
   const [statItems, setStatItems] = useState<StatItem[]>();
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
 
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
-  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [dateSort, setDateSort] = useState<
+    "date_asc" | "date_desc" | undefined
+  >();
+  const [amountSort, setAmountSort] = useState<
+    "amount_asc" | "amount_desc" | undefined
+  >();
+
   const [total, setTotal] = useState<number>(0);
 
   const [searchText, setSearchText] = useState("");
@@ -47,18 +53,26 @@ export default function InvoicesPage() {
 
   const router = useRouter();
 
-  const { data: piData, isPending } = useList<PurchaseInvoiceResponse>(
-    "purchase-invoices",
-    {
-      page: pagination.page,
-      pageSize: pagination.pageSize,
-      sort: sortOrder
-        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
-        : undefined,
-      status: status,
-      q: searchText,
-    }
-  );
+  function getSortLabel() {
+    if (dateSort === "date_asc") return "Invoice Date (Newest First)";
+    if (dateSort === "date_desc") return "Invoice Date (Oldest First)";
+    if (amountSort === "amount_asc") return "Amount (Highest First)";
+    if (amountSort === "amount_desc") return "Amount (Lowest First)";
+    return "Invoice Date (Newest First)"; // default fallback
+  }
+
+  const {
+    data: piData,
+    isPending,
+    refetch,
+  } = useList<PurchaseInvoiceResponse>("purchase-invoices", {
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    status: status,
+    q: searchText,
+    dateSort,
+    amountSort,
+  });
 
   useEffect(() => {
     if (piData) {
@@ -86,7 +100,7 @@ export default function InvoicesPage() {
           gradient: "linear-gradient(90deg, #FFFBE6 0%, #FFF 100%)",
           borderColor: "#FFC53D",
           tooltip: "Total number of invoices",
-          total_approved: piData.total,
+          total_approved: piData.statistics.total_invoices,
         },
         {
           title: "Total USD Value",
@@ -127,14 +141,39 @@ export default function InvoicesPage() {
 
   const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) => {
     setSearchText(value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const onSortHandler = (value: string) => {
-    setSortOrder(value === "Date (Newest First)" ? "descend" : "ascend");
+    switch (value) {
+      case "Invoice Date (Newest First)":
+        setDateSort("date_asc");
+        setAmountSort(undefined);
+        break;
+      case "Invoice Date (Oldest First)":
+        setDateSort("date_desc");
+        setAmountSort(undefined);
+        break;
+      case "Amount (Highest First)":
+        setAmountSort("amount_asc");
+        setDateSort(undefined);
+        break;
+      case "Amount (Lowest First)":
+        setAmountSort("amount_desc");
+        setDateSort(undefined);
+        break;
+      default:
+        setDateSort(undefined);
+        setAmountSort(undefined);
+    }
+
+    refetch();
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const statusChangeHandler = (value: string) => {
     setStatus(value === "All Status" ? undefined : value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const viewChangeHandler = (value: "Card" | "Table") => {
@@ -144,7 +183,8 @@ export default function InvoicesPage() {
   const clearFiltersHandler = () => {
     setStatus(undefined);
     setSearchText("");
-    setSortOrder(undefined);
+    setDateSort(undefined);
+    setAmountSort(undefined);
     setPagination({ page: 1, pageSize: 10 });
   };
 
@@ -153,7 +193,7 @@ export default function InvoicesPage() {
   };
 
   return (
-    <section className="px-6">
+    <section className="max-w-7xl mx-auto py-10 px-4">
       {/* Breadcrumbs */}
       <Breadcrumbs
         items={[{ title: "Home", href: "/" }, { title: "Invoices" }]}
@@ -185,17 +225,25 @@ export default function InvoicesPage() {
             <Flex justify="center" align="center" gap={12}>
               <span>Sort:</span>
               <Select
-                defaultValue="Date (Newest First)"
+                value={getSortLabel()}
                 style={{ width: 160 }}
                 onChange={onSortHandler}
                 options={[
                   {
-                    value: "Date (Newest First)",
-                    label: "Date (Newest First)",
+                    value: "Invoice Date (Newest First)",
+                    label: "Invoice Date (Newest First)",
                   },
                   {
-                    value: "Date (Oldest First)",
-                    label: "Date (Oldest First)",
+                    value: "Invoice Date (Oldest First)",
+                    label: "Invoice Date (Oldest First)",
+                  },
+                  {
+                    value: "Amount (Highest First)",
+                    label: "Amount (Highest First)",
+                  },
+                  {
+                    value: "Amount (Lowest First)",
+                    label: "Amount (Lowest First)",
                   },
                 ]}
               />

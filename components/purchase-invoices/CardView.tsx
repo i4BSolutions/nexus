@@ -1,14 +1,10 @@
 import { PurchaseInvoiceDto } from "@/types/purchase-invoice/purchase-invoice.type";
 
 import {
-  CarryOutOutlined,
   DollarOutlined,
   EditOutlined,
   EllipsisOutlined,
   EyeOutlined,
-  FileTextOutlined,
-  InfoOutlined,
-  PlusOutlined,
 } from "@ant-design/icons";
 
 import type { MenuProps } from "antd";
@@ -44,7 +40,10 @@ export default function CardView({
 
   return (
     <section className="py-4">
-      <div className="flex flex-wrap gap-4">
+      <div
+        className="grid gap-4"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(325px, 1fr))" }}
+      >
         {data.map((item: PurchaseInvoiceDto) => {
           const items: MenuProps["items"] = [
             {
@@ -69,7 +68,7 @@ export default function CardView({
           return (
             <div
               key={item.id}
-              className="border-2 border-[#F5F5F5] rounded-[16px] w-[320px]"
+              className="border-2 border-[#F5F5F5] rounded-[16px] w-full"
             >
               <div
                 className="py-3 rounded-t-[14px]"
