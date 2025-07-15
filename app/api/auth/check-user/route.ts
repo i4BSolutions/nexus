@@ -21,6 +21,6 @@ export async function GET(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  console.log("Check email data:", data);
-  return NextResponse.json({ exists: data.length > 0 });
+
+  return NextResponse.json({ exists: data.length > 0 }, { status: 200 });
 }
