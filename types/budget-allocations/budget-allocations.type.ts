@@ -19,6 +19,11 @@ export interface BudgetAllocationsResponse {
   total: number;
   page: number;
   pageSize: number;
+  statistics: {
+    totalAllocations: number;
+    totalAllocatedUSD: number;
+    totalPendingUSD: number;
+  };
 }
 
 export interface BudgetAllocationsUpdateData {

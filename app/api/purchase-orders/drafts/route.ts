@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 import { success, error } from "@/lib/api-response";
-import { ApiResponse } from "@/types/api-response-type";
 import { PurchaseOrderDraftInterface } from "@/types/purchase-order/purchase-order-draft.type";
 
 import { getAuthenticatedUser } from "@/helper/getUser";
+import { ApiResponse } from "@/types/shared/api-response-type";
 
 /**
  * GET - Retrieve user's purchase order drafts

@@ -3,11 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { error, success } from "@/lib/api-response";
 import { getAuthenticatedUser } from "@/helper/getUser";
 import { uploadTransferEvidenceImage } from "@/utils/uploadTransferEvidence";
-import { ApiResponse } from "@/types/api-response-type";
 import {
   BudgetAllocationsInterface,
   BudgetAllocationsUpdateData,
 } from "@/types/budget-allocations/budget-allocations.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
 
 const bucket = "allocation-transfer-evidence";
 

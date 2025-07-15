@@ -25,7 +25,7 @@ const CreateBudgetAllocationsPage = () => {
     mutationFn: createAllocation,
     onSuccess: () => {
       message.success("Allocation created successfully!");
-      router.push("/budget-allocations");
+      // router.push("/budget-allocations");
     },
     onError: (error: any) => {
       message.error(error.message || "Unexpected error");
