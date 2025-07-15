@@ -61,7 +61,7 @@ const StatisticsCards = ({ stats }: { stats: StatItem[] }) => (
         </Space>
         {index !== 0 && (
           <Typography.Text type="secondary">
-            Across {stats[0].total_approved || 0} approved POs
+            Across {stats[0].total_approved || 0} {item.approved_text}
           </Typography.Text>
         )}
       </Card>

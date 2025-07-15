@@ -172,6 +172,49 @@ export async function POST(
 }
 
 /**
+ * This function retrieves statistics for purchase invoices.
+ * It calculates the total number of invoices and the total USD value.
+ * @returns Promise<{ total_invoices: number, total_usd: number, delivered: number }>
+ */
+async function getStatistics() {
+  const supabase = await createClient();
+
+  let statsQuery = supabase.from("purchase_invoice").select(
+    `
+      exchange_rate_to_usd,
+      invoice_items:purchase_invoice_item (
+        quantity,
+        unit_price_local
+      )
+    `
+  );
+  const { data: allInvoicesForStats, error: statsError } = await statsQuery;
+
+  let totalAmountUsd = 0;
+  let totalInvoices = 0;
+
+  if (!statsError && allInvoicesForStats) {
+    totalInvoices = allInvoicesForStats.length;
+    totalAmountUsd = allInvoicesForStats.reduce((total, invoice) => {
+      const invoiceTotal = invoice.invoice_items.reduce(
+        (sum: number, item: any) =>
+          sum +
+          (item.quantity * item.unit_price_local) /
+            invoice.exchange_rate_to_usd,
+        0
+      );
+      return total + invoiceTotal;
+    }, 0);
+  }
+
+  return {
+    total_invoices: totalInvoices,
+    total_usd: totalAmountUsd,
+    delivered: 0, // Need to calculate actual delivered percentage
+  };
+}
+
+/**
  * This API route retrieves all purchase invoices from the database with
  * pagination support
  * descending order by default
@@ -293,19 +336,14 @@ export async function GET(
     formatDto = formatDto.slice(from, to + 1);
   }
 
+  const statisticsData = await getStatistics();
+
   const data = {
     items: formatDto,
     total: count || 0,
     page,
     pageSize: pageSize,
-    statistics: {
-      total_invoices: count || 0,
-      total_usd: formatDto.reduce(
-        (total: number, item: any) => total + item.total_amount_usd,
-        0
-      ),
-      delivered: 0,
-    },
+    statistics: statisticsData,
   };
 
   return NextResponse.json(
@@ -313,4 +351,3 @@ export async function GET(
     { status: 200 }
   );
 }
-

@@ -11,4 +11,5 @@ export type StatItem = {
   prefix?: string;
   suffix?: string;
   total_approved?: number;
+  approved_text?: string;
 };
