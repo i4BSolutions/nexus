@@ -5,7 +5,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 // Ant Design Components
-import { Button, Flex, Segmented, Select, Spin, Typography } from "antd";
+import {
+  Button,
+  Flex,
+  Progress,
+  Segmented,
+  Select,
+  Spin,
+  Typography,
+} from "antd";
 import Input, { SearchProps } from "antd/es/input";
 import {
   CarryOutOutlined,
@@ -113,6 +121,11 @@ export default function InvoicesPage() {
           total_approved: piData.statistics.total_invoices,
           prefix: "$",
           approved_text: "invoices",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {piData.statistics.total_invoices || 0}{" "}
+            </Typography.Text>
+          ),
         },
         {
           title: "% Delivered",
@@ -122,6 +135,9 @@ export default function InvoicesPage() {
           gradient: "linear-gradient(90deg, #F9F0FF 0%, #FFF 100%)",
           borderColor: "#D3ADF7",
           tooltip: "Delivered invoices rate",
+          footerContent: (
+            <Progress percent={19} showInfo={false} strokeColor="#9254DE" />
+          ),
           // TODO: Calculate actual delivered percentage
         },
       ]);

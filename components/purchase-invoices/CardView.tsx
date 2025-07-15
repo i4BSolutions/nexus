@@ -17,7 +17,6 @@ import {
   Progress,
   Row,
   Space,
-  Tooltip,
   Typography,
 } from "antd";
 import { useRouter } from "next/navigation";
@@ -189,7 +188,47 @@ export default function CardView({
                       Delivery Progress
                     </Typography.Text>
                   </Col>
-                  <Progress percent={19} />
+                  <Progress percent={19} strokeColor="#52C41A" />
+                  <Space
+                    style={{
+                      width: "100%",
+                      justifyContent: "space-between",
+                      marginTop: 8,
+                    }}
+                  >
+                    <Space>
+                      <div
+                        style={{
+                          color: "#52C41A",
+                          background: "#F6FFED",
+                          border: "1px solid #B7EB8F",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 400,
+                          padding: "2px 8px",
+                          maxWidth: "fit-content",
+                        }}
+                      >
+                        10% Delivered
+                      </div>
+                    </Space>
+                    <Space>
+                      <div
+                        style={{
+                          color: "#F5222D",
+                          background: "#FFF1F0",
+                          border: "1px solid #FFA39E",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 400,
+                          padding: "2px 8px",
+                          maxWidth: "fit-content",
+                        }}
+                      >
+                        90% Pending
+                      </div>
+                    </Space>
+                  </Space>
                 </Row>
               </div>
             </div>

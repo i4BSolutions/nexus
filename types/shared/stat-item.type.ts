@@ -12,4 +12,5 @@ export type StatItem = {
   suffix?: string;
   total_approved?: number;
   approved_text?: string;
+  footerContent?: any;
 };
