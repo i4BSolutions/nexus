@@ -15,107 +15,75 @@ export async function GET(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse<BudgetAllocationsResponse | null>>> {
   const supabase = await createClient();
-  const searchParams = req.nextUrl.searchParams;
+  const { searchParams } = new URL(req.url);
 
-  const page = parseInt(searchParams.get("page") || "1");
-  const pageSize = parseInt(searchParams.get("pageSize") || "10");
-  const poId = searchParams.get("po_id");
-  const budgetId = searchParams.get("budget_id");
-  const status = searchParams.get("status");
-  const includeStats = searchParams.get("stats") === "true";
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const status = searchParams.get("status") || undefined;
+  const sortParam = searchParams.get("sort"); // e.g. allocation_amount_desc
+  const q = searchParams.get("q") || ""; // search term for allocation_number
 
   let query = supabase
     .from("budget_allocation")
     .select("*", { count: "exact" });
 
-  if (poId) query = query.eq("po_id", poId);
-  if (budgetId) query = query.eq("budget_id", budgetId);
-  if (status) query = query.eq("status", status);
-
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
-  query = query.range(from, to);
-
-  const { data, error: queryError, count } = await query;
-
-  if (queryError) return NextResponse.json(error(queryError.message, 500));
-
-  const signedData = await Promise.all(
-    (data || []).map(async (item) => {
-      if (item.transfer_evidence) {
-        const { data: signedUrlData, error: signedUrlError } =
-          await supabase.storage
-            .from(bucket)
-            .createSignedUrl(item.transfer_evidence, 60 * 60); // 1 hour expiry
-
-        if (signedUrlError) {
-          console.error("Signed URL error:", signedUrlError.message);
-        }
-
-        return {
-          ...item,
-          transfer_evidence_url: signedUrlData?.signedUrl || null,
-        };
-      }
-
-      return { ...item, transfer_evidence_url: null };
-    })
-  );
-
-  let statistics: BudgetAllocationsResponse["statistics"] = {
-    totalAllocations: 0,
-    totalAllocatedUSD: 0,
-    totalPendingUSD: 0,
-  };
-
-  if (includeStats) {
-    // Clone query without pagination to compute stats
-    let statQuery = supabase.from("budget_allocation").select("*");
-
-    if (poId) statQuery = statQuery.eq("po_id", poId);
-    if (budgetId) statQuery = statQuery.eq("budget_id", budgetId);
-    if (status) statQuery = statQuery.eq("status", status);
-
-    const { data: allAllocations, error: statsError } = await statQuery;
-    if (statsError) {
-      console.error("Stats error:", statsError.message);
-    }
-
-    const totalAllocatedUSD =
-      allAllocations?.reduce((sum, item) => {
-        const usd =
-          item.exchange_rate_usd > 0
-            ? item.allocation_amount / item.exchange_rate_usd
-            : 0;
-        return sum + usd;
-      }, 0) || 0;
-
-    const totalPendingUSD =
-      allAllocations?.reduce((sum, item) => {
-        const isPending = item.status === "Pending";
-        const usd =
-          item.exchange_rate_usd > 0
-            ? item.allocation_amount / item.exchange_rate_usd
-            : 0;
-        return isPending ? sum + usd : sum;
-      }, 0) || 0;
-
-    statistics = {
-      totalAllocations: allAllocations?.length || 0,
-      totalAllocatedUSD: Number(totalAllocatedUSD.toFixed(2)),
-      totalPendingUSD: Number(totalPendingUSD.toFixed(2)),
-    };
+  // Search by allocation_number
+  if (q) {
+    query = query.ilike("allocation_number", `%${q}%`);
   }
 
+  // Filter by status
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  // Sort
+  if (sortParam === "allocation_amount_asc") {
+    query = query.order("allocation_amount", { ascending: true });
+  } else if (sortParam === "allocation_amount_desc") {
+    query = query.order("allocation_amount", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false }); // default
+  }
+
+  // Pagination
+  query = query.range(from, to);
+
+  const { data, count, error: getError } = await query;
+
+  if (getError) {
+    return NextResponse.json(error(getError.message), { status: 500 });
+  }
+
+  const allocations = data || [];
+
+  // Statistics
+  const totalAllocations = count || 0;
+  const totalAllocatedUSD = allocations.reduce(
+    (sum, item) => sum + (item.equivalent_usd || 0),
+    0
+  );
+  const totalPendingUSD = allocations
+    .filter((item) => item.status === "Pending")
+    .reduce((sum, item) => sum + (item.equivalent_usd || 0), 0);
+
+  const responseData: BudgetAllocationsResponse = {
+    items: allocations,
+    total: totalAllocations,
+    page,
+    pageSize,
+    statistics: {
+      totalAllocations,
+      totalAllocatedUSD,
+      totalPendingUSD,
+    },
+  };
+
   return NextResponse.json(
-    success({
-      items: signedData || [],
-      total: count || 0,
-      page,
-      pageSize,
-      statistics,
-    })
+    success(responseData, "Budget allocations retrieved successfully")
   );
 }
 
