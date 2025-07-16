@@ -74,13 +74,15 @@ export async function PUT(
       });
     }
 
+    const { reason, ...rest } = body;
+
     const updateData = {
-      ...body,
-      sku: existing.sku,
+      ...rest,
+      sku: existing.sku, // Ensure SKU remains unchanged
       updated_at: new Date().toISOString(),
     };
 
-    const { data, error: dbError } = await supabase
+    const { data: updated, error: dbError } = await supabase
       .from("product")
       .update(updateData)
       .eq("id", id)
@@ -93,8 +95,11 @@ export async function PUT(
       });
     }
 
-    // Track price changes
-    if (body.unit_price != null && body.unit_price !== existing.unit_price) {
+    // Track price change history if applicable
+    const priceChanged =
+      rest.unit_price != null && rest.unit_price !== existing.unit_price;
+
+    if (priceChanged) {
       const { data: auth } = await supabase.auth.getUser();
       const updated_by = auth?.user?.email || "system";
 
@@ -102,16 +107,18 @@ export async function PUT(
         {
           product_id: id,
           old_price: existing.unit_price,
-          new_price: body.unit_price,
+          new_price: rest.unit_price,
+          reason: reason || null, // use extracted reason
           updated_by,
         },
       ]);
     }
 
-    return NextResponse.json(success(data, "Product updated successfully"), {
+    return NextResponse.json(success(updated, "Product updated successfully"), {
       status: 200,
     });
   } catch (e) {
+    console.error("PUT /product/:id error:", e);
     return NextResponse.json(error("Invalid request body", 400), {
       status: 400,
     });
