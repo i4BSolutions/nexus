@@ -14,22 +14,19 @@ import {
   CalendarOutlined,
   DollarCircleOutlined,
   DollarOutlined,
-  HourglassOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import {
   Button,
-  Card,
   Divider,
+  Empty,
   Flex,
-  Input,
   Pagination,
   Select,
   Table,
-  Tag,
   Typography,
 } from "antd";
-import { SearchProps } from "antd/es/input";
+import Input, { SearchProps } from "antd/es/input";
 import { ColumnsType, SortOrder } from "antd/es/table/interface";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
@@ -79,7 +76,7 @@ export default function BudgetAllocationsPage() {
         {
           title: "Pending Allocated (USD)",
           value: budgetAllocationData.statistics.totalPendingUSD,
-          icon: <HourglassOutlined />,
+          icon: <DollarCircleOutlined />,
           prefix: "$",
           bgColor: "#FFC53D",
           gradient: "linear-gradient(90deg, #FFFBE6 0%, #FFFFFF 100%)",
@@ -188,6 +185,14 @@ export default function BudgetAllocationsPage() {
     },
   ];
 
+  if (!budgetAllocationData || !budgetAllocationData.items)
+    return (
+      <Empty
+        description="You can create a new budget allocation by clicking the button."
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+      />
+    );
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <Breadcrumbs
@@ -203,7 +208,14 @@ export default function BudgetAllocationsPage() {
         buttonIcon={<PlusOutlined />}
       />
 
-      {statItems.length > 0 && <StatisticsCards stats={statItems} />}
+      {statItems.length > 0 ? (
+        <StatisticsCards stats={statItems} />
+      ) : (
+        <Empty
+          description="You can create a new budget allocation by clicking the button."
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        />
+      )}
 
       <Flex justify="space-between" align="center" style={{ marginBottom: 18 }}>
         <Input.Search

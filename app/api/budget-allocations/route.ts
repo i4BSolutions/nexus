@@ -16,63 +16,87 @@ export async function GET(
 ): Promise<NextResponse<ApiResponse<BudgetAllocationsResponse | null>>> {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
-
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const status = searchParams.get("status") || undefined;
-  const sortParam = searchParams.get("sort"); // e.g. allocation_amount_desc
-  const q = searchParams.get("q") || ""; // search term for allocation_number
+  const q = searchParams.get("q") || "";
+  const status = searchParams.get("status");
+  const sort = searchParams.get("sort"); // "allocation_amount_asc" | "allocation_amount_desc"
 
   let query = supabase
     .from("budget_allocation")
     .select("*", { count: "exact" });
 
-  // Search by allocation_number
   if (q) {
     query = query.ilike("allocation_number", `%${q}%`);
   }
 
-  // Filter by status
   if (status) {
     query = query.eq("status", status);
   }
 
-  // Sort
-  if (sortParam === "allocation_amount_asc") {
+  if (sort === "allocation_amount_asc") {
     query = query.order("allocation_amount", { ascending: true });
-  } else if (sortParam === "allocation_amount_desc") {
+  } else if (sort === "allocation_amount_desc") {
     query = query.order("allocation_amount", { ascending: false });
   } else {
-    query = query.order("created_at", { ascending: false }); // default
+    query = query.order("allocation_date", { ascending: false });
   }
 
-  // Pagination
   query = query.range(from, to);
 
-  const { data, count, error: getError } = await query;
+  const { data, count, error: fetchError } = await query;
 
-  if (getError) {
-    return NextResponse.json(error(getError.message), { status: 500 });
+  if (fetchError) {
+    return NextResponse.json(error(fetchError.message), { status: 500 });
   }
 
-  const allocations = data || [];
+  // Get signed URLs for transfer_evidence
+  const keys = data
+    ?.map((item) => item.transfer_evidence)
+    .filter((key): key is string => !!key);
+
+  const { data: signedData, error: signedUrlError } = await supabase.storage
+    .from(bucket)
+    .createSignedUrls(keys || [], 60 * 60); // 1 hour
+
+  if (signedUrlError) {
+    return NextResponse.json(error(signedUrlError.message), { status: 500 });
+  }
+
+  const signedUrlMap = new Map<string, string>();
+  signedData?.forEach((entry) => {
+    if (entry.signedUrl && entry.path) {
+      signedUrlMap.set(entry.path, entry.signedUrl);
+    }
+  });
+
+  const items =
+    data?.map((item) => ({
+      ...item,
+      transfer_evidence_url: item.transfer_evidence
+        ? signedUrlMap.get(item.transfer_evidence) || null
+        : null,
+    })) || [];
 
   // Statistics
-  const totalAllocations = count || 0;
-  const totalAllocatedUSD = allocations.reduce(
-    (sum, item) => sum + (item.equivalent_usd || 0),
+  const allQuery = supabase.from("budget_allocation").select("*");
+  const allData = (await allQuery).data || [];
+
+  const totalAllocations = allData.length;
+  const totalAllocatedUSD = allData.reduce(
+    (sum, a) => sum + (a.equivalent_usd || 0),
     0
   );
-  const totalPendingUSD = allocations
-    .filter((item) => item.status === "Pending")
-    .reduce((sum, item) => sum + (item.equivalent_usd || 0), 0);
+  const totalPendingUSD = allData
+    .filter((a) => a.status === "Pending")
+    .reduce((sum, a) => sum + (a.equivalent_usd || 0), 0);
 
-  const responseData: BudgetAllocationsResponse = {
-    items: allocations,
-    total: totalAllocations,
+  const response: BudgetAllocationsResponse = {
+    items,
+    total: count || 0,
     page,
     pageSize,
     statistics: {
@@ -83,7 +107,11 @@ export async function GET(
   };
 
   return NextResponse.json(
-    success(responseData, "Budget allocations retrieved successfully")
+    success<BudgetAllocationsResponse>(
+      response,
+      "Budget allocations retrieved successfully"
+    ),
+    { status: 200 }
   );
 }
 
