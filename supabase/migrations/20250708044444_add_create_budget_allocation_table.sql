@@ -4,7 +4,7 @@ create table "public"."budget_allocation" (
     "allocation_amount" numeric not null,
     "currency_code" character varying(10) not null,
     "exchange_rate_usd" numeric(15,6) not null,
-    "equivalent_usd" numeric generated always as ((allocation_amount * exchange_rate_usd)) stored,
+    "equivalent_usd" numeric generated always as ((allocation_amount / exchange_rate_usd)) stored,
     "transfer_evidence" text not null,
     "status" text default 'Pending'::text,
     "created_at" timestamp with time zone not null default timezone('utc'::text, now()),
