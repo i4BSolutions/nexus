@@ -5,7 +5,7 @@ import {
   DeleteOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import { Button, Space, Tabs, Tag, Typography, message } from "antd";
+import { App, Button, Space, Tabs, Tag, Typography } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -23,6 +23,8 @@ import HistoryCard from "@/components/suppliers/HistoryCard";
 import SupplierModal from "@/components/suppliers/SupplierModal";
 
 const SupplierPage = () => {
+  const { message } = App.useApp();
+
   const params = useParams();
   const id = params?.id as string;
 
