@@ -1,5 +1,6 @@
 "use client";
 
+import { BudgetAllocationsInterface } from "@/types/budget-allocations/budget-allocations.type";
 import { ProductCurrencyInterface } from "@/types/product/product.type";
 import {
   CalendarOutlined,
@@ -28,6 +29,7 @@ import {
   Space,
   Modal,
   Carousel,
+  Radio,
 } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -54,11 +56,19 @@ const fetchPurchaseOrders = async () => {
   return json.data.dto;
 };
 
+type BudgetAllocationFormProps = {
+  onSubmit: (formData: FormData) => void;
+  initialValues?: Partial<BudgetAllocationsInterface>;
+  mode?: "create" | "edit";
+  isLoading?: boolean;
+};
+
 const BudgetAllocationForm = ({
   onSubmit,
-}: {
-  onSubmit: (formData: FormData) => void;
-}) => {
+  initialValues,
+  mode = "create",
+  isLoading,
+}: BudgetAllocationFormProps) => {
   const [form] = Form.useForm();
   const [allocatedAmount, setAllocatedAmount] = useState("");
   const [exchangeRate, setExchangeRate] = useState("");
@@ -83,6 +93,37 @@ const BudgetAllocationForm = ({
     queryKey: ["purchaseOrders"],
     queryFn: fetchPurchaseOrders,
   });
+  console.log(initialValues);
+
+  React.useEffect(() => {
+    if (initialValues) {
+      form.setFieldsValue({
+        ...initialValues,
+        allocation_date: initialValues.allocation_date
+          ? dayjs(initialValues.allocation_date)
+          : undefined,
+        currency_code: initialValues.currency_code,
+        po_id: initialValues.po_id,
+        status: initialValues.status,
+        allocated_by: initialValues.allocated_by || "",
+        note: initialValues.note || "",
+        allocated_amount: initialValues.allocation_amount?.toString() || "",
+        exchange_rate_usd: initialValues.exchange_rate_usd?.toString() || "",
+      });
+      setAllocatedAmount(initialValues.allocation_amount?.toString() || "");
+      setExchangeRate(initialValues.exchange_rate_usd?.toString() || "");
+      if (initialValues.transfer_evidence_url) {
+        const file: UploadFile = {
+          uid: "-1",
+          name: "Transfer Proof",
+          status: "done",
+          url: initialValues.transfer_evidence_url,
+        };
+        setFileList([file]);
+        setPreviewUrl(initialValues.transfer_evidence_url);
+      }
+    }
+  }, [initialValues]);
 
   React.useEffect(() => {
     return () => {
@@ -150,7 +191,7 @@ const BudgetAllocationForm = ({
 
     if (fileList[0]?.originFileObj) {
       formData.append("file", fileList[0].originFileObj);
-    } else {
+    } else if (mode === "create") {
       message.error("Please upload a transfer proof image");
       return;
     }
@@ -555,6 +596,19 @@ const BudgetAllocationForm = ({
               <Form.Item name="note" label="Note (optional)">
                 <TextArea rows={4} placeholder="Enter note" />
               </Form.Item>
+
+              {mode === "edit" && (
+                <Form.Item
+                  name="status"
+                  label="Status"
+                  rules={[{ required: true, message: "Please select status" }]}
+                >
+                  <Radio.Group>
+                    <Radio value="Pending">Pending</Radio>
+                    <Radio value="Approved">Approved</Radio>
+                  </Radio.Group>
+                </Form.Item>
+              )}
             </Col>
 
             {/* Right Section: Image Preview */}
@@ -602,9 +656,14 @@ const BudgetAllocationForm = ({
           {/* </Form> */}
         </Card>
         <Row style={{ justifyContent: "space-between", marginTop: 12 }}>
-          <Button>Cancel</Button>
-          <Button type="primary" htmlType="submit">
-            Create Allocation
+          <Button disabled={isLoading}>Cancel</Button>
+          <Button
+            disabled={isLoading}
+            loading={isLoading}
+            type="primary"
+            htmlType="submit"
+          >
+            {mode === "edit" ? "Update Allocation" : "Create Allocation"}
           </Button>
         </Row>
       </Form>

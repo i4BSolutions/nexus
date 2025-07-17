@@ -173,11 +173,19 @@ export default function BudgetAllocationsPage() {
       title: "ACTIONS",
       render: (_, record) => (
         <Flex justify="start" align="center" gap={4}>
-          <Button style={{ padding: 0 }} type="link">
+          <Button
+            onClick={() => router.push(`/budget-allocations/${record.id}`)}
+            style={{ padding: 0 }}
+            type="link"
+          >
             View
           </Button>
           <Divider type="vertical" />
-          <Button style={{ padding: 0 }} type="link">
+          <Button
+            onClick={() => router.push(`/budget-allocations/${record.id}/edit`)}
+            style={{ padding: 0 }}
+            type="link"
+          >
             Edit
           </Button>
         </Flex>

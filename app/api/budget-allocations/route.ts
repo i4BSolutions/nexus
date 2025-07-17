@@ -130,6 +130,8 @@ export async function POST(
   const currency_code = String(formData.get("currency_code"));
   const exchange_rate_usd = Number(formData.get("exchange_rate_usd"));
   const file = formData.get("file") as File;
+  const note = formData.get("note")?.toString() || null;
+  const allocated_by = formData.get("allocated_by")?.toString() || null;
 
   const { data: po, error: poError } = await supabase
     .from("purchase_order")
@@ -158,6 +160,8 @@ export async function POST(
         transfer_evidence: "",
         status: "Pending",
         created_by: user.id,
+        allocated_by,
+        note,
       },
     ])
     .select()
@@ -199,7 +203,7 @@ export async function POST(
       allocation_id: allocationId,
       amount: allocation_amount,
       currency_code,
-      notes: null,
+      notes: note,
     },
   ]);
 

@@ -9,7 +9,7 @@ import {
 } from "@/types/budget-allocations/budget-allocations.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
 
-const bucket = "allocation-transfer-evidence";
+const bucket = "core-orbit";
 
 export async function GET(
   _req: NextRequest,
@@ -38,9 +38,28 @@ export async function GET(
     });
   }
 
-  return NextResponse.json(success(data, "Allocation retrieved successfully"), {
-    status: 200,
-  });
+  let transferEvidenceUrl: string | null = null;
+
+  if (data.transfer_evidence) {
+    const { data: signed, error: urlError } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(data.transfer_evidence, 60 * 60);
+
+    if (!urlError && signed?.signedUrl) {
+      transferEvidenceUrl = signed.signedUrl;
+    }
+  }
+
+  return NextResponse.json(
+    success(
+      {
+        ...data,
+        transfer_evidence_url: transferEvidenceUrl,
+      },
+      "Allocation retrieved successfully"
+    ),
+    { status: 200 }
+  );
 }
 
 export async function PUT(
@@ -66,6 +85,9 @@ export async function PUT(
   const allocation_amount = Number(formData.get("allocation_amount"));
   const currency_code = String(formData.get("currency_code") ?? "");
   const exchange_rate_usd = Number(formData.get("exchange_rate_usd"));
+  const status = String(formData.get("status") ?? "Pending");
+  const note = String(formData.get("note") ?? "");
+  const allocated_by = String(formData.get("allocated_by") ?? "");
   const file = formData.get("file") as File | null;
 
   const { data: old } = await supabase
@@ -80,6 +102,9 @@ export async function PUT(
     allocation_amount,
     currency_code,
     exchange_rate_usd,
+    status,
+    note,
+    allocated_by,
   };
 
   if (file) {
