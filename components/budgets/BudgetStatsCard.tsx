@@ -71,7 +71,7 @@ const StatisticsCards = ({ stats }: { stats: StatItem[] }) => {
 
             <div style={{ fontSize: 24, fontWeight: 600 }}>
               {item.isCurrency && typeof item.value === "number"
-                ? `$ ${item.value.toLocaleString()}`
+                ? `${item.value.toLocaleString()}`
                 : item.value}
             </div>
 

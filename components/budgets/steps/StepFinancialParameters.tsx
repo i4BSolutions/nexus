@@ -1,12 +1,9 @@
 "use client";
 
-import {
-  BudgetFormInput,
-  BudgetSchema,
-} from "@/schemas/budgets/budgets.schema";
+import { BudgetFormInput } from "@/schemas/budgets/budgets.schema";
 import { ProductCurrencyInterface } from "@/types/product/product.type";
 import { useQuery } from "@tanstack/react-query";
-import { Form, InputNumber, Select, Row, Col, Typography, message } from "antd";
+import { Form, Input, Select, Row, Col, Typography } from "antd";
 import React, {
   forwardRef,
   useEffect,
@@ -45,22 +42,30 @@ const StepFinancialParameters = forwardRef<
     queryFn: fetchCurrencies,
   });
 
-  const [plannedAmount, setPlannedAmount] = useState<number>(0);
-  const [exchangeRate, setExchangeRate] = useState<number>(1);
+  const [plannedAmount, setPlannedAmount] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("");
 
-  const usdEquivalent = exchangeRate > 0 ? plannedAmount / exchangeRate : 0;
+  const plannedAmountValue = parseFloat(plannedAmount) || 0;
+  const exchangeRateValue = parseFloat(exchangeRate) || 1;
+
+  const usdEquivalent =
+    exchangeRateValue > 0 ? plannedAmountValue / exchangeRateValue : 0;
 
   useEffect(() => {
     if (formData) {
       form.setFieldsValue(formData);
-      setPlannedAmount(formData.planned_amount || 0);
-      setExchangeRate(formData.exchange_rate_usd || 1);
+      setPlannedAmount(formData.planned_amount?.toString() || "");
+      setExchangeRate(formData.exchange_rate_usd?.toString() || "");
     }
   }, [formData, form]);
 
   const handleNext = () => {
     form.validateFields().then((values) => {
-      onNext(values);
+      onNext({
+        ...values,
+        planned_amount: parseFloat(plannedAmount),
+        exchange_rate_usd: parseFloat(exchangeRate),
+      });
     });
   };
 
@@ -76,18 +81,14 @@ const StepFinancialParameters = forwardRef<
           <Form.Item
             label="Planned Budget"
             name="planned_amount"
-            required
             rules={[
               { required: true, message: "Planned budget is required" },
               {
-                pattern: /^[1-9]\d*$/,
-                message: "Unit price cannot be 0",
-              },
-              {
                 validator: (_, value) => {
-                  if (value && parseFloat(value) <= 0) {
+                  const num = parseFloat(value);
+                  if (isNaN(num) || num <= 0) {
                     return Promise.reject(
-                      new Error("Planned budget must be greater than 0")
+                      new Error("Must be a positive number greater than 0")
                     );
                   }
                   return Promise.resolve();
@@ -95,7 +96,7 @@ const StepFinancialParameters = forwardRef<
               },
             ]}
           >
-            <InputNumber
+            <Input
               addonBefore={
                 <Form.Item
                   name="currency_code"
@@ -120,21 +121,10 @@ const StepFinancialParameters = forwardRef<
                   </Select>
                 </Form.Item>
               }
-              min={0}
-              style={{ width: "100%" }}
               placeholder="Enter planned budget"
-              value={plannedAmount === 0 ? undefined : plannedAmount}
-              onChange={(val) => setPlannedAmount(val ?? 0)}
-              formatter={(value) =>
-                value
-                  ? `${Number(value).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}`
-                  : ""
-              }
-              parser={(value) =>
-                parseFloat(value?.replace(/[^\d.]/g, "") || "0")
+              value={plannedAmount}
+              onChange={(e) =>
+                setPlannedAmount(e.target.value.replace(/[^\d.]/g, ""))
               }
             />
           </Form.Item>
@@ -145,19 +135,14 @@ const StepFinancialParameters = forwardRef<
           <Form.Item
             label="Exchange Rate (to USD)"
             name="exchange_rate_usd"
-            required
             rules={[
               { required: true, message: "Exchange rate is required" },
               {
-                pattern: /^\d+(\.\d{1,4})?$/,
-                message:
-                  "Exchange rate must be a positive number with up to 4 decimal places",
-              },
-              {
                 validator: (_, value) => {
-                  if (value && parseFloat(value) <= 0) {
+                  const num = parseFloat(value);
+                  if (isNaN(num) || num <= 0) {
                     return Promise.reject(
-                      new Error("Exchange rate must be greater than 0")
+                      new Error("Must be a positive number greater than 0")
                     );
                   }
                   return Promise.resolve();
@@ -165,34 +150,20 @@ const StepFinancialParameters = forwardRef<
               },
             ]}
           >
-            <InputNumber
-              min={0}
-              step={0.01}
-              style={{ width: "100%" }}
+            <Input
+              placeholder="Enter exchange rate (USD)"
               value={exchangeRate}
-              onChange={(val) => setExchangeRate(val ?? 1)}
-              placeholder="Enter exchange rate(USD)"
-              parser={(value) => {
-                const parsed = value?.replace(/[^\d.]/g, "") ?? "";
-                return parsed ? parseFloat(parsed) : NaN;
-              }}
-              formatter={(value) =>
-                value
-                  ? `${Number(value).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}`
-                  : ""
+              onChange={(e) =>
+                setExchangeRate(e.target.value.replace(/[^\d.]/g, ""))
               }
             />
           </Form.Item>
         </Col>
       </Row>
 
-      {/* USD Equivalent */}
       <Text strong>Planned Budget (USD Equivalent)</Text>
       <div style={{ fontSize: 20, marginTop: 8 }}>
-        ${" "}
+        {" "}
         {usdEquivalent.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
