@@ -104,9 +104,7 @@ export default function TableView({
           <Button
             style={{ padding: 0 }}
             type="link"
-            onClick={() =>
-              router.push(`/purchase-invoice/${record.purchase_order_no}`)
-            }
+            onClick={() => router.push(`/purchase-invoice/${record.id}`)}
           >
             View
           </Button>
@@ -114,9 +112,7 @@ export default function TableView({
           <Button
             style={{ padding: 0 }}
             type="link"
-            onClick={() =>
-              router.push(`/purchase-invoice/${record.purchase_order_no}/edit`)
-            }
+            onClick={() => router.push(`/purchase-invoice/${record.id}/edit`)}
           >
             Edit
           </Button>
