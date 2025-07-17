@@ -18,6 +18,7 @@ import {
   EllipsisOutlined,
   StopOutlined,
   DeleteOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -105,7 +106,11 @@ const BudgetCard = ({ data, onStatusChange }: BudgetsSectionProps) => {
                           cursor: "pointer",
                         }}
                       >
-                        <StopOutlined style={{ marginRight: 8 }} />
+                        {budget.status ? (
+                          <StopOutlined style={{ marginRight: 8 }} />
+                        ) : (
+                          <CheckCircleOutlined style={{ marginRight: 8 }} />
+                        )}
                         <span>{budget.status ? "Inactive" : "Active"}</span>
                       </div>
                     </div>
