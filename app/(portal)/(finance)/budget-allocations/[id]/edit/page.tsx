@@ -17,6 +17,7 @@ const updateAllocation = async ({
   id: string;
   data: FormData;
 }) => {
+  console.log(data);
   const res = await fetch(`/api/budget-allocations/${id}`, {
     method: "PUT",
     body: data,
@@ -97,8 +98,6 @@ const BudgetAllocationEditPage = () => {
             id: params.id as string,
             data: formData,
           });
-          message.success("Budget allocation updated successfully");
-          router.push(`/budget-allocations/${params.id}`);
         }}
       />
     </section>

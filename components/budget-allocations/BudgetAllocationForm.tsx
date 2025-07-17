@@ -93,7 +93,6 @@ const BudgetAllocationForm = ({
     queryKey: ["purchaseOrders"],
     queryFn: fetchPurchaseOrders,
   });
-  console.log(initialValues);
 
   React.useEffect(() => {
     if (initialValues) {
@@ -188,6 +187,7 @@ const BudgetAllocationForm = ({
     formData.append("exchange_rate_usd", exchangeRate);
     formData.append("allocated_by", values.allocated_by);
     formData.append("note", values.note || "");
+    formData.append("status", values.status);
 
     if (fileList[0]?.originFileObj) {
       formData.append("file", fileList[0].originFileObj);

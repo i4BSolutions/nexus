@@ -193,14 +193,6 @@ export default function BudgetAllocationsPage() {
     },
   ];
 
-  if (!budgetAllocationData || !budgetAllocationData.items)
-    return (
-      <Empty
-        description="You can create a new budget allocation by clicking the button."
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-      />
-    );
-
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <Breadcrumbs
@@ -216,14 +208,7 @@ export default function BudgetAllocationsPage() {
         buttonIcon={<PlusOutlined />}
       />
 
-      {statItems.length > 0 ? (
-        <StatisticsCards stats={statItems} />
-      ) : (
-        <Empty
-          description="You can create a new budget allocation by clicking the button."
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        />
-      )}
+      {statItems.length > 0 && <StatisticsCards stats={statItems} />}
 
       <Flex justify="space-between" align="center" style={{ marginBottom: 18 }}>
         <Input.Search
