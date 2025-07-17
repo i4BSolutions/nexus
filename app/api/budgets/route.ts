@@ -1,7 +1,9 @@
+import { getAuthenticatedUser } from "@/helper/getUser";
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
+import dayjs from "dayjs";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -13,10 +15,28 @@ export async function GET(
   const page = parseInt(searchParams.get("page") || "1");
   const pageSize = parseInt(searchParams.get("pageSize") || "10");
   const q = searchParams.get("q")?.trim().toLowerCase() || "";
+  const sortParam = searchParams.get("sort");
+
+  // Parse boolean status filter
   const statusFilter = searchParams.get("status");
+  let statusBoolean: boolean | undefined = undefined;
+  if (statusFilter === "true") statusBoolean = true;
+  else if (statusFilter === "false") statusBoolean = false;
+
+  let sortField: "created_at" | "project_name" | "budget_name" = "created_at";
+  let sortDirection: "asc" | "desc" = "desc";
+
+  if (sortParam) {
+    const lastUnderscoreIndex = sortParam.lastIndexOf("_");
+    const field = sortParam.substring(0, lastUnderscoreIndex);
+    const direction = sortParam.substring(lastUnderscoreIndex + 1);
+    if (["project_name", "budget_name", "created_at"].includes(field)) {
+      sortField = field as typeof sortField;
+      sortDirection = direction === "asc" ? "asc" : "desc";
+    }
+  }
 
   try {
-    // 1. Fetch all budgets
     const { data: allBudgets, error: fetchError } = await supabase
       .from("budgets")
       .select("*");
@@ -25,23 +45,34 @@ export async function GET(
       return NextResponse.json(error("Failed to fetch budgets", 500));
     }
 
-    // 2. Apply search and status filters
+    // Filter budgets
     const filteredBudgets = allBudgets.filter((b) => {
       const matchSearch =
         q === "" ||
         b.budget_name.toLowerCase().includes(q) ||
         b.project_name.toLowerCase().includes(q);
-      const matchStatus = !statusFilter || b.status === statusFilter;
+      const matchStatus =
+        statusBoolean === undefined || b.status === statusBoolean;
       return matchSearch && matchStatus;
     });
 
-    const paginated = filteredBudgets.slice(
-      (page - 1) * pageSize,
-      page * pageSize
-    );
+    // Sort budgets
+    const sorted = [...filteredBudgets].sort((a, b) => {
+      if (sortField === "created_at") {
+        return sortDirection === "asc"
+          ? dayjs(a.created_at).unix() - dayjs(b.created_at).unix()
+          : dayjs(b.created_at).unix() - dayjs(a.created_at).unix();
+      }
+      const valA = String(a[sortField] ?? "").toLowerCase();
+      const valB = String(b[sortField] ?? "").toLowerCase();
+      return sortDirection === "asc"
+        ? valA.localeCompare(valB)
+        : valB.localeCompare(valA);
+    });
+
+    const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
     const budgetIds = paginated.map((b) => b.id);
 
-    // 3. Fetch related allocations and invoices
     const { data: allocations } = await supabase
       .from("budget_allocations")
       .select("budget_id, amount_usd")
@@ -52,7 +83,7 @@ export async function GET(
       .select("budget_id, amount_usd")
       .in("budget_id", budgetIds);
 
-    // 4. Enrich budgets
+    // Enrich budgets
     const enrichedItems = paginated.map((budget) => {
       const allocs =
         allocations?.filter((a) => a.budget_id === budget.id) || [];
@@ -91,11 +122,11 @@ export async function GET(
       };
     });
 
-    // 5. Statistics summary
+    // Stats summary
     const statistics = {
       total: allBudgets.length,
-      active: allBudgets.filter((b) => b.status === "Active").length,
-      inactive: allBudgets.filter((b) => b.status === "Inactive").length,
+      active: allBudgets.filter((b) => b.status === true).length,
+      inactive: allBudgets.filter((b) => b.status === false).length,
     };
 
     return NextResponse.json(
@@ -122,19 +153,34 @@ export async function POST(
   const supabase = await createClient();
   const body = await req.json();
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
-  const userId = body.created_by || "system";
+  const user = await getAuthenticatedUser(supabase);
 
-  const planned_amount_usd = body.planned_amount / body.exchange_rate_usd;
-  const payload = { ...body, planned_amount_usd };
+  if (
+    !body.budget_name ||
+    !body.project_name ||
+    !body.start_date ||
+    !body.end_date ||
+    !body.planned_amount ||
+    !body.exchange_rate_usd
+  ) {
+    return NextResponse.json(error("Invalid data", 400), { status: 400 });
+  }
+
+  // const planned_amount_usd = body.planned_amount / body.exchange_rate_usd;
+  const { planned_amount_usd, ...payload } = body;
+  const fullPayload = {
+    ...payload,
+    created_by: user.id,
+  };
 
   const { data: created, error: dbError } = await supabase
     .from("budgets")
-    .insert([payload])
+    .insert([fullPayload])
     .select()
     .single();
 
   if (dbError)
-    return NextResponse.json(error("Failed to create budget", 500), {
+    return NextResponse.json(error(dbError.message, 500), {
       status: 500,
     });
 
@@ -142,8 +188,8 @@ export async function POST(
     {
       budget_id: created.id,
       action: "CREATE",
-      changes: { new: payload },
-      performed_by: userId,
+      changes: { new: fullPayload },
+      performed_by: user.id,
       ip_address: ip,
     },
   ]);
