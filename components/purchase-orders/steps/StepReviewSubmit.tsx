@@ -102,19 +102,21 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
     };
 
     const getTotal = () => {
-      const items = formData.items;
-      const exchangeRate = formData.exchange_rate;
+      const items = formData?.items || [];
+      const exchangeRate = Number(formData?.exchange_rate) || 0;
       let totalLocal = 0;
 
       items.forEach((item: any) => {
-        if (!item || !item.product) return;
-        const price = item.unit_price || 0;
-        totalLocal += (item.quantity || 0) * price;
+        if (!item || !item.product || item.foc) return;
+
+        const price = Number(item.unit_price) || 0;
+        const quantity = Number(item.quantity) || 0;
+
+        totalLocal += quantity * price;
       });
 
-      const totalUSD = exchangeRate
-        ? (totalLocal / exchangeRate).toFixed(2)
-        : "0.00";
+      const totalUSD =
+        exchangeRate > 0 ? (totalLocal / exchangeRate).toFixed(2) : "0.00";
 
       return {
         totalLocal: totalLocal.toLocaleString(),
