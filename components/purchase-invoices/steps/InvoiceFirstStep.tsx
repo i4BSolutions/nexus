@@ -4,8 +4,8 @@ import { DatePicker, Form, Input } from "antd";
 export default function InvoiceFirstStep() {
   return (
     <section className="w-full">
-      <Form.Item
-        name="invoiceNumber"
+      <Form.Item<InvoiceFieldType>
+        name="invoice_number"
         label="Invoice Number"
         rules={[{ required: true, message: "Please input invoice number!" }]}
       >

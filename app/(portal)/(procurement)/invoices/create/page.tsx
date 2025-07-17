@@ -4,6 +4,7 @@ import InvoiceFirstStep from "@/components/purchase-invoices/steps/InvoiceFirstS
 import InvoiceSecondStep from "@/components/purchase-invoices/steps/InvoiceSecondStep";
 import InvoiceThirdStep from "@/components/purchase-invoices/steps/InvoiceThirdStep";
 import CreationSteps from "@/components/shared/multi-step-form/CreationSteps";
+import { useCreate } from "@/hooks/react-query/useCreate";
 import { useGetAll } from "@/hooks/react-query/useGetAll";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useList } from "@/hooks/react-query/useList";
@@ -15,16 +16,7 @@ import { InvoiceFieldType } from "@/types/purchase-invoice/purchase-invoice.type
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 import { PurchaseOrderResponse } from "@/types/purchase-order/purchase-order.type";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import {
-  App,
-  Button,
-  Flex,
-  Form,
-  FormProps,
-  Space,
-  Spin,
-  Typography,
-} from "antd";
+import { App, Button, Flex, Form, Space, Spin, Typography } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -36,6 +28,11 @@ export default function InvoiceCreatePage() {
   const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState<
     number | null
   >(null);
+
+  const { data: invoiceNumber, isLoading: invoiceNumberLoading } =
+    useGetAll<string>("purchase-invoices/get-purchase-invoice-no", [
+      "purchase-invoice-number",
+    ]);
 
   const { data: poDetailData, isLoading: poDetailLoading } =
     useGetById<PurchaseOrderDetailDto>(
@@ -57,24 +54,91 @@ export default function InvoiceCreatePage() {
       status: "true",
     });
 
+  const { mutate: createInvoice } = useCreate("purchase-invoices", [
+    "purchase-invoices",
+  ]);
+
+  const onFinish = () => {
+    // console.log("✅ All Fields (from form):", form.getFieldsValue(true));
+    const allValues: InvoiceFieldType = form.getFieldsValue(true);
+    const selectedItems = allValues.invoice_items.filter(
+      (item) => item.checked
+    );
+    // console.log("Selected Items:", selectedItems);
+    console.log("payload", {
+      purchase_invoice_number: allValues.invoice_number,
+      purchase_order_id: allValues.purchase_order,
+      invoice_date: allValues.invoice_date,
+      due_date: allValues.due_date,
+      currency_id: allValues.currency,
+      usd_exchange_rate: allValues.usd_exchange_rate,
+      note: allValues.note,
+      status: "Pending",
+      invoice_items: selectedItems.map((item) => ({
+        product_id: item.product,
+        quantity: item.invoice_quantity,
+        unit_price_local: item.invoice_unit_price_local,
+      })),
+    });
+
+    try {
+      createInvoice(
+        {
+          purchase_invoice_number: allValues.invoice_number,
+          purchase_order_id: allValues.purchase_order,
+          invoice_date: allValues.invoice_date,
+          due_date: allValues.due_date,
+          currency_id: allValues.currency,
+          usd_exchange_rate: allValues.usd_exchange_rate,
+          note: allValues.note,
+          status: "Pending",
+          invoice_items: selectedItems.map((item) => ({
+            product_id: item.product,
+            quantity: item.invoice_quantity,
+            unit_price_local: item.invoice_unit_price_local,
+          })),
+        },
+        {
+          onSuccess: () => {
+            message.success("Purchase invoice created successfully");
+            router.push("/invoices");
+          },
+        }
+      );
+    } catch (error) {
+      message.error("Failed to create purchase invoice. Please try again.");
+    } finally {
+    }
+  };
+
   useEffect(() => {
     if (poDetailData) {
       form.setFieldsValue({
         invoice_items: poDetailData.product_items.map((item) => ({
           id: item.id,
           product: item.product,
-          quantity: item.quantity,
-          unit_price_local: item.unit_price_local,
+          invoice_quantity: item.quantity,
+          invoice_unit_price_local: item.unit_price_local,
+          checked: false,
         })),
+        purchase_order: poDetailData.id,
+        currency: poDetailData.currency.id,
+        usd_exchange_rate: poDetailData.usd_exchange_rate,
       });
     }
-  }, [poDetailData, form]);
+  }, [poDetailData, selectedPurchaseOrderId]);
+
+  useEffect(() => {
+    if (invoiceNumber) {
+      form.setFieldValue("invoice_number", invoiceNumber);
+    }
+  }, [invoiceNumber]);
 
   if (
     currenciesLoading ||
     purchaseOrdersLoading ||
     productsLoading ||
-    poDetailLoading
+    invoiceNumberLoading
   ) {
     return (
       <div className="h-[500px] w-full grid place-items-center">
@@ -100,6 +164,7 @@ export default function InvoiceCreatePage() {
           <InvoiceSecondStep
             form={form}
             poDetailData={poDetailData!}
+            poDetailLoading={poDetailLoading}
             purchaseOrdersData={purchaseOrdersData}
             currenciesData={currenciesData}
             productsData={productsData}
@@ -116,14 +181,25 @@ export default function InvoiceCreatePage() {
           />
         );
       default:
-        return <InvoiceFirstStep />;
+        return null;
     }
   };
 
   const handleNextStep = async () => {
     try {
-      //   await form.validateFields();
-      setCurrentStep(currentStep + 1);
+      if (currentStep === 1) {
+        const checkedItems = form
+          .getFieldValue("invoice_items")
+          ?.filter((item: any) => item?.checked);
+        if (!checkedItems || checkedItems.length === 0) {
+          message.error("Please select at least one item");
+          return;
+        }
+      }
+      await form.validateFields();
+      if (currentStep < 2) {
+        setCurrentStep(currentStep + 1);
+      }
     } catch {
       message.error("Please fill in the required fields.");
     }
@@ -142,11 +218,7 @@ export default function InvoiceCreatePage() {
     //     message.info("Purchase order not created");
     //     router.push("/purchase-orders");
     //   }
-    router.push("/invoices");
-  };
-
-  const onFinish: FormProps<InvoiceFieldType>["onFinish"] = (values) => {
-    console.log("Success:", values);
+    // router.push("/invoices");
   };
 
   return (
@@ -181,57 +253,53 @@ export default function InvoiceCreatePage() {
 
         {/* Step Content */}
         <div style={{ marginTop: "24px" }}>
-          <Form
+          <Form<InvoiceFieldType>
+            name="invoice-form"
             form={form}
             layout="vertical"
+            preserve={true}
             onValuesChange={(changed, allValues) => {
-              console.log("✅ Changed:", changed);
-              console.log("✅ All Values:", allValues);
               if (changed.purchase_order) {
                 setSelectedPurchaseOrderId(changed.purchase_order);
               }
             }}
-            onFinish={onFinish}
-            initialValues={{
-              invoiceNumber: "INV-2025-1239-01",
-            }}
           >
             {renderCurrentStep()}
+
+            {/* Navigation Buttons */}
+            <Space
+              style={{
+                display: "flex",
+                marginTop: "24px",
+                justifyContent: "space-between",
+              }}
+            >
+              <Space>
+                <Button type="default" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </Space>
+              <Space>
+                <Button
+                  type="default"
+                  disabled={currentStep === 0}
+                  onClick={handlePrevStep}
+                >
+                  Previous
+                </Button>
+                {currentStep === 2 ? (
+                  <Button type="primary" onClick={onFinish}>
+                    Create
+                  </Button>
+                ) : (
+                  <Button type="primary" onClick={handleNextStep}>
+                    Next
+                  </Button>
+                )}
+              </Space>
+            </Space>
           </Form>
         </div>
-
-        {/* Navigation Buttons */}
-        <Space
-          style={{
-            display: "flex",
-            marginTop: "24px",
-            justifyContent: "space-between",
-          }}
-        >
-          <Space>
-            <Button type="default" onClick={handleCancel}>
-              Cancel
-            </Button>
-          </Space>
-          <Space>
-            <Button
-              type="default"
-              disabled={currentStep === 0}
-              onClick={handlePrevStep}
-            >
-              Previous
-            </Button>
-            {currentStep === 2 ? (
-              <Button type="primary" htmlType="submit">
-                Create
-              </Button>
-            ) : (
-              <Button type="primary" onClick={handleNextStep}>
-                Next
-              </Button>
-            )}
-          </Space>
-        </Space>
       </section>
     </section>
   );

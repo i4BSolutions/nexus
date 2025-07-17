@@ -45,7 +45,7 @@ export interface InvoiceFormProps {
 }
 
 export interface InvoiceFieldType {
-  invoiceNumber: string;
+  invoice_number: string;
   invoice_date: string;
   due_date: string;
   currency: number;
