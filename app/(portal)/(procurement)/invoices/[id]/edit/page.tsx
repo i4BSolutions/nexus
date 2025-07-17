@@ -47,7 +47,8 @@ export default function PiEditPage() {
     error,
   } = useGetById("purchase-invoices", id, !!id);
 
-  const invoiceData = invoiceDataRaw?.data as PurchaseInvoiceInterface | any;
+  const invoiceData = (invoiceDataRaw as { data: PurchaseInvoiceInterface })
+    ?.data;
 
   const updateData = useUpdate("purchase-invoices");
 
@@ -109,10 +110,12 @@ export default function PiEditPage() {
     const exchangeRate = invoiceData.usd_exchange_rate;
     let totalLocal = 0;
 
-    items.forEach((item: any) => {
-      const price = item.unit_price_local || 0;
-      totalLocal += (item.quantity || 0) * price;
-    });
+    if (items) {
+      items.forEach((item: any) => {
+        const price = item.unit_price_local || 0;
+        totalLocal += (item.quantity || 0) * price;
+      });
+    }
 
     const totalUSD = exchangeRate
       ? (totalLocal / exchangeRate).toFixed(2)
