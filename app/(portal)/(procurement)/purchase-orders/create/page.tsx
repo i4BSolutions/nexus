@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect, Suspense } from "react";
-import { Space, Typography, Button, Spin, App } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
+import { App, Button, Space, Spin, Typography } from "antd";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 // Components
-import CreationSteps from "@/components/purchase-orders/CreationSteps";
-import StepSupplierRegion from "@/components/purchase-orders/steps/StepSupplierRegion";
-import StepItemEntry from "@/components/purchase-orders/steps/StepItemEntry";
 import StepContactPersons from "@/components/purchase-orders/steps/StepContactPersons";
 import StepDateCurrency from "@/components/purchase-orders/steps/StepDateCurrency";
+import StepItemEntry from "@/components/purchase-orders/steps/StepItemEntry";
 import StepReviewSubmit from "@/components/purchase-orders/steps/StepReviewSubmit";
+import StepSupplierRegion from "@/components/purchase-orders/steps/StepSupplierRegion";
 import WarningModal from "@/components/purchase-orders/WarningModal";
+import CreationSteps from "@/components/shared/multi-step-form/CreationSteps";
 
 function CreatePurchaseOrderPageContent() {
   const { message } = App.useApp();
@@ -305,7 +305,16 @@ function CreatePurchaseOrderPageContent() {
       </Space>
 
       {/* Progress Steps */}
-      <CreationSteps currentStep={currentStep} />
+      <CreationSteps
+        currentStep={currentStep}
+        steps={[
+          { title: "Supplier & Region" },
+          { title: "Date & Currency" },
+          { title: "Item Entry" },
+          { title: "Contact Persons" },
+          { title: "Review & Submit" },
+        ]}
+      />
 
       {/* Step Content */}
       <div style={{ marginTop: "24px" }}>{renderCurrentStep()}</div>
