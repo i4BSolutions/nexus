@@ -1,5 +1,6 @@
 "use client";
 
+import PiWarningModal from "@/components/purchase-invoices/PiWarningModal";
 import InvoiceFirstStep from "@/components/purchase-invoices/steps/InvoiceFirstStep";
 import InvoiceSecondStep from "@/components/purchase-invoices/steps/InvoiceSecondStep";
 import InvoiceThirdStep from "@/components/purchase-invoices/steps/InvoiceThirdStep";
@@ -24,7 +25,9 @@ export default function InvoiceCreatePage() {
   const router = useRouter();
   const { message } = App.useApp();
   const [form] = Form.useForm();
+
   const [currentStep, setCurrentStep] = useState(0);
+  const [showWarningModal, setShowWarningModal] = useState(false);
   const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState<
     number | null
   >(null);
@@ -194,13 +197,7 @@ export default function InvoiceCreatePage() {
   };
 
   const handleCancel = () => {
-    //   if (hasUnsavedChanges) {
-    //     setShowWarningModal(true);
-    //   } else {
-    //     message.info("Purchase order not created");
-    //     router.push("/purchase-orders");
-    //   }
-    // router.push("/invoices");
+    setShowWarningModal(true);
   };
 
   return (
@@ -282,6 +279,14 @@ export default function InvoiceCreatePage() {
             </Space>
           </Space>
         </div>
+        <PiWarningModal
+          open={showWarningModal}
+          onCancel={() => setShowWarningModal(false)}
+          onDiscard={() => {
+            setShowWarningModal(false);
+            router.push("/invoices");
+          }}
+        />
       </section>
     </section>
   );
