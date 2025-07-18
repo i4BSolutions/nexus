@@ -115,6 +115,7 @@ const BudgetAllocationDetails = ({
                       width={120}
                       height={120}
                       style={{ borderRadius: 12, objectFit: "cover" }}
+                      unoptimized
                     />
                   ))
                 ) : (
