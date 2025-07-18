@@ -52,6 +52,8 @@ export interface PurchaseOrderDetailDto {
     name: string;
   } | null;
   note?: string;
+  ordered?: string;
+  available?: string;
 }
 
 export interface PoBudgetAllocationInterface {

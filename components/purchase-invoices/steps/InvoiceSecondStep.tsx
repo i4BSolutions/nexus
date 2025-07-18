@@ -264,27 +264,27 @@ export default function InvoiceSecondStep({
 
                           {/* Ordered and Available Quantities */}
                           <Col span={2}>
-                            {productsData?.items?.length && (
+                            {poDetailData && (
                               <Typography.Text
                                 style={{
                                   marginBottom: 0,
                                   marginLeft: 14,
                                 }}
                               >
-                                9
+                                {poDetailData.ordered || "N/A"}
                               </Typography.Text>
                             )}
                           </Col>
 
                           <Col span={2}>
-                            {productsData?.items?.length && (
+                            {poDetailData && (
                               <Typography.Text
                                 style={{
                                   marginBottom: 0,
                                   marginLeft: 14,
                                 }}
                               >
-                                9
+                                {poDetailData.available || "N/A"}
                               </Typography.Text>
                             )}
                           </Col>

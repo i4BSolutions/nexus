@@ -59,28 +59,10 @@ export default function InvoiceCreatePage() {
   ]);
 
   const onFinish = () => {
-    // console.log("✅ All Fields (from form):", form.getFieldsValue(true));
     const allValues: InvoiceFieldType = form.getFieldsValue(true);
     const selectedItems = allValues.invoice_items.filter(
       (item) => item.checked
     );
-    // console.log("Selected Items:", selectedItems);
-    console.log("payload", {
-      purchase_invoice_number: allValues.invoice_number,
-      purchase_order_id: allValues.purchase_order,
-      invoice_date: allValues.invoice_date,
-      due_date: allValues.due_date,
-      currency_id: allValues.currency,
-      usd_exchange_rate: allValues.usd_exchange_rate,
-      note: allValues.note,
-      status: "Pending",
-      invoice_items: selectedItems.map((item) => ({
-        product_id: item.product,
-        quantity: item.invoice_quantity,
-        unit_price_local: item.invoice_unit_price_local,
-      })),
-    });
-
     try {
       createInvoice(
         {
@@ -265,40 +247,40 @@ export default function InvoiceCreatePage() {
             }}
           >
             {renderCurrentStep()}
-
-            {/* Navigation Buttons */}
-            <Space
-              style={{
-                display: "flex",
-                marginTop: "24px",
-                justifyContent: "space-between",
-              }}
-            >
-              <Space>
-                <Button type="default" onClick={handleCancel}>
-                  Cancel
-                </Button>
-              </Space>
-              <Space>
-                <Button
-                  type="default"
-                  disabled={currentStep === 0}
-                  onClick={handlePrevStep}
-                >
-                  Previous
-                </Button>
-                {currentStep === 2 ? (
-                  <Button type="primary" onClick={onFinish}>
-                    Create
-                  </Button>
-                ) : (
-                  <Button type="primary" onClick={handleNextStep}>
-                    Next
-                  </Button>
-                )}
-              </Space>
-            </Space>
           </Form>
+
+          {/* Navigation Buttons */}
+          <Space
+            style={{
+              display: "flex",
+              marginTop: "24px",
+              justifyContent: "space-between",
+            }}
+          >
+            <Space>
+              <Button type="default" onClick={handleCancel}>
+                Cancel
+              </Button>
+            </Space>
+            <Space>
+              <Button
+                type="default"
+                disabled={currentStep === 0}
+                onClick={handlePrevStep}
+              >
+                Previous
+              </Button>
+              {currentStep === 2 ? (
+                <Button type="primary" onClick={onFinish}>
+                  Create
+                </Button>
+              ) : (
+                <Button type="primary" onClick={handleNextStep}>
+                  Next
+                </Button>
+              )}
+            </Space>
+          </Space>
         </div>
       </section>
     </section>

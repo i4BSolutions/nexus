@@ -273,25 +273,25 @@ export default function InvoiceThirdStep({
 
                         {/* Ordered and Available Quantities */}
                         <Col span={3}>
-                          {productsData?.items?.length && (
+                          {poDetailData && (
                             <Typography.Text
                               style={{
                                 marginBottom: 0,
                               }}
                             >
-                              9
+                              {poDetailData.ordered || "N/A"}
                             </Typography.Text>
                           )}
                         </Col>
 
                         <Col span={3}>
-                          {productsData?.items?.length && (
+                          {poDetailData && (
                             <Typography.Text
                               style={{
                                 marginBottom: 0,
                               }}
                             >
-                              9
+                              {poDetailData.available || "N/A"}
                             </Typography.Text>
                           )}
                         </Col>
