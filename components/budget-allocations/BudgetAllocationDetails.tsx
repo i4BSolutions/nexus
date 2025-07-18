@@ -19,10 +19,11 @@ const BudgetAllocationDetails = ({
 }) => {
   const usd = data.allocation_amount / data.exchange_rate_usd;
 
-  const transferImages =
-    typeof data.transfer_evidence_url === "string"
-      ? data.transfer_evidence_url.split(",").filter(Boolean)
-      : [];
+  const transferImages: string[] = Array.isArray(data.transfer_evidence_urls)
+    ? data.transfer_evidence_urls
+        .map((evidence) => evidence.url)
+        .filter((url): url is string => !!url)
+    : [];
 
   return (
     <section className="w-full rounded-2xl border-2 border-[#F5F5F5]">
@@ -98,7 +99,7 @@ const BudgetAllocationDetails = ({
             <div className="mb-4">
               <Typography.Text type="secondary">Note</Typography.Text>
               <div className="text-gray-400 italic mt-1">
-                No notes available
+                {data.note || "N/A"}
               </div>
             </div>
 

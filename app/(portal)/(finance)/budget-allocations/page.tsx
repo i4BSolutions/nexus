@@ -24,6 +24,7 @@ import {
   Pagination,
   Select,
   Table,
+  Tag,
   Typography,
 } from "antd";
 import Input, { SearchProps } from "antd/es/input";
@@ -167,7 +168,19 @@ export default function BudgetAllocationsPage() {
       title: "STATUS",
       dataIndex: "status",
       key: "status",
-      render: (status) => <StatusBadge status={status} />,
+      render: (status) => (
+        <Tag
+          color={
+            status === "Approved"
+              ? "green"
+              : status === "Pending"
+              ? "orange"
+              : "red"
+          }
+        >
+          {status}
+        </Tag>
+      ),
     },
     {
       title: "ACTIONS",

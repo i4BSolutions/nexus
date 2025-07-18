@@ -42,3 +42,13 @@
   font-size: 20px;
   opacity: 1 !important;
 }
+
+.custom-prev-arrow,
+.custom-next-arrow {
+  color: black; /* Set the arrow color */
+}
+
+.custom-prev-arrow:hover,
+.custom-next-arrow:hover {
+  color: darkred !important;
+}

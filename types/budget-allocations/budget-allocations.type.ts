@@ -15,6 +15,7 @@ export interface BudgetAllocationsInterface {
   note?: string;
   created_at: string;
   updated_at: string;
+  transfer_evidence_urls?: Array<{ key: string; url: string | null }>;
 }
 
 export interface BudgetAllocationsResponse {
@@ -36,8 +37,7 @@ export interface BudgetAllocationsUpdateData {
   allocation_amount: number;
   currency_code: string;
   exchange_rate_usd: number;
-  transfer_evidence?: string;
-  status: string;
+  transfer_evidence?: string | string[];
   note?: string;
   allocated_by: string;
 }

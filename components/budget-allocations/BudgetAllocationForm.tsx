@@ -31,6 +31,7 @@ import {
   Radio,
 } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
+import { RcFile } from "antd/es/upload";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import Link from "next/link";
@@ -78,7 +79,7 @@ const BudgetAllocationForm = ({
   const [selectedPO, setSelectedPO] = useState<any>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const [previewIndex, setPreviewIndex] = useState<number>(0);
-
+  console.log(initialValues);
   const allocatedAmountValue = parseFloat(allocatedAmount) || 0;
   const exchangeRateValue = parseFloat(exchangeRate) || 1;
 
@@ -104,7 +105,6 @@ const BudgetAllocationForm = ({
           : undefined,
         currency_code: initialValues.currency_code,
         po_id: initialValues.po_id,
-        status: initialValues.status,
         allocated_by: initialValues.allocated_by || "",
         note: initialValues.note || "",
         allocated_amount: initialValues.allocation_amount?.toString() || "",
@@ -112,15 +112,19 @@ const BudgetAllocationForm = ({
       });
       setAllocatedAmount(initialValues.allocation_amount?.toString() || "");
       setExchangeRate(initialValues.exchange_rate_usd?.toString() || "");
-      if (initialValues.transfer_evidence_url) {
-        const file: UploadFile = {
-          uid: "-1",
-          name: "Transfer Proof",
-          status: "done",
-          url: initialValues.transfer_evidence_url,
-        };
-        setFileList([file]);
-        setPreviewUrl(initialValues.transfer_evidence_url);
+
+      // Handle transfer evidence URL(s)
+      if (initialValues?.transfer_evidence_urls?.length) {
+        const files: UploadFile[] = initialValues.transfer_evidence_urls.map(
+          (item, index) => ({
+            uid: `-${index}`,
+            name: item.key.split("/").pop() || `evidence-${index}`,
+            status: "done",
+            url: item.url ?? undefined,
+          })
+        );
+        setFileList(files);
+        setPreviewUrl(files[0]?.url || "");
       }
     }
   }, [initialValues]);
@@ -177,25 +181,32 @@ const BudgetAllocationForm = ({
 
   const handleSubmit = async (values: any) => {
     const formData = new FormData();
+
     formData.append("po_id", values.po_id);
     formData.append("allocation_number", values.allocation_number);
     formData.append(
       "allocation_date",
-      dayjs.utc(values.allocation_date.$d).format("YYYY-MM-DD")
+      dayjs.utc(values.allocation_date).format("YYYY-MM-DD")
     );
     formData.append("allocation_amount", allocatedAmount);
     formData.append("currency_code", values.currency_code);
     formData.append("exchange_rate_usd", exchangeRate);
     formData.append("allocated_by", values.allocated_by);
     formData.append("note", values.note || "");
-    formData.append("status", values.status);
+    formData.append("status", values.status || "Pending");
 
-    if (fileList[0]?.originFileObj) {
-      formData.append("file", fileList[0].originFileObj);
-    } else if (mode === "create") {
-      message.error("Please upload a transfer proof image");
+    const validFiles = fileList
+      .map((file) => file.originFileObj)
+      .filter((f): f is RcFile => !!f);
+
+    if (mode === "create" && validFiles.length === 0) {
+      message.error("Please upload at least one transfer proof image");
       return;
     }
+
+    validFiles.forEach((file) => {
+      formData.append("file", file);
+    });
 
     onSubmit(formData);
     form.resetFields();
@@ -597,19 +608,6 @@ const BudgetAllocationForm = ({
               <Form.Item name="note" label="Note (optional)">
                 <TextArea rows={4} placeholder="Enter note" />
               </Form.Item>
-
-              {mode === "edit" && (
-                <Form.Item
-                  name="status"
-                  label="Status"
-                  rules={[{ required: true, message: "Please select status" }]}
-                >
-                  <Radio.Group>
-                    <Radio value="Pending">Pending</Radio>
-                    <Radio value="Approved">Approved</Radio>
-                  </Radio.Group>
-                </Form.Item>
-              )}
             </Col>
 
             {/* Right Section: Image Preview */}
@@ -678,34 +676,7 @@ const BudgetAllocationForm = ({
         centered
         style={{ maxWidth: "900px" }}
       >
-        <Carousel
-          initialSlide={previewIndex}
-          dots
-          arrows
-          infinite
-          prevArrow={<LeftOutlined color="red" style={{ color: "red" }} />}
-          nextArrow={
-            <div
-              style={{
-                zIndex: 1000,
-                background: "rgba(0, 0, 0, 0.5)",
-                borderRadius: "50%",
-                width: 40,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                fontSize: 20,
-                right: -20,
-                position: "absolute",
-                cursor: "pointer",
-              }}
-            >
-              <RightOutlined />
-            </div>
-          }
-        >
+        <Carousel initialSlide={previewIndex} dots infinite>
           {fileList.map((file) => {
             const src =
               file.url ||

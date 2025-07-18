@@ -23,11 +23,14 @@ export async function GET(
 
   const q = searchParams.get("q") || "";
   const status = searchParams.get("status");
-  const sort = searchParams.get("sort"); // "allocation_amount_asc" | "allocation_amount_desc"
+  const sort = searchParams.get("sort");
 
   let query = supabase
     .from("budget_allocation")
     .select("*", { count: "exact" });
+
+  // Exclude canceled allocations by default
+  query = query.neq("status", "Canceled");
 
   if (q) {
     query = query.ilike("allocation_number", `%${q}%`);
@@ -53,35 +56,42 @@ export async function GET(
     return NextResponse.json(error(fetchError.message), { status: 500 });
   }
 
-  // Get signed URLs for transfer_evidence
-  const keys = data
-    ?.map((item) => item.transfer_evidence)
-    .filter((key): key is string => !!key);
+  // Flatten all file paths from transfer_evidence arrays
+  const allFilePaths = (data || [])
+    .flatMap((item) =>
+      Array.isArray(item.transfer_evidence) ? item.transfer_evidence : []
+    )
+    .filter((path): path is string => !!path);
 
+  // Generate signed URLs
   const { data: signedData, error: signedUrlError } = await supabase.storage
     .from(bucket)
-    .createSignedUrls(keys || [], 60 * 60); // 1 hour
+    .createSignedUrls(allFilePaths, 60 * 60); // 1 hour
 
   if (signedUrlError) {
     return NextResponse.json(error(signedUrlError.message), { status: 500 });
   }
 
+  // Map signed URLs back to their paths
   const signedUrlMap = new Map<string, string>();
   signedData?.forEach((entry) => {
-    if (entry.signedUrl && entry.path) {
+    if (entry.path && entry.signedUrl) {
       signedUrlMap.set(entry.path, entry.signedUrl);
     }
   });
 
+  // Attach transfer_evidence_urls to each allocation
   const items =
     data?.map((item) => ({
       ...item,
-      transfer_evidence_url: item.transfer_evidence
-        ? signedUrlMap.get(item.transfer_evidence) || null
-        : null,
+      transfer_evidence_urls: Array.isArray(item.transfer_evidence)
+        ? item.transfer_evidence.map(
+            (key: string) => signedUrlMap.get(key) || null
+          )
+        : [],
     })) || [];
 
-  // Statistics
+  // Stats
   const allQuery = supabase.from("budget_allocation").select("*");
   const allData = (await allQuery).data || [];
 
@@ -106,13 +116,9 @@ export async function GET(
     },
   };
 
-  return NextResponse.json(
-    success<BudgetAllocationsResponse>(
-      response,
-      "Budget allocations retrieved successfully"
-    ),
-    { status: 200 }
-  );
+  return NextResponse.json(success(response, "Budget allocations retrieved"), {
+    status: 200,
+  });
 }
 
 export async function POST(
@@ -129,9 +135,16 @@ export async function POST(
   const allocation_amount = Number(formData.get("allocation_amount"));
   const currency_code = String(formData.get("currency_code"));
   const exchange_rate_usd = Number(formData.get("exchange_rate_usd"));
-  const file = formData.get("file") as File;
   const note = formData.get("note")?.toString() || null;
   const allocated_by = formData.get("allocated_by")?.toString() || null;
+
+  const files = formData.getAll("file") as File[];
+
+  if (!files.length || files.some((f) => !(f instanceof File))) {
+    return NextResponse.json(
+      error("At least one valid image is required", 400)
+    );
+  }
 
   const { data: po, error: poError } = await supabase
     .from("purchase_order")
@@ -157,7 +170,7 @@ export async function POST(
         allocation_amount,
         currency_code,
         exchange_rate_usd,
-        transfer_evidence: "",
+        transfer_evidence: [],
         status: "Pending",
         created_by: user.id,
         allocated_by,
@@ -171,22 +184,35 @@ export async function POST(
 
   const allocationId = inserted.id;
 
-  // Upload file
-  const uploadResult = await uploadTransferEvidenceImage(
-    bucket,
-    allocationId,
-    file
-  );
+  const uploadedPaths: string[] = [];
 
-  if (!uploadResult.success)
-    return NextResponse.json(
-      error(uploadResult.error || "Upload image error", 400)
-    );
+  for (const file of files) {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 10)}.${fileExt}`;
+    const filePath = `budget-allocation-transfer-evidence/${allocationId}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      return NextResponse.json(
+        error(`Upload failed: ${uploadError.message}`, 500)
+      );
+    }
+
+    uploadedPaths.push(filePath);
+  }
 
   // Update allocation with file path
   const { data: updated, error: updateError } = await supabase
     .from("budget_allocation")
-    .update({ transfer_evidence: uploadResult.filePath })
+    .update({ transfer_evidence: uploadedPaths })
     .eq("id", allocationId)
     .select()
     .single();
