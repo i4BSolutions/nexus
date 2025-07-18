@@ -1,5 +1,5 @@
-import { ApiResponse } from "@/types/api-response-type";
 import { ProductResponse } from "@/types/product/product.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
 import { useQuery } from "@tanstack/react-query";
 
 export function useProducts(params: {

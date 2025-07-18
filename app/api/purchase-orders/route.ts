@@ -1,8 +1,9 @@
+import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse, NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { ApiResponse } from "@/types/api-response-type";
 import { PurchaseOrderInterface } from "@/types/purchase-order/purchase-order.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { NextRequest, NextResponse } from "next/server";
+import { PurchaseOrderResponse } from "../../../types/purchase-order/purchase-order.type";
 
 /**
  * This API route creates a purchase order.
@@ -80,5 +81,133 @@ export async function POST(
   return NextResponse.json(
     success(order, "Purchase order and items created successfully"),
     { status: 200 }
+  );
+}
+
+/**
+ * This API route retrieves all purchase orders with optional filtering and sorting.
+ * @param req - NextRequest object
+ * @returns NextResponse ApiResponse<PurchaseOrderInterface[]>
+ */
+export async function GET(
+  req: NextRequest
+): Promise<
+  NextResponse<ApiResponse<PurchaseOrderResponse> | ApiResponse<null>>
+> {
+  const supabase = await createClient();
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const pageSizeParam = searchParams.get("pageSize") || "10";
+  const pageSize = parseInt(pageSizeParam, 10);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  const poNumber = searchParams.get("q") || "";
+  const statusParam = searchParams.get("status");
+  const sortParam = searchParams.get("sort");
+
+  let query = supabase.from("purchase_order").select(
+    `
+      id,
+      purchase_order_no,
+      order_date,
+      status,
+      product_currency (
+        currency_code
+      ),
+      usd_exchange_rate,
+      contact_person:contact_person_id  (
+        id,
+        name
+      ),
+      expected_delivery_date,
+      purchase_order_items (
+        product_id,
+        quantity,
+        unit_price_local
+      )
+    `,
+    { count: "exact" }
+  );
+
+  if (poNumber) {
+    query = query.ilike("purchase_order_no", `%${poNumber}%`);
+  }
+
+  if (statusParam) {
+    query = query.eq("status", statusParam);
+  }
+
+  query = query.order("order_date", {
+    ascending: sortParam === "order_date_asc",
+  });
+
+  if (typeof to === "number") {
+    query = query.range(from, to);
+  }
+
+  const {
+    data,
+    count,
+    error: getError,
+  } = (await query) as unknown as {
+    data: any[] | null;
+    count: number | null;
+    error: any;
+  };
+
+  if (getError) {
+    return NextResponse.json(error(getError.message), { status: 500 });
+  }
+
+  const orders = data?.map((order) => ({
+    id: order.id,
+    purchase_order_no: order.purchase_order_no,
+    order_date: order.order_date,
+    status: order.status,
+    expected_delivery_date: order.expected_delivery_date,
+    usd_exchange_rate: order.usd_exchange_rate,
+    currency_code: order.product_currency.currency_code,
+    contact_person: order.contact_person.name,
+    amount_local: order.purchase_order_items.reduce(
+      (total: number, item: { quantity: number; unit_price_local: number }) =>
+        total + item.quantity * item.unit_price_local,
+      0
+    ),
+    amount_usd: order.purchase_order_items.reduce(
+      (total: number, item: { quantity: number; unit_price_local: number }) =>
+        total +
+        (item.quantity * item.unit_price_local) / order.usd_exchange_rate,
+      0
+    ),
+    invoiced_amount: 0,
+    allocated_amount: 0,
+  }));
+
+  const GetPurchaseOrderResponse: PurchaseOrderResponse = {
+    dto: orders || [],
+    total: count || 0,
+    page,
+    pageSize: pageSize,
+    statistics: {
+      total: count || 0,
+      total_approved: orders
+        ? orders.filter((order) => order.status === "Approved").length
+        : 0,
+      total_usd_value: orders
+        ? orders.reduce((total, order) => total + order.amount_usd, 0)
+        : 0,
+      invoiced_percentage: 0,
+      allocated_percentage: 0,
+    },
+  };
+
+  return NextResponse.json(
+    success<PurchaseOrderResponse>(
+      GetPurchaseOrderResponse,
+      "Purchase orders retrieved successfully"
+    ),
+    {
+      status: 200,
+    }
   );
 }

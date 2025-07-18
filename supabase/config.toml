@@ -57,7 +57,7 @@ schema_paths = []
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+sql_paths = ["./seeds/*.sql"]
 
 [realtime]
 enabled = true
@@ -252,6 +252,7 @@ max_frequency = "5s"
 enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"
 secret = "env(GOOGLE_CLIENT_SECRET)"
+redirect_uri = "http://localhost:54321/auth/v1/callback"
 
 [auth.external.apple]
 enabled = false

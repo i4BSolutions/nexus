@@ -1,10 +1,10 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
-import { ApiResponse, PaginatedResponse } from "@/types/api-response-type";
 import {
   ProductInterface,
   ProductResponse,
 } from "@/types/product/product.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -17,7 +17,7 @@ export async function GET(
   const category = searchParams.get("category") || "";
   const stockStatus = searchParams.get("stock_status");
   const sort = searchParams.get("sort") || "sku";
-
+  const isActiveParam = searchParams.get("status");
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSizeParam = searchParams.get("pageSize") || "10";
   const pageSize =
