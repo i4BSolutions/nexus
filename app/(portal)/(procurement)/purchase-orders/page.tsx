@@ -19,7 +19,7 @@ import {
   ShoppingCartOutlined,
   UpCircleOutlined,
 } from "@ant-design/icons";
-import { Button, Flex, Input, Segmented, Select, Spin } from "antd";
+import { Button, Flex, Input, Segmented, Select, Spin, Typography } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 
@@ -89,6 +89,13 @@ export default function PurchaseOrdersPage() {
           borderColor: "#87E8DE",
           tooltip: "Total value of all purchase orders",
           prefix: "$",
+          approved_text: "approved POs",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {poData.statistics.total || 0}
+              approved POs
+            </Typography.Text>
+          ),
         },
         {
           title: "% Invoiced",
@@ -99,6 +106,11 @@ export default function PurchaseOrdersPage() {
           borderColor: "#ADC6FF",
           tooltip: "Percentage of total POs that have been invoiced",
           suffix: "%",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {poData.statistics.total || 0} approved POs
+            </Typography.Text>
+          ),
         },
         {
           title: "% Allocated",
@@ -109,6 +121,11 @@ export default function PurchaseOrdersPage() {
           borderColor: "#D3ADF7",
           tooltip: "Percentage of total POs that have been allocated",
           suffix: "%",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {poData.statistics.total || 0} approved POs
+            </Typography.Text>
+          ),
         },
       ]);
     }

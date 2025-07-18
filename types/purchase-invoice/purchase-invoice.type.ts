@@ -16,11 +16,13 @@ export interface PurchaseInvoiceInterface {
 export interface PurchaseInvoiceDto {
   id: number;
   purchase_invoice_number: string;
-  purchase_order_number: string;
+  purchase_order_no: string;
   invoice_date: string;
   due_date: string;
   currency_code: string;
   usd_exchange_rate: number;
+  total_amount_local: number;
+  total_amount_usd: number;
   status: string;
   note?: string;
 }
@@ -31,10 +33,8 @@ export interface PurchaseInvoiceResponse {
   page: number;
   pageSize: number;
   statistics: {
-    total: number;
-    total_invoiced: number;
-    total_allocated: number;
-    invoiced_percentage: number;
-    allocated_percentage: number;
+    total_invoices: number;
+    total_usd: number;
+    delivered: number;
   };
 }

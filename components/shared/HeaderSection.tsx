@@ -4,6 +4,7 @@ import { Typography, Button, Space } from "antd";
 const HeaderSection = ({
   title,
   description,
+  bgColor,
   icon,
   onAddNew,
   buttonText,
@@ -11,6 +12,7 @@ const HeaderSection = ({
 }: {
   title: string;
   description?: string;
+  bgColor?: string;
   icon: React.ReactNode;
   onAddNew: () => void;
   buttonText?: string;
@@ -30,7 +32,7 @@ const HeaderSection = ({
         style={{
           width: 32,
           height: 32,
-          background: "#40A9FF",
+          background: bgColor ? bgColor : "#40A9FF",
           borderRadius: "100%",
           display: "flex",
           justifyContent: "center",
