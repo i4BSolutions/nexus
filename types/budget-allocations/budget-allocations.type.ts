@@ -30,6 +30,7 @@ export interface BudgetAllocationsResponse {
 }
 
 export interface BudgetAllocationsUpdateData {
+  po_id: number;
   allocation_number: string;
   allocation_date: string;
   allocation_amount: number;

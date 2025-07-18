@@ -80,6 +80,7 @@ export async function PUT(
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
   const formData = await req.formData();
 
+  const po_id = Number(formData.get("po_id"));
   const allocation_number = String(formData.get("allocation_number") ?? "");
   const allocation_date = String(formData.get("allocation_date") ?? "");
   const allocation_amount = Number(formData.get("allocation_amount"));
@@ -97,6 +98,7 @@ export async function PUT(
     .single();
 
   let updateData: BudgetAllocationsUpdateData = {
+    po_id,
     allocation_number,
     allocation_date,
     allocation_amount,
