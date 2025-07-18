@@ -1,7 +1,10 @@
 "use client";
 
+import PoCardView from "@/components/purchase-orders/PoCardView";
+import PoTableView from "@/components/purchase-orders/PoTableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
+import StatisticsCards from "@/components/shared/StatisticsCards";
 import { useList } from "@/hooks/react-query/useList";
 import {
   PurchaseOrderDto,
@@ -14,12 +17,14 @@ import {
   ShoppingCartOutlined,
   UpCircleOutlined,
 } from "@ant-design/icons";
-import { Flex, Spin } from "antd";
+import { Button, Flex, Input, Segmented, Select, Spin } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function PurchaseOrdersPage() {
+  const router = useRouter();
   const [statItems, setStatItems] = useState<StatItem[]>();
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
   const [data, setData] = useState<PurchaseOrderDto[]>();
