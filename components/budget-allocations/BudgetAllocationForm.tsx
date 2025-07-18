@@ -26,7 +26,6 @@ import {
   message,
   Button,
   Tag,
-  Space,
   Modal,
   Carousel,
   Radio,
@@ -61,6 +60,7 @@ type BudgetAllocationFormProps = {
   initialValues?: Partial<BudgetAllocationsInterface>;
   mode?: "create" | "edit";
   isLoading?: boolean;
+  onCancel: () => void;
 };
 
 const BudgetAllocationForm = ({
@@ -68,6 +68,7 @@ const BudgetAllocationForm = ({
   initialValues,
   mode = "create",
   isLoading,
+  onCancel,
 }: BudgetAllocationFormProps) => {
   const [form] = Form.useForm();
   const [allocatedAmount, setAllocatedAmount] = useState("");
@@ -656,7 +657,9 @@ const BudgetAllocationForm = ({
           {/* </Form> */}
         </Card>
         <Row style={{ justifyContent: "space-between", marginTop: 12 }}>
-          <Button disabled={isLoading}>Cancel</Button>
+          <Button disabled={isLoading} onClick={onCancel}>
+            Cancel
+          </Button>
           <Button
             disabled={isLoading}
             loading={isLoading}

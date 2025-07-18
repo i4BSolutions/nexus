@@ -99,6 +99,7 @@ const BudgetAllocationEditPage = () => {
             data: formData,
           });
         }}
+        onCancel={() => router.push("/budget-allocations")}
       />
     </section>
   );

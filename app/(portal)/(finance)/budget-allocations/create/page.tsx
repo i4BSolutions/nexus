@@ -62,6 +62,7 @@ const CreateBudgetAllocationsPage = () => {
         onSubmit={(formData) => mutation.mutateAsync(formData)}
         isLoading={mutation.isPending}
         mode="create"
+        onCancel={() => router.push("/budget-allocations")}
       />
     </section>
   );
