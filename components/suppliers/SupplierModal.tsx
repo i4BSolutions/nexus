@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  EditOutlined,
   MailOutlined,
   MobileOutlined,
+  PlusOutlined,
   ShopOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -58,6 +60,13 @@ const SupplierModal: React.FC<SupplierModalProps> = ({
         isEdit
           ? "Edit the details of the supplier."
           : "Fill in the details to add a new supplier to your directory."
+      }
+      icon={
+        isEdit ? (
+          <EditOutlined style={{ color: "#FFFFFF" }} />
+        ) : (
+          <PlusOutlined style={{ color: "#FFFFFF" }} />
+        )
       }
       onClose={onClose}
     >

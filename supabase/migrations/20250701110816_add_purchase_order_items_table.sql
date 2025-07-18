@@ -3,7 +3,7 @@ create table "public"."purchase_order_items" (
     "purchase_order_id" bigint not null,
     "product_id" bigint not null,
     "quantity" integer not null,
-    "unit_price_local" numeric(12,6) not null,
+    "unit_price_local" numeric(15,6) not null,
     "created_at" timestamp with time zone default now(),
     "updated_at" timestamp with time zone default now()
 );

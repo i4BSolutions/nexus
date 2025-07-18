@@ -5,6 +5,9 @@ import { forwardRef, useEffect, useImperativeHandle } from "react";
 // Ant Design
 import { Space, Typography, Form, DatePicker, Select, Input } from "antd";
 
+// Day.js
+import dayjs from "dayjs";
+
 // React Query
 import { useQuery } from "@tanstack/react-query";
 
@@ -19,6 +22,7 @@ interface StepDateCurrencyProps {
 
 export interface StepDateCurrencyRef {
   submitForm: () => void;
+  getFormData: () => any;
 }
 
 // TODO: Fetch budgets
@@ -60,6 +64,7 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
 
     useImperativeHandle(ref, () => ({
       submitForm: handleNext,
+      getFormData: () => form.getFieldsValue(),
     }));
 
     return (
@@ -100,7 +105,13 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                 name="order_date"
                 rules={[{ required: true, message: "Order date is required" }]}
               >
-                <DatePicker size="large" style={{ width: "100%" }} />
+                <DatePicker
+                  size="large"
+                  style={{ width: "100%" }}
+                  disabledDate={(current) =>
+                    current && current < dayjs().startOf("day")
+                  }
+                />
               </Form.Item>
 
               <Form.Item
@@ -129,7 +140,13 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                   },
                 ]}
               >
-                <DatePicker size="large" style={{ width: "100%" }} />
+                <DatePicker
+                  size="large"
+                  style={{ width: "100%" }}
+                  disabledDate={(current) =>
+                    current && current < dayjs().startOf("day")
+                  }
+                />
               </Form.Item>
             </Space>
 
@@ -231,6 +248,21 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                   name="exchange_rate"
                   rules={[
                     { required: true, message: "Exchange rate is required" },
+                    {
+                      pattern: /^\d+(\.\d{1,4})?$/,
+                      message:
+                        "Exchange rate must be a positive number with up to 4 decimal places",
+                    },
+                    {
+                      validator: (_, value) => {
+                        if (value && parseFloat(value) <= 0) {
+                          return Promise.reject(
+                            new Error("Exchange rate must be greater than 0")
+                          );
+                        }
+                        return Promise.resolve();
+                      },
+                    },
                   ]}
                 >
                   <Input size="large" placeholder="Enter exchange rate" />

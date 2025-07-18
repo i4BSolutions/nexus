@@ -1,31 +1,22 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
-import { ProductInterface } from "@/types/product/product.type";
 import {
-  ApiResponse,
-  PaginatedResponse,
-} from "@/types/shared/api-response-type";
+  ProductInterface,
+  ProductResponse,
+} from "@/types/product/product.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest): Promise<
-  NextResponse<
-    | ApiResponse<
-        PaginatedResponse<ProductInterface> & {
-          lowStock: number;
-          outOfStock: number;
-        }
-      >
-    | ApiResponse<null>
-  >
-> {
+export async function GET(
+  req: NextRequest
+): Promise<NextResponse<ApiResponse<ProductResponse> | ApiResponse<null>>> {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
 
   const search = searchParams.get("search")?.trim() || "";
   const category = searchParams.get("category") || "";
   const stockStatus = searchParams.get("stock_status");
-  const sort = searchParams.get("sort") || "name";
-  const isActiveParam = searchParams.get("status");
+  const sort = searchParams.get("sort") || "sku";
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSizeParam = searchParams.get("pageSize") || "10";
@@ -83,12 +74,27 @@ export async function GET(req: NextRequest): Promise<
     }
 
     // Sort
+    const [sortField = "sku", sortDirection = "desc"] = sort.split("_"); // e.g., created_at_desc
+    const direction = sortDirection === "asc" ? 1 : -1;
+
     filtered.sort((a, b) => {
-      const valA = a[sort as keyof ProductInterface];
-      const valB = b[sort as keyof ProductInterface];
-      return typeof valA === "string"
-        ? String(valA).localeCompare(String(valB))
-        : 0;
+      const valA = a[sortField as keyof ProductInterface];
+      const valB = b[sortField as keyof ProductInterface];
+
+      if (typeof valA === "number" && typeof valB === "number") {
+        return (valA - valB) * direction;
+      }
+
+      if (
+        valA instanceof Date ||
+        (typeof valA === "string" && !isNaN(Date.parse(valA)))
+      ) {
+        const timeA = new Date(valA as string).getTime();
+        const timeB = new Date(valB as string).getTime();
+        return (timeA - timeB) * direction;
+      }
+
+      return String(valA).localeCompare(String(valB)) * direction;
     });
 
     // Paginate
@@ -99,16 +105,18 @@ export async function GET(req: NextRequest): Promise<
       paginated = filtered.slice(from, (to as number) + 1);
     }
 
-    const response: PaginatedResponse<ProductInterface> & {
-      lowStock: number;
-      outOfStock: number;
-    } = {
+    const response = {
       items: paginated,
       total: allProducts.length,
       page,
       pageSize: pageSize === "all" ? filtered.length : pageSize,
       lowStock,
       outOfStock,
+      counts: {
+        total: allProducts.length,
+        lowStock,
+        outOfStock,
+      },
     };
 
     return NextResponse.json(

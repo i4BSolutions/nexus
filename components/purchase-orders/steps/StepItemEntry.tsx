@@ -11,6 +11,8 @@ import {
   Button,
   Row,
   Col,
+  Checkbox,
+  Input,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 
@@ -21,6 +23,7 @@ import {
 } from "@/types/product/product.type";
 import { useQuery } from "@tanstack/react-query";
 import { useList } from "@/hooks/react-query/useList";
+import FormItemInput from "antd/es/form/FormItemInput";
 
 interface StepItemEntryProps {
   onNext: (values: any) => void;
@@ -30,6 +33,7 @@ interface StepItemEntryProps {
 
 export interface StepItemEntryRef {
   submitForm: () => void;
+  getFormData: () => any;
 }
 
 function useForceUpdate() {
@@ -78,6 +82,7 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
 
     useImperativeHandle(ref, () => ({
       submitForm: handleNext,
+      getFormData: () => form.getFieldsValue(),
     }));
 
     // Helper to get currency code by id
@@ -99,7 +104,7 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
       let currencyIds = new Set();
 
       items.forEach((item: any) => {
-        if (!item || !item.product) return;
+        if (!item || !item.product || item.foc) return;
         const price = item.unit_price || 0;
         totalLocal += (item.quantity || 0) * price;
         if (item.currency_code_id) currencyIds.add(item.currency_code_id);
@@ -131,8 +136,26 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
           layout="vertical"
           onFinish={handleNext}
           requiredMark="optional"
-          onValuesChange={(changed, all) => {
-            if (changed.items) forceUpdate();
+          onValuesChange={(changedValues, allValues) => {
+            if (changedValues.items) {
+              const changedIndex = changedValues.items.findIndex(
+                (item: any) =>
+                  item && Object.prototype.hasOwnProperty.call(item, "foc")
+              );
+
+              if (changedIndex !== -1) {
+                const isFOC = changedValues.items[changedIndex].foc;
+                const currentItems = form.getFieldValue("items") || [];
+
+                if (isFOC) {
+                  currentItems[changedIndex].quantity = 0;
+                  currentItems[changedIndex].unit_price = 0;
+                  form.setFieldsValue({ items: currentItems });
+                }
+              }
+
+              forceUpdate();
+            }
           }}
         >
           <Space
@@ -170,9 +193,10 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                     align="middle"
                   >
                     <Col span={6}>PRODUCT</Col>
-                    <Col span={4}>QUANTITY</Col>
-                    <Col span={7}>UNIT PRICE</Col>
-                    <Col span={4}>SUBTOTAL</Col>
+                    <Col span={2}>QUANTITY</Col>
+                    <Col span={6}>UNIT PRICE</Col>
+                    <Col span={3}>FOC</Col>
+                    <Col span={3}>SUBTOTAL</Col>
                     <Col span={3}>ACTIONS</Col>
                   </Row>
 
@@ -275,7 +299,7 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                         </Col>
 
                         {/* Quantity */}
-                        <Col span={4}>
+                        <Col span={2}>
                           <Form.Item
                             {...restField}
                             name={[name, "quantity"]}
@@ -284,15 +308,31 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                                 required: true,
                                 message: "Quantity is required",
                               },
+                              {
+                                validator: (_, value) => {
+                                  if (value && parseFloat(value) <= 0) {
+                                    return Promise.reject(
+                                      new Error(
+                                        "Quantity must be greater than 0"
+                                      )
+                                    );
+                                  }
+                                  return Promise.resolve();
+                                },
+                              },
                             ]}
                             style={{ marginBottom: 0 }}
                           >
-                            <InputNumber min={0} style={{ width: "100%" }} />
+                            <InputNumber
+                              min={0}
+                              style={{ width: "100%" }}
+                              disabled={items[name]?.foc}
+                            />
                           </Form.Item>
                         </Col>
 
                         {/* Currency and Unit Price */}
-                        <Col span={7}>
+                        <Col span={6}>
                           <Space.Compact style={{ width: "100%" }}>
                             <Form.Item
                               style={{ width: "30%", marginBottom: 0 }}
@@ -325,19 +365,43 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                               name={[name, "unit_price"]}
                               rules={[
                                 {
-                                  required: true,
-                                  message: "Unit price is required",
+                                  validator: (_, value) => {
+                                    if (value && parseFloat(value) <= 0) {
+                                      return Promise.reject(
+                                        new Error(
+                                          "Unit price must be greater than 0"
+                                        )
+                                      );
+                                    }
+                                    return Promise.resolve();
+                                  },
                                 },
                               ]}
                               style={{ marginBottom: 0 }}
                             >
-                              <InputNumber min={0} style={{ width: "100%" }} />
+                              <InputNumber
+                                min={0}
+                                style={{ width: "100%" }}
+                                disabled={items[name]?.foc}
+                              />
                             </Form.Item>
                           </Space.Compact>
                         </Col>
 
+                        {/* FOC */}
+                        <Col span={3}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "foc"]}
+                            valuePropName="checked"
+                            style={{ marginBottom: 0 }}
+                          >
+                            <Checkbox>Free</Checkbox>
+                          </Form.Item>
+                        </Col>
+
                         {/* Subtotal */}
-                        <Col span={4}>
+                        <Col span={3}>
                           <div>
                             <span>
                               {subtotal.toLocaleString()}{" "}

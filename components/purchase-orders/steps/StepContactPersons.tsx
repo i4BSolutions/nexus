@@ -17,10 +17,15 @@ interface StepContactPersonsProps {
   formData?: any;
 }
 
-const StepContactPersons = forwardRef(function StepContactPersons(
-  { onNext, onBack, formData }: StepContactPersonsProps,
-  ref
-) {
+export interface StepContactPersonsRef {
+  submitForm: () => void;
+  getFormData: () => any;
+}
+
+const StepContactPersons = forwardRef<
+  StepContactPersonsRef,
+  StepContactPersonsProps
+>(({ onNext, onBack, formData }, ref) => {
   const [form] = Form.useForm();
 
   const [isPersonCreateModalOpen, setIsPersonCreateModalOpen] = useState(false);
@@ -39,6 +44,7 @@ const StepContactPersons = forwardRef(function StepContactPersons(
     submitForm: () => {
       form.submit();
     },
+    getFormData: () => form.getFieldsValue(),
   }));
 
   const handleNext = () => {
@@ -143,16 +149,17 @@ const StepContactPersons = forwardRef(function StepContactPersons(
             allowClear
             showSearch
             filterOption={(input, option) => {
-              if (option?.value === "create_new") return false;
-              return (option?.label as string)
-                ?.toLowerCase()
-                .includes(input.toLowerCase());
+              const label = option?.label;
+              if (typeof label === "string") {
+                return label.toLowerCase().includes(input.toLowerCase());
+              }
+              return false;
             }}
             options={[
               ...(getFilteredOptions([signPerson, authorizedSignPerson]) || []),
               {
                 label: (
-                  <span
+                  <div
                     onClick={() => {
                       setPersonCreateTargetField("contact_person");
                       setIsPersonCreateModalOpen(true);
@@ -160,9 +167,8 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                   >
                     <PlusCircleOutlined style={{ marginRight: 8 }} />
                     Create New
-                  </span>
+                  </div>
                 ),
-                value: "create_new",
               },
             ]}
             style={{ width: "100%" }}
@@ -210,10 +216,11 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                 allowClear
                 showSearch
                 filterOption={(input, option) => {
-                  if (option?.value === "create_new") return false;
-                  return (option?.label as string)
-                    ?.toLowerCase()
-                    .includes(input.toLowerCase());
+                  const label = option?.label;
+                  if (typeof label === "string") {
+                    return label.toLowerCase().includes(input.toLowerCase());
+                  }
+                  return false;
                 }}
                 options={[
                   ...(getFilteredOptions([
@@ -222,7 +229,7 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                   ]) || []),
                   {
                     label: (
-                      <span
+                      <div
                         onClick={() => {
                           setPersonCreateTargetField("sign_person");
                           setIsPersonCreateModalOpen(true);
@@ -230,9 +237,8 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                       >
                         <PlusCircleOutlined style={{ marginRight: 8 }} />
                         Create New
-                      </span>
+                      </div>
                     ),
-                    value: "create_new",
                   },
                 ]}
                 style={{ width: "100%" }}
@@ -279,16 +285,17 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                 allowClear
                 showSearch
                 filterOption={(input, option) => {
-                  if (option?.value === "create_new") return false;
-                  return (option?.label as string)
-                    ?.toLowerCase()
-                    .includes(input.toLowerCase());
+                  const label = option?.label;
+                  if (typeof label === "string") {
+                    return label.toLowerCase().includes(input.toLowerCase());
+                  }
+                  return false;
                 }}
                 options={[
                   ...(getFilteredOptions([contactPerson, signPerson]) || []),
                   {
                     label: (
-                      <span
+                      <div
                         onClick={() => {
                           setPersonCreateTargetField("authorized_sign_person");
                           setIsPersonCreateModalOpen(true);
@@ -296,9 +303,8 @@ const StepContactPersons = forwardRef(function StepContactPersons(
                       >
                         <PlusCircleOutlined style={{ marginRight: 8 }} />
                         Create New
-                      </span>
+                      </div>
                     ),
-                    value: "create_new",
                   },
                 ]}
                 style={{ width: "100%" }}
