@@ -43,7 +43,8 @@ export default function PoTableView({
       dataIndex: "order_date",
       key: "order_date",
       defaultSortOrder: "descend",
-      sorter: (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
+      sorter: (a, b) =>
+        new Date(a.order_date).getTime() - new Date(b.order_date).getTime(),
       render: (order_date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />
@@ -114,7 +115,7 @@ export default function PoTableView({
   ];
 
   return (
-    <section className="py-4">
+    <section className="py-4 w-full max-w-[1140px]">
       <Table<PurchaseOrderDto>
         columns={columns}
         dataSource={data}
@@ -125,7 +126,7 @@ export default function PoTableView({
         footer={() => (
           <div className="flex justify-between">
             <Typography.Text type="secondary">
-              Total {data.length} items
+              Total {total} items
             </Typography.Text>
             <Pagination
               defaultCurrent={1}
