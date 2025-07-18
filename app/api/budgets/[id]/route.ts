@@ -139,7 +139,7 @@ export async function DELETE(
     .eq("id", id)
     .select()
     .single();
-  console.log(dbError?.message);
+
   if (dbError)
     return NextResponse.json(error(dbError.message, 500), {
       status: 500,

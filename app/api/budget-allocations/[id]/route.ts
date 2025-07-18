@@ -33,8 +33,6 @@ export async function GET(
     .eq("id", id)
     .single();
 
-  console.log(fetchError?.message);
-
   if (fetchError) {
     return NextResponse.json(error(fetchError.message), { status: 500 });
   }
@@ -54,7 +52,7 @@ export async function GET(
   const { data: signedUrls, error: signedError } = await supabase.storage
     .from(bucket)
     .createSignedUrls(transferEvidencePaths, 60 * 60); // valid for 1 hour
-  console.log(signedError?.message);
+
   if (signedError) {
     return NextResponse.json(error(signedError.message), { status: 500 });
   }
