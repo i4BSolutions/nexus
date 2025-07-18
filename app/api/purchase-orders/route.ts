@@ -146,8 +146,8 @@ export async function GET(
     query = query.eq("status", statusParam);
   }
 
-  query = query.order("id", {
-    ascending: sortParam === "id_asc",
+  query = query.order("order_date", {
+    ascending: sortParam === "order_date_asc",
   });
 
   if (typeof from === "number" && typeof to === "number") {
