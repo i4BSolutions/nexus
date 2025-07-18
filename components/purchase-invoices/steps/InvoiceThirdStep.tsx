@@ -279,7 +279,7 @@ export default function InvoiceThirdStep({
                                 marginBottom: 0,
                               }}
                             >
-                              {poDetailData.ordered || "N/A"}
+                              {poDetailData.product_items[name]?.invoiced}
                             </Typography.Text>
                           )}
                         </Col>
@@ -291,7 +291,7 @@ export default function InvoiceThirdStep({
                                 marginBottom: 0,
                               }}
                             >
-                              {poDetailData.available || "N/A"}
+                              {poDetailData.product_items[name]?.available}
                             </Typography.Text>
                           )}
                         </Col>

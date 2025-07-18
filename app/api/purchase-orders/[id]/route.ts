@@ -34,19 +34,43 @@ async function fetchPurchaseOrderItems(supabase: any, idStr: string) {
 }
 
 // Helper: Format items for DTO
-function formatPurchaseOrderItems(items: any[], usdExchangeRate: number) {
+function formatPurchaseOrderItems(
+  items: any[],
+  usdExchangeRate: number,
+  invoiceQuantityMap?: Record<string, number>
+) {
   return (
-    items?.map((item) => ({
-      id: item.id,
-      product: item.product.id,
-      product_name: item.product?.name,
-      quantity: item.quantity,
-      unit_price_local: item.unit_price_local,
-      unit_price_usd: item.unit_price_local / usdExchangeRate,
-      sub_total_local: item.quantity * item.unit_price_local,
-      sub_total_usd: (item.quantity * item.unit_price_local) / usdExchangeRate,
-    })) || []
+    items?.map((item) => {
+      const orderedQty = item.quantity;
+      const invoicedQty = invoiceQuantityMap?.[item.product_id] ?? 0;
+      const availableQty = orderedQty - invoicedQty;
+
+      return {
+        id: item.id,
+        product: item.product.id,
+        product_name: item.product?.name,
+        quantity: orderedQty,
+        unit_price_local: item.unit_price_local,
+        unit_price_usd: item.unit_price_local / usdExchangeRate,
+        sub_total_local: item.quantity * item.unit_price_local,
+        sub_total_usd:
+          (item.quantity * item.unit_price_local) / usdExchangeRate,
+        ordered: orderedQty,
+        invoiced: invoicedQty,
+        available: availableQty,
+      };
+    }) || []
   );
+}
+
+async function fetchPurchaseInvoiceItemsByPoId(
+  supabase: any,
+  purchaseOrderId: string
+) {
+  return await supabase
+    .from("purchase_invoice_item")
+    .select("product_id, quantity")
+    .eq("purchase_order_id", purchaseOrderId);
 }
 
 // Helper: Calculate totals
@@ -153,6 +177,35 @@ export async function GET(
     return NextResponse.json(error(itemsError.message), { status: 500 });
   }
 
+  const { data: allPIItems, error: piItemsError } =
+    await fetchPurchaseInvoiceItemsByPoId(supabase, idStr);
+
+  const invoiceQuantityMap: Record<string, number> = {};
+
+  allPIItems?.forEach((item: any) => {
+    const pid = item.product_id;
+    invoiceQuantityMap[pid] = (invoiceQuantityMap[pid] || 0) + item.quantity;
+  });
+
+  if (piItemsError) {
+    return NextResponse.json(error(piItemsError.message), { status: 500 });
+  }
+
+  // Calculate totalOrdered from PO items
+  const totalOrdered =
+    items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) ||
+    0;
+
+  // Calculate totalInvoiced from PI items
+  const totalInvoiced =
+    allPIItems?.reduce(
+      (sum: number, item: any) => sum + (item.quantity || 0),
+      0
+    ) || 0;
+
+  // Available quantity = Ordered - Invoiced
+  const totalAvailable = totalOrdered - totalInvoiced;
+
   // Calculate totals
   const { totalAmountLocal, totalAmountUSD } = calculateTotals(
     items,
@@ -162,7 +215,8 @@ export async function GET(
   // Format items for the DTO
   const formattedItems = formatPurchaseOrderItems(
     items,
-    purchaseOrder.usd_exchange_rate
+    purchaseOrder.usd_exchange_rate,
+    invoiceQuantityMap
   );
 
   // Format the response according to GetPurchaseOrderDetailDto

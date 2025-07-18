@@ -271,7 +271,7 @@ export default function InvoiceSecondStep({
                                   marginLeft: 14,
                                 }}
                               >
-                                {poDetailData.ordered || "N/A"}
+                                {poDetailData.product_items[name]?.invoiced}
                               </Typography.Text>
                             )}
                           </Col>
@@ -284,7 +284,7 @@ export default function InvoiceSecondStep({
                                   marginLeft: 14,
                                 }}
                               >
-                                {poDetailData.available || "N/A"}
+                                {poDetailData.product_items[name]?.available}
                               </Typography.Text>
                             )}
                           </Col>
