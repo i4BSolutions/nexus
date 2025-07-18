@@ -98,15 +98,21 @@ export async function GET(
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
 
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSizeParam = searchParams.get("pageSize") || "10";
-  const pageSize = parseInt(pageSizeParam, 10);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
   const poNumber = searchParams.get("q") || "";
   const statusParam = searchParams.get("status");
   const sortParam = searchParams.get("sort");
+
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const hasPageSize = searchParams.has("pageSize");
+  const pageSizeParam = searchParams.get("pageSize");
+  const pageSize = pageSizeParam ? parseInt(pageSizeParam, 10) : undefined;
+  let from: number | undefined;
+  let to: number | undefined;
+
+  if (hasPageSize && pageSize !== undefined) {
+    from = (page - 1) * pageSize;
+    to = from + pageSize - 1;
+  }
 
   let query = supabase.from("purchase_order").select(
     `
@@ -140,11 +146,11 @@ export async function GET(
     query = query.eq("status", statusParam);
   }
 
-  query = query.order("order_date", {
-    ascending: sortParam === "order_date_asc",
+  query = query.order("id", {
+    ascending: sortParam === "id_asc",
   });
 
-  if (typeof to === "number") {
+  if (typeof from === "number" && typeof to === "number") {
     query = query.range(from, to);
   }
 
@@ -173,9 +179,15 @@ export async function GET(
     usd_exchange_rate: order.usd_exchange_rate,
     currency_code: order.product_currency.currency_code,
     contact_person: order.contact_person.name,
-    amount: order.purchase_order_items.reduce(
+    amount_local: order.purchase_order_items.reduce(
       (total: number, item: { quantity: number; unit_price_local: number }) =>
         total + item.quantity * item.unit_price_local,
+      0
+    ),
+    amount_usd: order.purchase_order_items.reduce(
+      (total: number, item: { quantity: number; unit_price_local: number }) =>
+        total +
+        (item.quantity * item.unit_price_local) / order.usd_exchange_rate,
       0
     ),
     invoiced_amount: 0,
@@ -186,17 +198,14 @@ export async function GET(
     dto: orders || [],
     total: count || 0,
     page,
-    pageSize: pageSize,
+    pageSize: pageSize || "all",
     statistics: {
       total: count || 0,
       total_approved: orders
         ? orders.filter((order) => order.status === "Approved").length
         : 0,
       total_usd_value: orders
-        ? orders.reduce(
-            (total, order) => total + order.amount / order.usd_exchange_rate,
-            0
-          )
+        ? orders.reduce((total, order) => total + order.amount_usd, 0)
         : 0,
       invoiced_percentage: 0,
       allocated_percentage: 0,

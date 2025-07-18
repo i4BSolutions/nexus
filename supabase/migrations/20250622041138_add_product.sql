@@ -3,7 +3,7 @@ create table "public"."product" (
     "sku" text not null,
     "name" text not null,
     "category" text not null,
-    "unit_price" numeric(10,2) not null,
+    "unit_price" numeric not null,
     "min_stock" integer default 0,
     "stock" integer default 0,
     "description" text,

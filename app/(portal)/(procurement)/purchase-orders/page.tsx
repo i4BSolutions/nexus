@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import CardView from "@/components/purchase-orders/CardView";
-import TableView from "@/components/purchase-orders/TableView";
+import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
+import PoCardView from "@/components/purchase-orders/PoCardView";
+import PoTableView from "@/components/purchase-orders/PoTableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import StatisticsCards from "@/components/shared/StatisticsCards";
@@ -22,9 +21,8 @@ import {
 import { Button, Flex, Input, Segmented, Select, Spin } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
-
-import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PurchaseOrdersPage() {
   const [statItems, setStatItems] = useState<StatItem[]>();
@@ -45,7 +43,7 @@ export default function PurchaseOrdersPage() {
       page: pagination.page,
       pageSize: pagination.pageSize,
       sort: sortOrder
-        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
+        ? `id_${sortOrder === "ascend" ? "asc" : "desc"}`
         : undefined,
       status: status,
       q: searchText,
@@ -59,7 +57,8 @@ export default function PurchaseOrdersPage() {
         purchase_order_no: item.purchase_order_no,
         order_date: item.order_date,
         status: item.status,
-        amount: item.amount,
+        amount_local: item.amount_local,
+        amount_usd: item.amount_usd,
         currency_code: item.currency_code,
         usd_exchange_rate: item.usd_exchange_rate,
         contact_person: item.contact_person,
@@ -89,6 +88,7 @@ export default function PurchaseOrdersPage() {
           borderColor: "#87E8DE",
           tooltip: "Total value of all purchase orders",
           prefix: "$",
+          approved_text: "approved POs",
         },
         {
           title: "% Invoiced",
@@ -235,14 +235,14 @@ export default function PurchaseOrdersPage() {
         />
       </Flex>
       {viewMode === "Card" ? (
-        <CardView
+        <PoCardView
           data={data}
           pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
           total={total}
         />
       ) : (
-        <TableView
+        <PoTableView
           data={data}
           pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
