@@ -1,6 +1,5 @@
 "use client";
 
-import StatusBadge from "@/components/purchase-orders/StatusBadge";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import StatisticsCards from "@/components/shared/StatisticsCards";
@@ -39,16 +38,20 @@ export default function BudgetAllocationsPage() {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+  const [sortField, setSortField] = useState<string | undefined>();
   const [searchText, setSearchText] = useState("");
+
+  const sortParam =
+    sortField && sortOrder
+      ? `${sortField}_${sortOrder === "ascend" ? "asc" : "desc"}`
+      : undefined;
 
   const { data: budgetAllocationData, isLoading: budgetAllocationIsLoading } =
     useList<BudgetAllocationsResponse>("budget-allocations", {
       page: pagination.page,
       pageSize: pagination.pageSize,
-      sort: sortOrder
-        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
-        : undefined,
-      status: status,
+      sort: sortParam,
+      status,
       q: searchText,
     });
 
@@ -63,6 +66,7 @@ export default function BudgetAllocationsPage() {
           gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFFFFF 100%)",
           borderColor: "#87E8DE",
           tooltip: "Total number of allocations created",
+          total_approved: budgetAllocationData.statistics.totalAllocations,
         },
         {
           title: "Total Allocated (USD)",
@@ -73,6 +77,7 @@ export default function BudgetAllocationsPage() {
           gradient: "linear-gradient(90deg, #F6FFED 0%, #FFFFFF 100%)",
           borderColor: "#B7EB8F",
           tooltip: "Total equivalent USD value of all allocations",
+          total_approved: budgetAllocationData.statistics.totalAllocatedUSD,
         },
         {
           title: "Pending Allocated (USD)",
@@ -83,11 +88,14 @@ export default function BudgetAllocationsPage() {
           gradient: "linear-gradient(90deg, #FFFBE6 0%, #FFFFFF 100%)",
           borderColor: "#FFE58F",
           tooltip: "Total pending allocations' equivalent USD",
+          total_approved: budgetAllocationData.statistics.totalPendingUSD,
         },
       ];
       setStatItems(stats);
     }
   }, [budgetAllocationData]);
+
+  if (!statItems) return null;
 
   const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) => {
     setSearchText(value);
@@ -137,12 +145,16 @@ export default function BudgetAllocationsPage() {
     },
     {
       title: "AMOUNT",
+      dataIndex: "allocation_amount",
       sorter: true,
-      sortOrder: sortOrder?.includes("allocation_amount")
-        ? sortOrder.includes("asc")
-          ? "ascend"
-          : "descend"
-        : undefined,
+      sortOrder: sortField === "allocation_amount" ? sortOrder : undefined,
+      onHeaderCell: () => ({
+        onClick: () => {
+          const order = sortOrder === "ascend" ? "descend" : "ascend";
+          setSortField("allocation_amount");
+          setSortOrder(order);
+        },
+      }),
       render: (_, record) => {
         const usd = record.allocation_amount / record.exchange_rate_usd;
         return (
