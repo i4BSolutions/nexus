@@ -104,9 +104,7 @@ export default function TableView({
           <Button
             style={{ padding: 0 }}
             type="link"
-            onClick={() =>
-              router.push(`/purchase-invoice/${record.purchase_order_no}`)
-            }
+            onClick={() => router.push(`/invoices/${record.id}`)}
           >
             View
           </Button>
@@ -114,9 +112,7 @@ export default function TableView({
           <Button
             style={{ padding: 0 }}
             type="link"
-            onClick={() =>
-              router.push(`/purchase-invoice/${record.purchase_order_no}/edit`)
-            }
+            onClick={() => router.push(`/invoices/${record.id}/edit`)}
           >
             Edit
           </Button>
@@ -133,11 +129,6 @@ export default function TableView({
         pagination={false}
         rowKey="id"
         scroll={{ x: true }}
-        onRow={(record) => ({
-          onClick: () => {
-            router.push(`/purchase-invoices/${record.purchase_invoice_number}`);
-          },
-        })}
         style={{ border: "2px solid #F5F5F5", borderRadius: "8px" }}
         footer={() => (
           <Flex justify="space-between" align="center" gap={4}>
