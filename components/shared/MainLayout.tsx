@@ -94,7 +94,7 @@ export default function MainLayout({
       children: [
         {
           key: "users",
-          label: "Users",
+          label: "Users & Permissions",
           onClick: () => router.push("/users"),
         },
       ],
