@@ -47,8 +47,7 @@ export default function PiEditPage() {
     error,
   } = useGetById("purchase-invoices", id, !!id);
 
-  const invoiceData = (invoiceDataRaw as { data: PurchaseInvoiceInterface })
-    ?.data;
+  const invoiceData = invoiceDataRaw as PurchaseInvoiceInterface;
 
   const updateData = useUpdate("purchase-invoices");
 
