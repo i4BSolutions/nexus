@@ -10,6 +10,7 @@ export interface PurchaseInvoiceInterface {
   status: string;
   note?: string;
   invoice_items?: PurchaseInvoiceItemInterface[];
+  purchase_order_id?: string;
   purchase_order_no: string;
   purchase_order_currency_code?: string;
   purchase_order_exchange_rate?: number;
@@ -39,4 +40,16 @@ export interface PurchaseInvoiceResponse {
     total_usd: number;
     delivered: number;
   };
+}
+
+export interface PurchaseInvoiceHistory {
+  id: number;
+  purchase_invoice_id: number;
+  changed_at: string;
+  changed_by: string;
+  changed_field: string;
+  new_values: string;
+  old_values: string;
+  reason: string;
+  reason_created_at: string;
 }

@@ -190,16 +190,14 @@ export async function GET(
     status: invoice.status,
     note: invoice.note || "",
     invoice_items: formattedItems || [],
+    purchase_order_id: purchaseOrder.id,
     purchase_order_no: purchaseOrder.purchase_order_no,
     purchase_order_currency_code: purchaseOrder.currency.currency_code,
     purchase_order_exchange_rate: purchaseOrder.usd_exchange_rate,
   };
 
   return NextResponse.json(
-    success({
-      message: "Purchase invoice retrieved successfully",
-      data: formattedInvoice,
-    }),
+    success(formattedInvoice, "Purchase invoice retrieved successfully"),
     { status: 200 }
   );
 }
@@ -288,6 +286,7 @@ export async function PUT(
     "status",
     "exchange_rate_to_usd",
     "note",
+    "is_voided",
   ];
 
   const updateData: Record<string, any> = {};
@@ -332,19 +331,24 @@ export async function PUT(
     updatedInvoice
   );
 
-  // Log the reason for update
-  const { error: purchaseInvoiceUpdateReasonError } = await supabase
-    .from("purchase_invoice_update_reason")
-    .insert({
-      purchase_invoice_id: id,
-      reason,
-      action: "update",
-    });
+  if (!body.is_voided) {
+    // Log the reason for update
+    const { error: purchaseInvoiceUpdateReasonError } = await supabase
+      .from("purchase_invoice_update_reason")
+      .insert({
+        purchase_invoice_id: id,
+        reason,
+        action: "update",
+      });
 
-  if (purchaseInvoiceUpdateReasonError) {
-    return NextResponse.json(error(purchaseInvoiceUpdateReasonError.message), {
-      status: 500,
-    });
+    if (purchaseInvoiceUpdateReasonError) {
+      return NextResponse.json(
+        error(purchaseInvoiceUpdateReasonError.message),
+        {
+          status: 500,
+        }
+      );
+    }
   }
 
   return NextResponse.json(
