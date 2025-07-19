@@ -1,5 +1,6 @@
 "use client";
 
+import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
 import PoCardView from "@/components/purchase-orders/PoCardView";
 import PoTableView from "@/components/purchase-orders/PoTableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -163,12 +164,18 @@ export default function PurchaseOrdersPage() {
         <HeaderSection
           title="Purchase Orders"
           description="Manage and track all purchase orders"
-          icon={
-            <ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />
-          }
-          onAddNew={() => router.push("/purchase-orders/create")}
+          icon={<ShoppingCartOutlined />}
+          onAddNew={() => {
+            setShowCreateModal(true);
+          }}
           buttonText="New Purchase Order"
           buttonIcon={<PlusOutlined />}
+        />
+
+        {/* Create Options Modal */}
+        <CreateOptionsModal
+          open={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
         />
         <StatisticsCards stats={statItems} />
         <Flex justify="center" align="center" gap={12}>

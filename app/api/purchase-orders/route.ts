@@ -66,6 +66,7 @@ export async function POST(
     product_id: item.product_id,
     quantity: item.quantity,
     unit_price_local: item.unit_price_local,
+    is_foc: item.is_foc,
   }));
 
   if (itemsToInsert.length > 0) {
