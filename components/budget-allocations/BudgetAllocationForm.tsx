@@ -181,7 +181,7 @@ const BudgetAllocationForm = ({
     formData.append("allocation_number", values.allocation_number);
     formData.append(
       "allocation_date",
-      dayjs.utc(values.allocation_date).format("YYYY-MM-DD")
+      dayjs(values.allocation_date).format("YYYY-MM-DD")
     );
     formData.append("allocation_amount", allocatedAmount);
     formData.append("currency_code", values.currency_code);

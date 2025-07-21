@@ -10,6 +10,7 @@ import {
   CheckCircleOutlined,
   EditOutlined,
   EllipsisOutlined,
+  PauseCircleOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import {
@@ -88,11 +89,35 @@ const BudgetAllocationDetailPage = () => {
 
   const dropDownItems: MenuProps["items"] = [
     {
-      label: <div className="text-sm !w-32 text-[#0de246]">Approve</div>,
+      label: (
+        <div
+          className={`text-sm !w-32 ${
+            detailData.status === "Pending"
+              ? "text-[#0de246]"
+              : "text-orange-500"
+          }`}
+        >
+          {detailData.status === "Pending" ? "Approve" : "Pending"}
+        </div>
+      ),
       key: "approveAllocation",
-      icon: <CheckCircleOutlined style={{ color: "#0de246" }} />,
-      onClick: () =>
-        mutation.mutateAsync({ id: params.id as string, status: "Approved" }),
+      icon:
+        detailData.status === "Pending" ? (
+          <CheckCircleOutlined style={{ color: "#0de246" }} />
+        ) : (
+          <PauseCircleOutlined style={{ color: "orange" }} />
+        ),
+      onClick: () => {
+        detailData.status === "Pending"
+          ? mutation.mutateAsync({
+              id: params.id as string,
+              status: "Approved",
+            })
+          : mutation.mutateAsync({
+              id: params.id as string,
+              status: "Pending",
+            });
+      },
       disabled: mutation.isPending,
     },
     {

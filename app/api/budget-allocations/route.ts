@@ -6,7 +6,6 @@ import {
   BudgetAllocationsInterface,
   BudgetAllocationsResponse,
 } from "@/types/budget-allocations/budget-allocations.type";
-import { uploadTransferEvidenceImage } from "@/utils/uploadTransferEvidence";
 import { ApiResponse } from "@/types/shared/api-response-type";
 
 const bucket = "core-orbit";
@@ -29,10 +28,8 @@ export async function GET(
 
   let query = supabase
     .from("budget_allocation")
-    .select("*", { count: "exact" });
-
-  // Exclude canceled allocations by default
-  query = query.neq("status", "Canceled");
+    .select("*", { count: "exact" })
+    .neq("status", "Canceled");
 
   if (q) {
     query = query.ilike("allocation_number", `%${q}%`);
@@ -72,22 +69,23 @@ export async function GET(
     )
     .filter((path): path is string => !!path);
 
-  // Generate signed URLs
-  const { data: signedData, error: signedUrlError } = await supabase.storage
-    .from(bucket)
-    .createSignedUrls(allFilePaths, 60 * 60); // 1 hour
+  let signedUrlMap = new Map<string, string>();
 
-  if (signedUrlError) {
-    return NextResponse.json(error(signedUrlError.message), { status: 500 });
-  }
+  if (allFilePaths.length > 0) {
+    const { data: signedData, error: signedUrlError } = await supabase.storage
+      .from(bucket)
+      .createSignedUrls(allFilePaths, 60 * 60); // 1 hour
 
-  // Map signed URLs back to their paths
-  const signedUrlMap = new Map<string, string>();
-  signedData?.forEach((entry) => {
-    if (entry.path && entry.signedUrl) {
-      signedUrlMap.set(entry.path, entry.signedUrl);
+    if (signedUrlError) {
+      return NextResponse.json(error(signedUrlError.message), { status: 500 });
     }
-  });
+
+    signedData?.forEach((entry) => {
+      if (entry.path && entry.signedUrl) {
+        signedUrlMap.set(entry.path, entry.signedUrl);
+      }
+    });
+  }
 
   // Attach transfer_evidence_urls to each allocation
   const items =
