@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h2>You have been invited to Nexus as a Super Admin!</h2>
+
+    <p>
+      You have been invited to create a user on {{ .SiteURL }}. Follow this link
+      to accept the invite:
+    </p>
+    <p>
+      <a href="{{ .SiteURL }}/verify-otp?token={{.Token}}&email={{.Email}}"
+        >Accept the invite</a
+      >
+    </p>
+  </body>
+</html>

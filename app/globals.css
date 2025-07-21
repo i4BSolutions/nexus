@@ -1,26 +1,25 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+.white-placeholder input::placeholder {
+  color: rgba(255, 255, 255, 0.25) !important;
+  opacity: 1;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.white-placeholder input {
+  color: #f0f0f0;
+  background-color: transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.ant-menu-item-selected {
+  border-right: 3px solid #722ed1;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.ant-segmented-group,
+.ant-segmented-item,
+.ant-segmented-thumb {
+  border-radius: 8px !important;
+}
+
+.ant-form-item-required::after {
+  display: none !important;
 }
