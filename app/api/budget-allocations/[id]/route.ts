@@ -219,8 +219,8 @@ export async function PATCH(
     .select()
     .single();
 
-  if (dbError || !updated) {
-    return NextResponse.json(error("Failed to update status", 500));
+  if (dbError) {
+    return NextResponse.json(error(dbError?.message, 500));
   }
 
   await supabase.from("budget_allocation_activity_logs").insert([
