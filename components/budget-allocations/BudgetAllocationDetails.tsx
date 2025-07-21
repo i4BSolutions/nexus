@@ -27,6 +27,7 @@ const BudgetAllocationDetails = ({
 
   return (
     <section className="w-full rounded-2xl border-2 border-[#F5F5F5]">
+      {/* Header */}
       <Flex
         align="center"
         gap={16}
@@ -59,94 +60,93 @@ const BudgetAllocationDetails = ({
           </Typography.Text>
         </div>
       </Flex>
-      <div className="px-6 py-7">
-        <Row gutter={[32, 32]}>
-          {/* LEFT */}
-          <Col xs={24} md={12}>
-            {/* Amount */}
-            <div className="mb-5">
-              <Typography.Text type="secondary">Amount</Typography.Text>
-              <Typography.Title level={2} className="!my-1">
-                {data.allocation_amount.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                })}{" "}
-                {data.currency_code}
-              </Typography.Title>
-              <Typography.Text type="secondary">
-                (${usd.toFixed(2)})
-              </Typography.Text>
-            </div>
 
-            {/* Allocation Date */}
+      {/* Body */}
+      <div className="px-6 py-7">
+        {/* AMOUNT - full width */}
+        <div className="mb-6">
+          <Typography.Text type="secondary" className="block">
+            Amount
+          </Typography.Text>
+          <div className="flex flex-col">
+            <Typography.Text
+              strong
+              className="!mb-0 !text-[28px] !font-semibold"
+            >
+              {data.allocation_amount.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}{" "}
+              {data.currency_code}
+            </Typography.Text>
+            <Typography.Text type="secondary" className="!text-base">
+              (${usd.toFixed(2)})
+            </Typography.Text>
+          </div>
+        </div>
+
+        <Row gutter={[48, 24]}>
+          <Col xs={24} md={12}>
             <div className="mb-4">
               <Typography.Text type="secondary">
                 Allocation Date
               </Typography.Text>
-              <div className="font-medium text-md mt-1">
+              <div className="text-base font-semibold mt-1">
                 {dayjs(data.allocation_date).format("MMM D, YYYY")}
               </div>
             </div>
-
-            {/* Currency */}
             <div className="mb-4">
               <Typography.Text type="secondary">Currency</Typography.Text>
-              <div className="font-medium text-md mt-1">
+              <div className="text-base font-semibold mt-1">
                 {data.currency_code}
               </div>
             </div>
-
-            {/* Notes */}
             <div className="mb-4">
               <Typography.Text type="secondary">Note</Typography.Text>
-              <div className="text-gray-400 italic mt-1">
-                {data.note || "N/A"}
-              </div>
-            </div>
-
-            {/* Transfer Evidence */}
-            <div>
-              <Typography.Text>Transfer Evidence</Typography.Text>
-              <div className="flex flex-wrap gap-3 mt-2">
-                {transferImages.length > 0 ? (
-                  transferImages.map((url, index) => (
-                    <Image
-                      key={index}
-                      src={url.trim()}
-                      alt={`evidence-${index}`}
-                      width={120}
-                      height={120}
-                      style={{ borderRadius: 12, objectFit: "cover" }}
-                      unoptimized
-                    />
-                  ))
-                ) : (
-                  <div className="text-gray-400 italic mt-1">
-                    No evidence uploaded
-                  </div>
-                )}
+              <div className="mt-1 text-base text-gray-400">
+                {data.note ? data.note : "N/A"}
               </div>
             </div>
           </Col>
 
-          {/* RIGHT */}
           <Col xs={24} md={12}>
-            {/* Created On */}
             <div className="mb-4">
               <Typography.Text type="secondary">Created On</Typography.Text>
-              <div className="font-medium text-md mt-1">
-                {dayjs(data.created_at).format("MMM D, YYYY")}
+              <div className="text-base font-semibold mt-1">
+                {dayjs(data.created_at).format("MMM D YYYY")}
               </div>
             </div>
-
-            {/* Exchange Rate */}
             <div className="mb-4">
               <Typography.Text type="secondary">Exchange Rate</Typography.Text>
-              <div className="font-medium text-md mt-1">
+              <div className="text-base font-semibold mt-1">
                 1 USD = {data.exchange_rate_usd} {data.currency_code}
               </div>
             </div>
           </Col>
         </Row>
+
+        {/* TRANSFER EVIDENCE */}
+        <div>
+          <Typography.Text type="secondary">Transfer Evidence</Typography.Text>
+          <div className="flex flex-wrap gap-3 mt-2">
+            {transferImages.length > 0 ? (
+              transferImages.map((url, index) => (
+                <Image
+                  key={index}
+                  src={url.trim()}
+                  alt={`evidence-${index}`}
+                  width={120}
+                  height={120}
+                  className="rounded-xl object-cover"
+                  unoptimized
+                />
+              ))
+            ) : (
+              <div className="text-gray-400 italic mt-1">
+                No evidence uploaded
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

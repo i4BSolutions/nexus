@@ -24,6 +24,8 @@ export async function GET(
   const q = searchParams.get("q") || "";
   const status = searchParams.get("status");
   const sort = searchParams.get("sort");
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
 
   let query = supabase
     .from("budget_allocation")
@@ -46,6 +48,13 @@ export async function GET(
     query = query.order("allocation_amount", { ascending: false });
   } else {
     query = query.order("allocation_date", { ascending: false });
+  }
+
+  if (startDate) {
+    query = query.gte("allocation_date", startDate);
+  }
+  if (endDate) {
+    query = query.lte("allocation_date", endDate);
   }
 
   query = query.range(from, to);
@@ -91,29 +100,41 @@ export async function GET(
         : [],
     })) || [];
 
-  // Stats
-  const allQuery = supabase.from("budget_allocation").select("*");
-  const allData = (await allQuery).data || [];
-
-  const totalAllocations = allData.length;
-  const totalAllocatedUSD = allData.reduce(
-    (sum, a) => sum + (a.equivalent_usd || 0),
-    0
+  const filteredStats = items.reduce(
+    (acc, curr) => {
+      const usd =
+        curr.equivalent_usd || curr.allocation_amount / curr.exchange_rate_usd;
+      acc.totalAllocations += 1;
+      acc.totalAllocatedUSD += usd;
+      if (curr.status === "Pending") acc.totalPendingUSD += usd;
+      return acc;
+    },
+    {
+      totalAllocations: 0,
+      totalAllocatedUSD: 0,
+      totalPendingUSD: 0,
+    }
   );
-  const totalPendingUSD = allData
-    .filter((a) => a.status === "Pending")
-    .reduce((sum, a) => sum + (a.equivalent_usd || 0), 0);
+
+  // Stats
+  // const allQuery = supabase.from("budget_allocation").select("*");
+  // const allData = (await allQuery).data || [];
+
+  // const totalAllocations = allData.length;
+  // const totalAllocatedUSD = allData.reduce(
+  //   (sum, a) => sum + (a.equivalent_usd || 0),
+  //   0
+  // );
+  // const totalPendingUSD = allData
+  //   .filter((a) => a.status === "Pending")
+  //   .reduce((sum, a) => sum + (a.equivalent_usd || 0), 0);
 
   const response: BudgetAllocationsResponse = {
     items,
     total: count || 0,
     page,
     pageSize,
-    statistics: {
-      totalAllocations,
-      totalAllocatedUSD,
-      totalPendingUSD,
-    },
+    statistics: filteredStats,
   };
 
   return NextResponse.json(success(response, "Budget allocations retrieved"), {

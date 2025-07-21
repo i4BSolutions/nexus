@@ -5,9 +5,6 @@ import { ProductCurrencyInterface } from "@/types/product/product.type";
 import {
   CalendarOutlined,
   CheckCircleFilled,
-  CheckCircleOutlined,
-  LeftOutlined,
-  RightOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
@@ -23,18 +20,16 @@ import {
   Upload,
   UploadFile,
   UploadProps,
-  message,
   Button,
   Tag,
   Modal,
   Carousel,
-  Radio,
+  App,
 } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
 import { RcFile } from "antd/es/upload";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import Link from "next/link";
 import React, { useState } from "react";
 
 dayjs.extend(utc);
@@ -71,6 +66,7 @@ const BudgetAllocationForm = ({
   isLoading,
   onCancel,
 }: BudgetAllocationFormProps) => {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [allocatedAmount, setAllocatedAmount] = useState("");
   const [exchangeRate, setExchangeRate] = useState("");
@@ -79,7 +75,6 @@ const BudgetAllocationForm = ({
   const [selectedPO, setSelectedPO] = useState<any>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const [previewIndex, setPreviewIndex] = useState<number>(0);
-  console.log(initialValues);
   const allocatedAmountValue = parseFloat(allocatedAmount) || 0;
   const exchangeRateValue = parseFloat(exchangeRate) || 1;
 
@@ -347,9 +342,9 @@ const BudgetAllocationForm = ({
                 style={{ width: "100%" }}
                 placeholder="Select date"
                 format="YYYY-MM-DD"
-                disabledDate={(current) =>
-                  current && current < dayjs().startOf("day")
-                }
+                // disabledDate={(current) =>
+                //   current && current < dayjs().startOf("day")
+                // }
               />
             </Form.Item>
           </div>
@@ -453,6 +448,7 @@ const BudgetAllocationForm = ({
                 ]}
               >
                 <Input
+                  disabled={mode === "edit" ? true : false}
                   addonBefore={
                     <Form.Item
                       name="currency_code"
@@ -463,6 +459,7 @@ const BudgetAllocationForm = ({
                       ]}
                     >
                       <Select
+                        disabled={mode === "edit" ? true : false}
                         loading={currenciesLoading}
                         placeholder="Currency"
                         style={{ width: 80 }}
@@ -511,6 +508,7 @@ const BudgetAllocationForm = ({
                 ]}
               >
                 <Input
+                  disabled={mode === "edit" ? true : false}
                   placeholder="Enter exchange rate (USD)"
                   value={exchangeRate}
                   onChange={(e) =>
@@ -578,9 +576,16 @@ const BudgetAllocationForm = ({
               <Form.Item
                 name="transfer_proof"
                 label="Transfer Proof"
-                rules={[
-                  { required: true, message: "Please upload transfer proof" },
-                ]}
+                rules={
+                  mode === "create"
+                    ? [
+                        {
+                          required: true,
+                          message: "Please upload transfer proof",
+                        },
+                      ]
+                    : []
+                }
               >
                 <Upload
                   {...props}
@@ -602,7 +607,10 @@ const BudgetAllocationForm = ({
                   { required: true, message: "Please enter allocated by" },
                 ]}
               >
-                <Input placeholder="Please Enter Allocated By" />
+                <Input
+                  disabled={mode === "edit" ? true : false}
+                  placeholder="Please Enter Allocated By"
+                />
               </Form.Item>
 
               <Form.Item name="note" label="Note (optional)">

@@ -71,7 +71,12 @@ const BudgetAllocationDetailPage = () => {
 
   const deleteBudgetAllocation = useDelete("budget-allocations");
 
-  if (detailIsLoading || !data) {
+  if (
+    detailIsLoading ||
+    !data ||
+    mutation.isPending ||
+    deleteBudgetAllocation.isPending
+  ) {
     return (
       <div className="flex justify-center items-center h-full">
         <Spin />

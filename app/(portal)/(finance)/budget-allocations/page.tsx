@@ -3,11 +3,9 @@
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import StatisticsCards from "@/components/shared/StatisticsCards";
-import { useList } from "@/hooks/react-query/useList";
-import {
-  BudgetAllocationsInterface,
-  BudgetAllocationsResponse,
-} from "@/types/budget-allocations/budget-allocations.type";
+import { useBudgetAllocations } from "@/hooks/budget-allocations/useBudgetAllocation";
+
+import { BudgetAllocationsInterface } from "@/types/budget-allocations/budget-allocations.type";
 import { StatItem } from "@/types/shared/stat-item.type";
 import {
   CalendarOutlined,
@@ -18,19 +16,21 @@ import {
 import {
   Button,
   Divider,
-  Empty,
   Flex,
   Pagination,
   Select,
   Table,
   Tag,
   Typography,
+  DatePicker,
 } from "antd";
 import Input, { SearchProps } from "antd/es/input";
 import { ColumnsType, SortOrder } from "antd/es/table/interface";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+
+const { RangePicker } = DatePicker;
 
 export default function BudgetAllocationsPage() {
   const router = useRouter();
@@ -40,6 +40,9 @@ export default function BudgetAllocationsPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [sortField, setSortField] = useState<string | undefined>();
   const [searchText, setSearchText] = useState("");
+  const [dateRange, setDateRange] = useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
+  >(null);
 
   const sortParam =
     sortField && sortOrder
@@ -47,12 +50,14 @@ export default function BudgetAllocationsPage() {
       : undefined;
 
   const { data: budgetAllocationData, isLoading: budgetAllocationIsLoading } =
-    useList<BudgetAllocationsResponse>("budget-allocations", {
+    useBudgetAllocations({
       page: pagination.page,
       pageSize: pagination.pageSize,
       sort: sortParam,
       status,
       q: searchText,
+      startDate: dateRange?.[0]?.format("YYYY-MM-DD"),
+      endDate: dateRange?.[1]?.format("YYYY-MM-DD"),
     });
 
   useEffect(() => {
@@ -110,6 +115,7 @@ export default function BudgetAllocationsPage() {
     setSearchText("");
     setSortOrder(undefined);
     setPagination({ page: 1, pageSize: 10 });
+    setDateRange(null);
   };
 
   const paginationChangeHandler = (page: number, pageSize?: number) => {
@@ -244,6 +250,12 @@ export default function BudgetAllocationsPage() {
         />
         <Flex justify="center" align="center" gap={12}>
           <span>Filter(s):</span>
+          <RangePicker
+            onChange={(dates) => setDateRange(dates)}
+            allowClear
+            style={{ minWidth: 260 }}
+            value={dateRange}
+          />
           <Select
             defaultValue="All Status"
             style={{ width: 160 }}
