@@ -185,11 +185,6 @@ export default function PurchaseOrdersPage() {
           buttonIcon={<PlusOutlined />}
         />
 
-        {/* Create Options Modal */}
-        <CreateOptionsModal
-          open={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-        />
         <StatisticsCards stats={statItems} />
         <Flex justify="center" align="center" gap={12}>
           <Input.Search
@@ -218,62 +213,63 @@ export default function PurchaseOrdersPage() {
                 />
               </Flex>
 
-            <div className="bg-[#D9D9D9] w-[1px] h-7" />
-          </>
-        ) : (
-          <div className="bg-transparent w-[425px] h-7" />
-        )}
-        <Flex justify="center" align="center" gap={12}>
-          <span>Filter(s):</span>
-          <Select
-            defaultValue="All Status"
-            style={{ width: 160 }}
-            onChange={statusChangeHandler}
-            options={[
-              {
-                value: "All Status",
-                label: "All Status",
-              },
-              {
-                value: "Draft",
-                label: "Draft",
-              },
-              {
-                value: "Approved",
-                label: "Approved",
-              },
-            ]}
+              <div className="bg-[#D9D9D9] w-[1px] h-7" />
+            </>
+          ) : (
+            <div className="bg-transparent w-[425px] h-7" />
+          )}
+          <Flex justify="center" align="center" gap={12}>
+            <span>Filter(s):</span>
+            <Select
+              defaultValue="All Status"
+              style={{ width: 160 }}
+              onChange={statusChangeHandler}
+              options={[
+                {
+                  value: "All Status",
+                  label: "All Status",
+                },
+                {
+                  value: "Draft",
+                  label: "Draft",
+                },
+                {
+                  value: "Approved",
+                  label: "Approved",
+                },
+              ]}
+            />
+            <Button
+              type="link"
+              style={{ padding: 0 }}
+              onClick={clearFiltersHandler}
+            >
+              Clear Filter(s)
+            </Button>
+          </Flex>
+          <div className="bg-[#D9D9D9] w-[1px] h-7" />
+          <Segmented<"Card" | "Table">
+            options={["Card", "Table"]}
+            style={{ borderRadius: 9, border: "1px solid #D9D9D9" }}
+            onChange={viewChangeHandler}
           />
-          <Button
-            type="link"
-            style={{ padding: 0 }}
-            onClick={clearFiltersHandler}
-          >
-            Clear Filter(s)
-          </Button>
         </Flex>
-        <div className="bg-[#D9D9D9] w-[1px] h-7" />
-        <Segmented<"Card" | "Table">
-          options={["Card", "Table"]}
-          style={{ borderRadius: 9, border: "1px solid #D9D9D9" }}
-          onChange={viewChangeHandler}
-        />
-      </Flex>
-      {viewMode === "Card" ? (
-        <CardView
-          data={data}
-          pagination={pagination}
-          paginationChangeHandler={paginationChangeHandler}
-          total={total}
-        />
-      ) : (
-        <TableView
-          data={data}
-          pagination={pagination}
-          paginationChangeHandler={paginationChangeHandler}
-          total={total}
-        />
-      )}
+        {viewMode === "Card" ? (
+          <CardView
+            data={data}
+            pagination={pagination}
+            paginationChangeHandler={paginationChangeHandler}
+            total={total}
+          />
+        ) : (
+          <TableView
+            data={data}
+            pagination={pagination}
+            paginationChangeHandler={paginationChangeHandler}
+            total={total}
+          />
+        )}
+      </div>
 
       {/* Create Options Modal */}
       <CreateOptionsModal
