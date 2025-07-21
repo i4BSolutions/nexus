@@ -1,3 +1,7 @@
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+
 /**
  * Handles the creation of a new user in the system.
  *
@@ -28,31 +32,17 @@
  *   - `can_manage_users`
  */
 
-import { supabaseAdmin } from "@/lib/supabase/admin";
-import { NextResponse } from "next/server";
-
 export async function POST(req: Request) {
   try {
     const { email, full_name, username, department, permissions } =
       await req.json();
 
-    // permissions: {
-    //   can_read_purchase_orders: true,
-    //   can_manage_purchase_orders: true,
-    //   can_read_invoices: true,
-    //   can_manage_invoices: true,
-    //   can_read_products_suppliers: true,
-    //   can_manage_products_suppliers: true,
-    //   can_read_stock: true,
-    //   can_stock_in: true,
-    //   can_stock_out: true,
-    //   can_read_warehouses: true,
-    //   can_manage_warehouses: true,
-    //   can_read_budget_allocations: true,
-    //   can_manage_budget_allocations: true,
-    //   can_read_dashboard: true,
-    //   can_manage_users: true,
-    // },
+    if (
+      !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+    ) {
+      throw new Error("Missing Supabase environment variables");
+    }
 
     switch (true) {
       case !email:
@@ -95,30 +85,26 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data: authUserData, error: authUserError } =
-      await supabaseAdmin.auth.admin.createUser({
-        email,
-        user_metadata: {
+    const { data: authUserData, error: inviteError } =
+      await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: {
           full_name,
           username,
           department,
           permissions,
         },
       });
-
-    if (authUserError) {
-      console.log("Create auth user error:", authUserError);
-      return NextResponse.json(
-        { error: authUserError.message },
-        { status: 500 }
-      );
+    if (inviteError) {
+      console.log("Invite user error:", inviteError);
+      return NextResponse.json({ error: inviteError.message }, { status: 500 });
     }
 
-    // const supabase = await createClient();
+    const supabase = await createClient();
 
-    // Insert into profiles table
-    const { data: profileUserData, error: profileUserError } =
-      await supabaseAdmin.from("profiles").insert({
+    // Insert into user_profiles table
+    const { data: profileUserData, error: profileUserError } = await supabase
+      .from("user_profiles")
+      .insert({
         id: authUserData.user.id,
         email: authUserData.user.email,
         full_name,
@@ -128,12 +114,14 @@ export async function POST(req: Request) {
       });
 
     if (profileUserError) {
-      console.log("Insert profile error:", profileUserError);
+      console.log("Insert profile user error:", profileUserError);
+      await supabaseAdmin.auth.admin.deleteUser(authUserData.user.id);
       return NextResponse.json(
         { error: profileUserError.message },
         { status: 500 }
       );
     }
+
     return NextResponse.json(
       { authUserData, profileUserData },
       { status: 201 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCreate } from "@/hooks/react-query/useCreate";
 import { UserFieldType } from "@/types/user/user.type";
 import {
   ArrowLeftOutlined,
@@ -12,8 +13,10 @@ import {
   TagOutlined,
 } from "@ant-design/icons";
 import {
+  App,
   Avatar,
   Button,
+  Checkbox,
   Col,
   Form,
   FormProps,
@@ -26,13 +29,63 @@ import { useRouter } from "next/navigation";
 
 export default function UserCreationPage() {
   const router = useRouter();
+  const { message } = App.useApp();
 
   const handleCancel = () => {
     router.back();
   };
 
+  const { mutate: createUser } = useCreate("users");
+
   const onFinish: FormProps<UserFieldType>["onFinish"] = (values) => {
+    const permissionKeys = Object.keys(values).filter(
+      (key) => key.startsWith("view_") || key.startsWith("manage_")
+    );
+
+    const hasAtLeastOnePermission = permissionKeys.some(
+      (key) => values[key as keyof UserFieldType]
+    );
+
+    if (!hasAtLeastOnePermission) {
+      message.error("Please select at least one permission for the user.");
+      return;
+    }
     console.log("Success:", values);
+    console.log("payload:", {
+      full_name: values.full_name,
+      username: values.username,
+      email: values.email,
+      department: values.department,
+      avatar: values.avatar || "",
+      permissions: permissionKeys.reduce((acc, key) => {
+        acc[`can_${key}`] = !!values[key as keyof UserFieldType];
+        return acc;
+      }, {} as Record<string, boolean>),
+    });
+    try {
+      createUser(
+        {
+          full_name: values.full_name,
+          username: values.username,
+          email: values.email,
+          department: values.department,
+          avatar: values.avatar || "",
+          permissions: permissionKeys.reduce((acc, key) => {
+            acc[`can_${key}`] = !!values[key as keyof UserFieldType];
+            return acc;
+          }, {} as Record<string, boolean>),
+        },
+        {
+          onSuccess: () => {
+            message.success("User created successfully!");
+            router.back();
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error creating user:", error);
+      message.error("Failed to create user. Please try again.");
+    }
   };
 
   return (
@@ -65,6 +118,23 @@ export default function UserCreationPage() {
         layout="vertical"
         autoComplete="off"
         onFinish={onFinish}
+        initialValues={{
+          view_purchase_orders: false,
+          manage_purchase_orders: false,
+          view_invoices: false,
+          manage_invoices: false,
+          view_products_suppliers: false,
+          manage_products_suppliers: false,
+          view_stock: false,
+          manage_stock_in: false,
+          manage_stock_out: false,
+          view_warehouses: false,
+          manage_warehouses: false,
+          view_budgets_allocations: false,
+          manage_budgets_allocations: false,
+          view_dashboard: false,
+          manage_users: false,
+        }}
       >
         {/* User Information */}
         <div className="border-t-2 border-r-2 border-l-2 border-[#F5F5F5] rounded-tr-2xl rounded-tl-2xl py-3 px-6 ">
@@ -139,6 +209,7 @@ export default function UserCreationPage() {
           </div>
         </div>
         <div className="border-2 border-[#F5F5F5] rounded-br-2xl rounded-bl-2xl px-6 ">
+          {/* Purchase Orders */}
           <Row
             style={{
               borderBottom: "2px solid #F5F5F5",
@@ -170,7 +241,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">View Purchase Orders</span>
@@ -193,7 +264,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">Manage Purchase Orders</span>
@@ -235,7 +306,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">View Invoices</span>
@@ -257,7 +328,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">Manage Invoices</span>
@@ -301,7 +372,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">View Products & Suppliers</span>
@@ -323,7 +394,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">Manage Products & Suppliers</span>
@@ -367,7 +438,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">View Stock</span>
@@ -389,7 +460,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">Record Stock-In</span>
@@ -409,7 +480,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">Record Stock-Out</span>
@@ -451,7 +522,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">View Warehouses</span>
@@ -473,7 +544,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">Manage Warehouses</span>
@@ -515,7 +586,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">View Budgets & Allocations</span>
@@ -537,7 +608,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">
@@ -582,7 +653,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">View Dashboard</span>
@@ -604,7 +675,7 @@ export default function UserCreationPage() {
               >
                 <div className="flex items-center gap-4">
                   <div>
-                    <Input type="checkbox" />
+                    <Checkbox />
                   </div>
                   <div className="flex flex-col">
                     <span className="text-sm">Manage Users</span>
