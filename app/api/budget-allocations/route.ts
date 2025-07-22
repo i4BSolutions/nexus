@@ -39,10 +39,10 @@ export async function GET(
     query = query.eq("status", status);
   }
 
-  if (sort === "allocation_amount_asc") {
-    query = query.order("allocation_amount", { ascending: true });
-  } else if (sort === "allocation_amount_desc") {
-    query = query.order("allocation_amount", { ascending: false });
+  if (sort === "equivalent_asc") {
+    query = query.order("equivalent", { ascending: true });
+  } else if (sort === "equivalent_desc") {
+    query = query.order("equivalent", { ascending: false });
   } else {
     query = query.order("allocation_date", { ascending: false });
   }

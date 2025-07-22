@@ -130,11 +130,13 @@ export default function BudgetAllocationsPage() {
     {
       title: "ALLOCATION NUMBER",
       dataIndex: "allocation_number",
+      key: "allocation_number",
       render: (text) => <a>{text}</a>,
     },
     {
       title: "PO NUMBER",
       dataIndex: "po_id",
+      key: "po_id",
       render: (po_id, record) => (
         <a>PO-2025-{String(po_id).padStart(4, "0")}</a>
       ),
@@ -142,6 +144,7 @@ export default function BudgetAllocationsPage() {
     {
       title: "DATE",
       dataIndex: "allocation_date",
+      key: "allocation_date",
       render: (date: string) => (
         <div>
           <CalendarOutlined style={{ marginRight: 6 }} />
@@ -152,15 +155,9 @@ export default function BudgetAllocationsPage() {
     {
       title: "AMOUNT",
       dataIndex: "allocation_amount",
-      sorter: true,
-      sortOrder: sortField === "allocation_amount" ? sortOrder : undefined,
-      onHeaderCell: () => ({
-        onClick: () => {
-          const order = sortOrder === "ascend" ? "descend" : "ascend";
-          setSortField("allocation_amount");
-          setSortOrder(order);
-        },
-      }),
+      key: "allocation_amount",
+      sorter: (a, b) => a.equivalent_usd - b.equivalent_usd,
+      defaultSortOrder: "descend",
       render: (_, record) => {
         const usd = record.allocation_amount / record.exchange_rate_usd;
         return (
@@ -179,6 +176,7 @@ export default function BudgetAllocationsPage() {
     },
     {
       title: "EXCHANGE RATE",
+      key: "exchange_rate_usd",
       render: (_, record) =>
         `1 USD = ${record.exchange_rate_usd} ${record.currency_code}`,
     },
