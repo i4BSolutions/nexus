@@ -2,6 +2,7 @@
 
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { UserFieldType } from "@/types/user/user.type";
+import getAvatarUrl from "@/utils/getAvatarUrl";
 import {
   ArrowLeftOutlined,
   AuditOutlined,
@@ -14,7 +15,6 @@ import {
 } from "@ant-design/icons";
 import {
   App,
-  Avatar,
   Button,
   Checkbox,
   Col,
@@ -152,7 +152,11 @@ export default function UserCreationPage() {
               background: "linear-gradient(90deg, #F9F0FF 0%, #FFF 100%)",
             }}
           >
-            <Avatar size={120} />
+            <img
+              src={getAvatarUrl("username")}
+              alt="avatar"
+              className="rounded-full w-30 h-30 object-cover"
+            />
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               Avatar will be generated automatically.
             </Typography.Text>
