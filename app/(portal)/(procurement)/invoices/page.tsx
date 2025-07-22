@@ -44,7 +44,7 @@ export default function InvoicesPage() {
   const [statItems, setStatItems] = useState<StatItem[]>();
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
 
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
   const [dateSort, setDateSort] = useState<
     "date_asc" | "date_desc" | undefined
   >();
@@ -193,6 +193,12 @@ export default function InvoicesPage() {
   };
 
   const viewChangeHandler = (value: "Card" | "Table") => {
+    if (value == "Table") {
+      setPagination((prev) => ({ ...prev, pageSize: 10 }));
+    } else {
+      setPagination((prev) => ({ ...prev, pageSize: 9 }));
+    }
+
     setViewMode(value);
   };
 
