@@ -41,6 +41,13 @@ export default function PiEditPage() {
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [totalUSD, setTotalUSD] = useState("0.00");
+  const [totalLocal, setTotalLocal] = useState("0");
+
+  const [updatedItems, setUpdatedItems] = useState<any[]>([]);
+
+  const watchedExchangeRate = Form.useWatch("exchange_rate_to_usd", form);
+
   const {
     data: invoiceDataRaw,
     isLoading,
@@ -64,6 +71,38 @@ export default function PiEditPage() {
       });
     }
   }, [invoiceData, form]);
+
+  useEffect(() => {
+    if (invoiceData && watchedExchangeRate) {
+      const items = invoiceData.invoice_items;
+      let totalLocalCalc = 0;
+
+      const rate = parseFloat(watchedExchangeRate);
+
+      const recalculatedItems = items?.map((item: any) => {
+        const quantity = item.quantity || 0;
+        const unitPriceLocal = item.unit_price_local || 0;
+        const subTotalLocal = quantity * unitPriceLocal;
+        const unitPriceUSD = rate ? unitPriceLocal / rate : 0;
+        const subTotalUSD = rate ? subTotalLocal / rate : 0;
+
+        totalLocalCalc += subTotalLocal;
+
+        return {
+          ...item,
+          unit_price_usd: unitPriceUSD,
+          sub_total_local: subTotalLocal,
+          sub_total_usd: subTotalUSD,
+        };
+      });
+
+      const totalUSDCalc = rate ? (totalLocalCalc / rate).toFixed(2) : "0.00";
+
+      setTotalLocal(totalLocalCalc.toLocaleString());
+      setTotalUSD(totalUSDCalc.toLocaleString());
+      setUpdatedItems(recalculatedItems ? recalculatedItems : []);
+    }
+  }, [watchedExchangeRate, invoiceData]);
 
   const handleFormSubmit = () => {
     setIsModalOpen(true);
@@ -101,29 +140,6 @@ export default function PiEditPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Total amount handler
-  const getTotal = () => {
-    const items = invoiceData.invoice_items;
-    const exchangeRate = invoiceData.usd_exchange_rate;
-    let totalLocal = 0;
-
-    if (items) {
-      items.forEach((item: any) => {
-        const price = item.unit_price_local || 0;
-        totalLocal += (item.quantity || 0) * price;
-      });
-    }
-
-    const totalUSD = exchangeRate
-      ? (totalLocal / exchangeRate).toFixed(2)
-      : "0.00";
-
-    return {
-      totalLocal: totalLocal.toLocaleString(),
-      totalUSD: totalUSD.toLocaleString(),
-    };
   };
 
   if (isLoading) {
@@ -452,7 +468,7 @@ export default function PiEditPage() {
             </Space>
             <Table
               columns={columns}
-              dataSource={invoiceData?.invoice_items || []}
+              dataSource={updatedItems}
               pagination={false}
               rowKey="id"
               scroll={{ x: true }}
@@ -467,11 +483,10 @@ export default function PiEditPage() {
                 Total Amount
               </Typography.Text>
               <Typography.Title level={3} style={{ margin: 0 }}>
-                {invoiceData ? getTotal().totalLocal : "0"}{" "}
-                {invoiceData?.currency_code}
+                {totalLocal} {invoiceData?.currency_code}
               </Typography.Title>
               <Typography.Text type="secondary" style={{ margin: 0 }}>
-                ({invoiceData ? getTotal().totalUSD : "0.00 USD"}) USD
+                ({totalUSD} USD)
               </Typography.Text>
             </Space>
           </div>
