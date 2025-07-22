@@ -174,7 +174,10 @@ export default function CardView({
                     </Typography.Text>
                   </div>
                   <div>
-                    <Link className="m-0 font-medium text-base">
+                    <Link
+                      href={`/purchase-orders/${item.purchase_order_no}`}
+                      className="m-0 font-medium text-base"
+                    >
                       {item.purchase_order_no}
                     </Link>
                   </div>
