@@ -1,15 +1,11 @@
 import { useList } from "@/hooks/react-query/useList";
-import {
-  ProductCurrencyInterface,
-  ProductInterface,
-} from "@/types/product/product.type";
+import { ProductInterface } from "@/types/product/product.type";
 import {
   MinusOutlined,
   PlusOutlined,
   TagOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import { useQuery } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -35,13 +31,6 @@ interface StockOutProps {
   formData?: any;
 }
 
-const fetchCurrencies = async () => {
-  const res = await fetch("/api/products/get-product-currencies");
-  if (!res.ok) throw new Error("Failed to fetch currencies");
-  const json = await res.json();
-  return json.data;
-};
-
 const StockOut = ({ formData }: StockOutProps) => {
   const [form] = Form.useForm();
 
@@ -52,6 +41,8 @@ const StockOut = ({ formData }: StockOutProps) => {
       status: "true",
     }
   );
+
+  const reason = Form.useWatch("reason", form);
 
   return (
     <Card
@@ -320,18 +311,35 @@ const StockOut = ({ formData }: StockOutProps) => {
           name="reason"
           rules={[{ required: true, message: "Please enter a reason" }]}
         >
-          <Input placeholder="Please enter a reason" />
+          <Select placeholder="Select reason">
+            <Option value="Production Consumption">
+              Production Consumption
+            </Option>
+            <Option value="Warehouse Transfer">Warehouse Transfer</Option>
+            <Option value="Damaged/Lost">Damaged/Lost</Option>
+            <Option value="Return to Supplier">Return to Supplier</Option>
+            <Option value="Other">Other</Option>
+          </Select>
         </Form.Item>
-        <Form.Item
-          label="Destination Warehouse"
-          required
-          name="destination_warehouse"
-          rules={[
-            { required: true, message: "Please enter a destination warehouse" },
-          ]}
-        >
-          <Input placeholder="Please enter destination warehouse" />
-        </Form.Item>
+        {reason === "Warehouse Transfer" && (
+          <Form.Item
+            label="Destination Warehouse"
+            required
+            name="destination_warehouse"
+            rules={[
+              {
+                required: true,
+                message: "Please enter a destination warehouse",
+              },
+            ]}
+          >
+            <Select placeholder="Select destination warehouse">
+              <Option value="Warehouse B">Warehouse B</Option>
+              <Option value="Warehouse C">Warehouse C</Option>
+              <Option value="External Site">External Site</Option>
+            </Select>
+          </Form.Item>
+        )}
         <Form.Item label="Note (Optional)" name="note">
           <TextArea placeholder="Enter note" />
         </Form.Item>
