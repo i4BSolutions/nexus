@@ -1,7 +1,7 @@
 "use client";
 
-import StockIn from "@/components/inventory/StockIn";
-import StockOut from "@/components/inventory/StockOut";
+import StockIn from "@/components/inventory/stock-management/StockIn";
+import StockOut from "@/components/inventory/stock-management/StockOut";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { SwapOutlined } from "@ant-design/icons";
 import { Space, Tabs, TabsProps, Typography } from "antd";
