@@ -2,6 +2,7 @@ import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { PurchaseOrderInterface } from "@/types/purchase-order/purchase-order.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
+import dayjs from "dayjs";
 import { NextRequest, NextResponse } from "next/server";
 import { PurchaseOrderResponse } from "../../../types/purchase-order/purchase-order.type";
 
@@ -162,9 +163,11 @@ export async function GET(
   const orders = data?.map((order) => ({
     id: order.id,
     purchase_order_no: order.purchase_order_no,
-    order_date: order.order_date,
+    order_date: dayjs(order.order_date).format("MMM D, YYYY"),
     status: order.status,
-    expected_delivery_date: order.expected_delivery_date,
+    expected_delivery_date: dayjs(order.expected_delivery_date).format(
+      "MMM D, YYYY"
+    ),
     usd_exchange_rate: order.usd_exchange_rate,
     currency_code: order.product_currency.currency_code,
     contact_person: order.contact_person.name,

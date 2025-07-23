@@ -13,7 +13,9 @@ export async function GET(
   const searchParams = req.nextUrl.searchParams;
 
   const page = parseInt(searchParams.get("page") || "1");
-  const pageSize = parseInt(searchParams.get("pageSize") || "10");
+  const pageSizeParam = searchParams.get("pageSize") || "10";
+  const pageSize =
+    pageSizeParam === "all" ? "all" : parseInt(pageSizeParam, 10);
   const q = searchParams.get("q")?.trim().toLowerCase() || "";
   const sortParam = searchParams.get("sort");
 
@@ -70,7 +72,14 @@ export async function GET(
         : valB.localeCompare(valA);
     });
 
-    const paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
+    let paginated;
+
+    if (pageSize === "all") {
+      paginated = sorted;
+    } else {
+      paginated = sorted.slice((page - 1) * pageSize, page * pageSize);
+    }
+
     const budgetIds = paginated.map((b) => b.id);
 
     const { data: allocations } = await supabase
@@ -135,7 +144,7 @@ export async function GET(
           items: enrichedItems,
           total: allBudgets.length,
           page,
-          pageSize,
+          pageSize: pageSize === "all" ? allBudgets.length : pageSize,
           statistics,
         },
         "Budgets retrieved successfully"
