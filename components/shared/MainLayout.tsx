@@ -75,13 +75,6 @@ export default function MainLayout({
           label: "Stock Management",
           onClick: () => router.push("/stock-management"),
         },
-      ],
-      children: [
-        {
-          key: "stock-management",
-          label: "Stock Management",
-          onClick: () => router.push("/stock-management"),
-        },
         {
           key: "warehouses",
           label: "Warehouses",
