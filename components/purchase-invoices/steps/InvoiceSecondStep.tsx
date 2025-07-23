@@ -129,6 +129,16 @@ export default function InvoiceSecondStep({
               required: true,
               message: "Please select exchange rate!",
             },
+            {
+              validator: (_, value) => {
+                if (value === 0 || value <= 0) {
+                  return Promise.reject(
+                    new Error("Exchange rate must be greater than 0")
+                  );
+                }
+                return Promise.resolve();
+              },
+            },
           ]}
         >
           <InputNumber size="large" style={{ width: "100%" }} type="number" />
@@ -331,13 +341,40 @@ export default function InvoiceSecondStep({
                                   message: "Quantity is required",
                                 },
                                 {
-                                  pattern: /^[1-9]\d*$/,
-                                  message: "Quantity cannot be 0",
+                                  type: "number",
+                                  min: 1,
+                                  message: "Quantity must be at least 1",
+                                },
+                                {
+                                  validator: (_, value) => {
+                                    if (
+                                      value &&
+                                      poDetailData?.product_items[name]
+                                        ?.available &&
+                                      value >
+                                        poDetailData.product_items[name]
+                                          .available
+                                    ) {
+                                      return Promise.reject(
+                                        new Error(
+                                          "Quantity cannot exceed available stock"
+                                        )
+                                      );
+                                    }
+                                    return Promise.resolve();
+                                  },
                                 },
                               ]}
                               style={{ marginBottom: 0, marginLeft: 16 }}
                             >
-                              <InputNumber min={0} style={{ width: "100px" }} />
+                              <InputNumber
+                                type="number"
+                                min={1}
+                                max={
+                                  poDetailData?.product_items[name]?.available
+                                }
+                                style={{ width: "100px" }}
+                              />
                             </Form.Item>
                           </Col>
 
@@ -349,7 +386,7 @@ export default function InvoiceSecondStep({
                               style={{ marginBottom: 0 }}
                             >
                               <InputNumber
-                                min={0.1}
+                                min={1}
                                 style={{ width: "150px", marginLeft: 16 }}
                               />
                             </Form.Item>
