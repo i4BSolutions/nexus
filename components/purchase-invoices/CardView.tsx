@@ -1,11 +1,12 @@
-import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
+import { PurchaseInvoiceDto } from "@/types/purchase-invoice/purchase-invoice.type";
+
 import {
   DollarOutlined,
   EditOutlined,
   EllipsisOutlined,
   EyeOutlined,
-  InfoCircleOutlined,
 } from "@ant-design/icons";
+
 import type { MenuProps } from "antd";
 import {
   Button,
@@ -15,36 +16,41 @@ import {
   Pagination,
   Progress,
   Row,
-  Tooltip,
+  Space,
   Typography,
 } from "antd";
-import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
+import dayjs from "dayjs";
+import Link from "antd/es/typography/Link";
 
-export default function PoCardView({
+export default function CardView({
   data,
   pagination,
   total,
   paginationChangeHandler,
 }: {
-  data: PurchaseOrderDto[];
+  data: PurchaseInvoiceDto[];
   pagination: { page: number; pageSize: number };
   total: number;
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
   const router = useRouter();
+
   return (
-    <section className="py-6 w-full max-w-[1140px]">
-      <div className="grid grid-cols-3 items-center w-full gap-5">
-        {data.map((item: PurchaseOrderDto) => {
+    <section className="py-4">
+      <div
+        className="grid gap-4"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(325px, 1fr))" }}
+      >
+        {data.map((item: PurchaseInvoiceDto) => {
           const items: MenuProps["items"] = [
             {
               label: <div className="text-sm !w-32">View</div>,
               key: "view",
               icon: <EyeOutlined />,
               onClick: () => {
-                router.push(`/purchase-orders/${item.id}`);
+                router.push(`/purchase-orders/${item.purchase_invoice_number}`);
               },
             },
             {
@@ -52,7 +58,9 @@ export default function PoCardView({
               key: "edit",
               icon: <EditOutlined />,
               onClick: () => {
-                router.push(`/purchase-orders/${item.id}/edit`);
+                router.push(
+                  `/purchase-orders/${item.purchase_invoice_number}/edit`
+                );
               },
             },
           ];
@@ -64,7 +72,7 @@ export default function PoCardView({
               <div
                 className="py-3 rounded-t-[14px]"
                 style={{
-                  background: "linear-gradient(90deg, #E6F7FF 0%, #FFF 100%)",
+                  background: "linear-gradient(90deg, #FFFBE6 0%, #FFF 100%)",
                 }}
               >
                 <Row>
@@ -73,7 +81,7 @@ export default function PoCardView({
                       style={{
                         width: 32,
                         height: 32,
-                        background: "#40A9FF",
+                        background: "#FFC53D",
                         borderRadius: "100%",
                         display: "flex",
                         justifyContent: "center",
@@ -85,15 +93,9 @@ export default function PoCardView({
                   </Col>
                   <Col span={12}>
                     <Typography.Text className="!text-xl !font-semibold">
-                      {item.purchase_order_no}
+                      {item.purchase_invoice_number}
                     </Typography.Text>
                     <div className="flex items-center gap-1.5">
-                      <Typography.Text
-                        className="text-sm"
-                        style={{ color: "rgba(0, 0, 0, 0.45)" }}
-                      >
-                        {dayjs(item.order_date).format("MMM D, YYYY")}
-                      </Typography.Text>
                       <StatusBadge status={item.status} />
                     </div>
                   </Col>
@@ -115,123 +117,125 @@ export default function PoCardView({
                     className="text-[30px] font-[500] m-0"
                     style={{ lineHeight: "32px" }}
                   >
-                    {item.amount_local.toLocaleString()} {item.currency_code}
+                    {item.total_amount_local.toLocaleString()}{" "}
+                    {item.currency_code}
                   </p>
-                  <Typography.Text type="secondary">
-                    (${item.amount_usd.toLocaleString()})
-                  </Typography.Text>
+                  <Space
+                    style={{ justifyContent: "space-between", width: "100%" }}
+                  >
+                    <Typography.Text type="secondary">
+                      (${item.total_amount_usd.toLocaleString()})
+                    </Typography.Text>
+                    <Typography.Text type="secondary">
+                      1 USD = {item.usd_exchange_rate.toLocaleString()}{" "}
+                      {item.currency_code}
+                    </Typography.Text>
+                  </Space>
                 </div>
-                <Flex
-                  justify="space-between"
-                  align="center"
-                  style={{ width: "100%" }}
-                >
-                  <div>
-                    <Typography.Text type="secondary">
-                      Contact Person
-                    </Typography.Text>
-                  </div>
-                  <div>
-                    <p className="m-0 font-medium text-base">
-                      {item.contact_person}
-                    </p>
-                  </div>
-                </Flex>
-                <Flex
-                  justify="space-between"
-                  align="center"
-                  style={{ width: "100%" }}
-                >
-                  <div>
-                    <Typography.Text type="secondary">
-                      Expected Delivery
-                    </Typography.Text>
-                  </div>
-                  <div>
-                    <p className="m-0 font-medium text-base">
-                      {dayjs(item.expected_delivery_date).format("MMM D, YYYY")}
-                    </p>
-                  </div>
-                </Flex>
-                <Row>
-                  <Col span={12}>
-                    <Typography.Text type="secondary" className="align-middle">
-                      Invoiced(USD){" "}
-                      <Tooltip title="Total amount invoiced in USD">
-                        <InfoCircleOutlined />
-                      </Tooltip>
-                    </Typography.Text>
-                    <p className="m-0 font-medium text-base">
-                      $
-                      {item.invoiced_amount
-                        ? item.invoiced_amount.toLocaleString()
-                        : 0}
-                    </p>
-                  </Col>
-                  <Col span={12}>
-                    <Typography.Text type="secondary" className="align-middle">
-                      Remaining(USD){" "}
-                      <Tooltip title="Total amount remaining in USD">
-                        <InfoCircleOutlined />
-                      </Tooltip>
-                    </Typography.Text>
-                    <p className="m-0 font-medium text-base">
-                      $
-                      {item.invoiced_amount
-                        ? item.invoiced_amount.toLocaleString()
-                        : 0}
-                    </p>
-                  </Col>
-                </Row>
-                <Row>
-                  <Progress percent={item.invoiced_amount} />
-                </Row>
-                <Row>
-                  <Col span={12}>
-                    <Typography.Text type="secondary" className="align-middle">
-                      Allocated(USD){" "}
-                      <Tooltip title="Total amount allocated in USD">
-                        <InfoCircleOutlined />
-                      </Tooltip>
-                    </Typography.Text>
 
-                    <p className="m-0 font-medium text-base">
-                      $
-                      {item.allocated_amount
-                        ? item.allocated_amount.toLocaleString()
-                        : 0}
-                    </p>
-                  </Col>
-                  <Col span={12}>
-                    <Typography.Text type="secondary" className="align-middle">
-                      Remaining(USD){" "}
-                      <Tooltip title="Total amount remaining in USD">
-                        <InfoCircleOutlined />
-                      </Tooltip>
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  style={{ width: "100%" }}
+                >
+                  <div>
+                    <Typography.Text type="secondary">
+                      Invoice Date
                     </Typography.Text>
+                  </div>
+                  <div>
                     <p className="m-0 font-medium text-base">
-                      $
-                      {item.allocated_amount
-                        ? item.allocated_amount.toLocaleString()
-                        : 0}
+                      {dayjs(item.invoice_date).format("MMM D, YYYY")}
                     </p>
-                  </Col>
-                </Row>
+                  </div>
+                </Flex>
+
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  style={{ width: "100%" }}
+                >
+                  <div>
+                    <Typography.Text type="secondary">Due Date</Typography.Text>
+                  </div>
+                  <div>
+                    <p className="m-0 font-medium text-base">
+                      {dayjs(item.due_date).format("MMM D, YYYY")}
+                    </p>
+                  </div>
+                </Flex>
+
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  style={{ width: "100%" }}
+                >
+                  <div>
+                    <Typography.Text type="secondary">
+                      Linked PO
+                    </Typography.Text>
+                  </div>
+                  <div>
+                    <Link className="m-0 font-medium text-base">
+                      {item.purchase_order_no}
+                    </Link>
+                  </div>
+                </Flex>
+
                 <Row>
-                  <Progress percent={item.allocated_amount} />
+                  <Col span={12}>
+                    <Typography.Text type="secondary">
+                      Delivery Progress
+                    </Typography.Text>
+                  </Col>
+                  <Progress percent={19} strokeColor="#52C41A" />
+                  <Space
+                    style={{
+                      width: "100%",
+                      justifyContent: "space-between",
+                      marginTop: 8,
+                    }}
+                  >
+                    <Space>
+                      <div
+                        style={{
+                          color: "#52C41A",
+                          background: "#F6FFED",
+                          border: "1px solid #B7EB8F",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 400,
+                          padding: "2px 8px",
+                          maxWidth: "fit-content",
+                        }}
+                      >
+                        10% Delivered
+                      </div>
+                    </Space>
+                    <Space>
+                      <div
+                        style={{
+                          color: "#F5222D",
+                          background: "#FFF1F0",
+                          border: "1px solid #FFA39E",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 400,
+                          padding: "2px 8px",
+                          maxWidth: "fit-content",
+                        }}
+                      >
+                        90% Pending
+                      </div>
+                    </Space>
+                  </Space>
                 </Row>
               </div>
             </div>
           );
         })}
       </div>
-
-      <Flex
-        justify="space-between"
-        align="center"
-        className="!pb-10 !pt-6"
-        style={{ alignSelf: "end" }}
-      >
+      <Flex justify="space-between" align="center" className="!pb-10 !pt-6">
         <div>
           <Typography.Text type="secondary">
             Total {total} items
