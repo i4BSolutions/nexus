@@ -311,7 +311,7 @@ const StockOut = ({ formData }: StockOutProps) => {
           name="reason"
           rules={[{ required: true, message: "Please enter a reason" }]}
         >
-          <Select placeholder="Select reason">
+          <Select allowClear placeholder="Select reason">
             <Option value="Production Consumption">
               Production Consumption
             </Option>
@@ -333,7 +333,7 @@ const StockOut = ({ formData }: StockOutProps) => {
               },
             ]}
           >
-            <Select placeholder="Select destination warehouse">
+            <Select allowClear placeholder="Select destination warehouse">
               <Option value="Warehouse B">Warehouse B</Option>
               <Option value="Warehouse C">Warehouse C</Option>
               <Option value="External Site">External Site</Option>
