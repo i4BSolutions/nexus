@@ -69,6 +69,13 @@ export default function MainLayout({
       key: "inventory",
       label: "Inventory",
       icon: <AuditOutlined />,
+      children: [
+        {
+          key: "stock-management",
+          label: "Stock Management",
+          onClick: () => router.push("/stock-management"),
+        },
+      ],
     },
     {
       key: "finance",
