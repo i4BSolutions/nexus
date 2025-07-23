@@ -70,7 +70,9 @@ export default function TableView({ data }: { data: Budget[] }) {
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        <Tag color={status === "Active" ? "green" : "red"}>{status}</Tag>
+        <Tag color={status ? "green" : "red"}>
+          {status ? "Active" : "Inactive"}
+        </Tag>
       ),
     },
     {

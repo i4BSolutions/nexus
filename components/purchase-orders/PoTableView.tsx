@@ -10,10 +10,9 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
-import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
 
-export default function TableView({
+export default function PoTableView({
   data,
   total,
   pagination,
@@ -24,8 +23,6 @@ export default function TableView({
   pagination: { page: number; pageSize: number };
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
-  const router = useRouter();
-
   const columns: TableProps<PurchaseOrderDto>["columns"] = [
     {
       title: "PURCHASE ORDER",
@@ -65,8 +62,8 @@ export default function TableView({
     },
     {
       title: "AMOUNT",
-      dataIndex: "amount",
-      key: "amount",
+      dataIndex: "amount_local",
+      key: "amount_local",
       render: (amount, record) => (
         <div>
           <div>
@@ -76,7 +73,7 @@ export default function TableView({
           </div>
           <div>
             <Typography.Text type="secondary">
-              (${amount.toLocaleString("en-US")})
+              (${record.amount_usd.toLocaleString("en-US")})
             </Typography.Text>
           </div>
         </div>
@@ -94,23 +91,11 @@ export default function TableView({
       width: 120,
       render: (_, record) => (
         <Flex justify="start" align="center" gap={4}>
-          <Button
-            style={{ padding: 0 }}
-            type="link"
-            onClick={() =>
-              router.push(`/purchase-orders/${record.purchase_order_no}`)
-            }
-          >
+          <Button style={{ padding: 0 }} type="link">
             View
           </Button>
           <Divider type="vertical" />
-          <Button
-            style={{ padding: 0 }}
-            type="link"
-            onClick={() =>
-              router.push(`/purchase-orders/${record.purchase_order_no}/edit`)
-            }
-          >
+          <Button style={{ padding: 0 }} type="link">
             Edit
           </Button>
         </Flex>
@@ -119,7 +104,7 @@ export default function TableView({
   ];
 
   return (
-    <section className="py-4">
+    <section className="py-4 w-full max-w-[1140px]">
       <Table<PurchaseOrderDto>
         columns={columns}
         dataSource={data}
@@ -130,7 +115,7 @@ export default function TableView({
         footer={() => (
           <div className="flex justify-between">
             <Typography.Text type="secondary">
-              Total {data.length} items
+              Total {total} items
             </Typography.Text>
             <Pagination
               defaultCurrent={1}
