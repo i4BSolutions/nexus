@@ -1,4 +1,4 @@
-name: Reset Staging Database
+name: Reset Database
 
 on:
   workflow_dispatch:
@@ -18,9 +18,8 @@ jobs:
 
       - name: Reset Database
         run: |
-          supabase db reset \
-            --project-ref ${{ secrets.SUPABASE_PROJECT_ID }} \
-            --db-url "postgres://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@db.${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co:5432/postgres" \
-            --yes
+          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_ID }}
+          supabase db reset --linked --force
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
