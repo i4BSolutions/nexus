@@ -30,4 +30,4 @@ jobs:
         run: supabase db push
 
       - name: Seed Database
-        run: supabase db reset --remote
+        run: supabase db reset
