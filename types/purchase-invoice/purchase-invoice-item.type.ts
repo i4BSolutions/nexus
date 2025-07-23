@@ -1,4 +1,4 @@
-export interface PurchaseOrderItemInterface {
+export interface PurchaseInvoiceItemInterface {
   id: number;
   product_name: string;
   quantity: number;

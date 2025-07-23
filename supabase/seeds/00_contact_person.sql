@@ -20,7 +20,7 @@ INSERT INTO
     public.person (name, inserted_at, updated_at)
 VALUES
     (
-        NULL,
+        'Dr. John Doe',
         '2025-07-03T03:57:09.446318',
         '2025-07-03T03:57:09.446318'
     );
@@ -47,7 +47,7 @@ INSERT INTO
     public.person (name, inserted_at, updated_at)
 VALUES
     (
-        NULL,
+        'Alyssa Cain',
         '2025-07-03T03:57:09.446318',
         '2025-07-03T03:57:09.446318'
     );
@@ -128,7 +128,7 @@ INSERT INTO
     public.person (name, inserted_at, updated_at)
 VALUES
     (
-        NULL,
+        'Matthew Sanchez',
         '2025-07-03T03:57:09.446318',
         '2025-07-03T03:57:09.446318'
     );
@@ -137,7 +137,7 @@ INSERT INTO
     public.person (name, inserted_at, updated_at)
 VALUES
     (
-        NULL,
+        'Erica Young',
         '2025-07-03T03:57:09.446318',
         '2025-07-03T03:57:09.446318'
     );
