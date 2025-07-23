@@ -14,6 +14,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: staging
 
     steps:
       - uses: actions/checkout@v4
@@ -27,4 +28,3 @@ jobs:
 
       - name: Push Database Migrations
         run: supabase db push
-      # - run: supabase db seed
