@@ -14,20 +14,43 @@ export interface PoInvoiceInterface {
 
 export interface PurchaseOrderDetailDto {
   id: number;
+  status: string;
   purchase_order_no: string;
-  supplier: string;
-  region: string;
+  supplier: {
+    id: number;
+    name: string;
+  };
+  region: {
+    id: number;
+    name: string;
+  };
+  budget: {
+    id: number;
+    name: string;
+  };
   order_date: string;
   expected_delivery_date: string;
-  budget: string;
-  currency_code: string;
+  currency: {
+    id: number;
+    currency_code: string;
+    currency_name: string;
+  };
   usd_exchange_rate: number;
   product_items: PurchaseOrderItemInterface[];
   total_amount_local: number;
   total_amount_usd: number;
-  contact_person: string;
-  sign_person?: string;
-  authorized_sign_person?: string;
+  contact_person: {
+    id: number;
+    name: string;
+  } | null;
+  sign_person?: {
+    id: number;
+    name: string;
+  } | null;
+  authorized_sign_person?: {
+    id: number;
+    name: string;
+  } | null;
   note?: string;
 }
 

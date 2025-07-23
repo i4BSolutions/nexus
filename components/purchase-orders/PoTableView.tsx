@@ -10,6 +10,7 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
 
 export default function PoTableView({
@@ -23,6 +24,8 @@ export default function PoTableView({
   pagination: { page: number; pageSize: number };
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
+  const router = useRouter();
+
   const columns: TableProps<PurchaseOrderDto>["columns"] = [
     {
       title: "PURCHASE ORDER",
@@ -91,11 +94,19 @@ export default function PoTableView({
       width: 120,
       render: (_, record) => (
         <Flex justify="start" align="center" gap={4}>
-          <Button style={{ padding: 0 }} type="link">
+          <Button
+            style={{ padding: 0 }}
+            type="link"
+            onClick={() => router.push(`/purchase-orders/${record.id}`)}
+          >
             View
           </Button>
           <Divider type="vertical" />
-          <Button style={{ padding: 0 }} type="link">
+          <Button
+            style={{ padding: 0 }}
+            type="link"
+            onClick={() => router.push(`/purchase-orders/${record.id}/edit`)}
+          >
             Edit
           </Button>
         </Flex>

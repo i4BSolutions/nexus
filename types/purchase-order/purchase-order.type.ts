@@ -47,22 +47,3 @@ export interface PurchaseOrderResponse {
     allocated_percentage: number;
   };
 }
-
-export interface GetPurchaseOrderDetailDto {
-  id: number;
-  purchase_order_no: string;
-  supplier: string;
-  region: string;
-  order_date: string;
-  expected_delivery_date: string;
-  budget: string;
-  currency_code: string;
-  usd_exchange_rate: number;
-  product_items: PurchaseOrderItemInterface[];
-  total_amount_local: number;
-  total_amount_usd: number;
-  contact_person: string;
-  sign_person?: string;
-  authorized_sign_person?: string;
-  note?: string;
-}
