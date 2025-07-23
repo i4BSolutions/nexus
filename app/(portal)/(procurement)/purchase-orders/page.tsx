@@ -20,9 +20,9 @@ import {
 import { Button, Flex, Input, Segmented, Select, Spin, Typography } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
-
-import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
 
 export default function PurchaseOrdersPage() {
   const router = useRouter();
@@ -34,9 +34,8 @@ export default function PurchaseOrdersPage() {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const router = useRouter();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
     "purchase-orders",
@@ -175,59 +174,48 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <section className="px-6">
-      <Breadcrumbs
-        items={[{ title: "Home", href: "/" }, { title: "Purchase Orders" }]}
-      />
-      <HeaderSection
-        title="Purchase Orders"
-        description="Manage and track all purchase orders"
-        icon={<ShoppingCartOutlined />}
-        onAddNew={() => {
-          setShowCreateModal(true);
-        }}
-        buttonText="New Purchase Order"
-        buttonIcon={<PlusOutlined />}
-      />
-
-      {/* Create Options Modal */}
-      <CreateOptionsModal
-        open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-      />
-=========
-        icon={<ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />}
-        onAddNew={() => router.push("/purchase-orders/create")}
-        buttonText="New Purchase Order"
-        buttonIcon={<PlusOutlined />}
-      />
-      <StatisticsCards stats={statItems} />
-      <Flex justify="center" align="center" gap={12}>
-        <Input.Search
-          placeholder="Search By PO Number"
-          allowClear
-          onSearch={onSearchHandler}
+    <section className="px-6 grid place-items-center w-full">
+      <div className="w-full max-w-[1140px]">
+        <Breadcrumbs
+          items={[{ title: "Home", href: "/" }, { title: "Purchase Orders" }]}
         />
-        {viewMode === "Card" ? (
-          <>
-            <Flex justify="center" align="center" gap={12}>
-              <span>Sort:</span>
-              <Select
-                defaultValue="Date (Newest First)"
-                style={{ width: 160 }}
-                onChange={onSortHandler}
-                options={[
-                  {
-                    value: "Date (Newest First)",
-                    label: "Date (Newest First)",
-                  },
-                  {
-                    value: "Date (Oldest First)",
-                    label: "Date (Oldest First)",
-                  },
-                ]}
-              />
-            </Flex>
+        <HeaderSection
+          title="Purchase Orders"
+          description="Manage and track all purchase orders"
+          icon={
+            <ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />
+          }
+          onAddNew={() => setShowCreateModal(true)}
+          buttonText="New Purchase Order"
+          buttonIcon={<PlusOutlined />}
+        />
+        <StatisticsCards stats={statItems} />
+        <Flex justify="center" align="center" gap={12}>
+          <Input.Search
+            placeholder="Search By PO Number"
+            allowClear
+            onSearch={onSearchHandler}
+          />
+          {viewMode === "Card" ? (
+            <>
+              <Flex justify="center" align="center" gap={12}>
+                <span>Sort:</span>
+                <Select
+                  defaultValue="Date (Newest First)"
+                  style={{ width: 160 }}
+                  onChange={onSortHandler}
+                  options={[
+                    {
+                      value: "Date (Newest First)",
+                      label: "Date (Newest First)",
+                    },
+                    {
+                      value: "Date (Oldest First)",
+                      label: "Date (Oldest First)",
+                    },
+                  ]}
+                />
+              </Flex>
 
               <div className="bg-[#D9D9D9] w-[1px] h-7" />
             </>
