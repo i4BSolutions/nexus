@@ -28,3 +28,6 @@ jobs:
 
       - name: Push Database Migrations
         run: supabase db push
+
+      - name: Seed Database
+        run: supabase db seed
