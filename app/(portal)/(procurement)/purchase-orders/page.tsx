@@ -1,5 +1,6 @@
 "use client";
 
+import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
 import PoCardView from "@/components/purchase-orders/PoCardView";
 import PoTableView from "@/components/purchase-orders/PoTableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -21,8 +22,7 @@ import { Button, Flex, Input, Segmented, Select, Spin, Typography } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
+import { useEffect, useState } from "react";
 
 export default function PurchaseOrdersPage() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function PurchaseOrdersPage() {
       page: pagination.page,
       pageSize: pagination.pageSize,
       sort: sortOrder
-        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
+        ? `id_${sortOrder === "ascend" ? "asc" : "desc"}`
         : undefined,
       status: status,
       q: searchText,

@@ -1,24 +1,21 @@
 import { getAuthenticatedUser } from "@/helper/getUser";
-import { createClient } from "@/lib/supabase/server";
-
-import { NextRequest, NextResponse } from "next/server";
-
-import { ApiResponse } from "@/types/shared/api-response-type";
-import { GetPurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order.type";
-
 import { error, success } from "@/lib/api-response";
+import { createClient } from "@/lib/supabase/server";
+import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { NextRequest, NextResponse } from "next/server";
 
 // Helper: Fetch purchase order with joined data
 async function fetchPurchaseOrderWithJoins(supabase: any, idStr: string) {
   const selectFields = [
     "*",
-    "supplier:supplier_id(name, contact_person, email, phone, address, status)",
-    "region:region_id(name)",
-    "currency:currency_id(currency_code, currency_name)",
-    "contact_person:contact_person_id(name)",
-    "sign_person:sign_person_id(name)",
-    "authorized_signer:authorized_signer_id(name)",
-    "budget:budget_id(budget_name, project_name, description, status)",
+    "supplier:supplier_id(id, name, contact_person, email, phone, address, status)",
+    "region:region_id(id, name)",
+    "currency:currency_id(id, currency_code, currency_name)",
+    "contact_person:contact_person_id(id, name)",
+    "sign_person:sign_person_id(id, name)",
+    "authorized_signer:authorized_signer_id(id, name)",
+    "budget:budget_id(id, budget_name, project_name, description, status)",
   ];
 
   return await supabase
@@ -32,7 +29,7 @@ async function fetchPurchaseOrderWithJoins(supabase: any, idStr: string) {
 async function fetchPurchaseOrderItems(supabase: any, idStr: string) {
   return await supabase
     .from("purchase_order_items")
-    .select("*, product:product_id(name, sku, description)")
+    .select("*, product:product_id(id, name, sku, description)")
     .eq("purchase_order_id", idStr);
 }
 
@@ -41,7 +38,8 @@ function formatPurchaseOrderItems(items: any[], usdExchangeRate: number) {
   return (
     items?.map((item) => ({
       id: item.id,
-      product_name: item.product?.name || `Product ID: ${item.product_id}`,
+      product: item.product.id,
+      product_name: item.product?.name,
       quantity: item.quantity,
       unit_price_local: item.unit_price_local,
       unit_price_usd: item.unit_price_local / usdExchangeRate,
@@ -68,23 +66,52 @@ function buildPurchaseOrderDetailDto(
   formattedItems: any[],
   totalAmountLocal: number,
   totalAmountUSD: number
-): GetPurchaseOrderDetailDto {
+): PurchaseOrderDetailDto {
   return {
     id: purchaseOrder.id,
+    status: purchaseOrder.status,
     purchase_order_no: purchaseOrder.purchase_order_no,
-    supplier: purchaseOrder.supplier?.name || "Unknown Supplier",
-    region: purchaseOrder.region?.name || "Unknown Region",
+    supplier: {
+      id: purchaseOrder.supplier?.id || 0,
+      name: purchaseOrder.supplier?.name || "Unknown Supplier",
+    },
+    region: {
+      id: purchaseOrder.region?.id || 0,
+      name: purchaseOrder.region?.name || "Unknown Region",
+    },
     order_date: purchaseOrder.order_date,
     expected_delivery_date: purchaseOrder.expected_delivery_date,
-    budget: purchaseOrder.budget?.budget_name || "Unknown Budget",
-    currency_code: purchaseOrder.currency?.currency_code || "USD",
+    budget: {
+      id: purchaseOrder.budget?.id || 0,
+      name: purchaseOrder.budget?.budget_name || "Unknown Budget",
+    },
+    currency: {
+      id: purchaseOrder.currency?.id,
+      currency_code: purchaseOrder.currency?.currency_code,
+      currency_name: purchaseOrder.currency?.currency_name,
+    },
     usd_exchange_rate: purchaseOrder.usd_exchange_rate,
     product_items: formattedItems,
     total_amount_local: totalAmountLocal,
     total_amount_usd: totalAmountUSD,
-    contact_person: purchaseOrder.contact_person?.name || "Not specified",
-    sign_person: purchaseOrder.sign_person?.name,
-    authorized_sign_person: purchaseOrder.authorized_signer?.name,
+    contact_person: purchaseOrder.contact_person
+      ? {
+          id: purchaseOrder.contact_person.id,
+          name: purchaseOrder.contact_person.name,
+        }
+      : null,
+    sign_person: purchaseOrder.sign_person
+      ? {
+          id: purchaseOrder.sign_person?.id,
+          name: purchaseOrder.sign_person?.name,
+        }
+      : null,
+    authorized_sign_person: purchaseOrder.authorized_signer
+      ? {
+          id: purchaseOrder.authorized_signer?.id,
+          name: purchaseOrder.authorized_signer?.name,
+        }
+      : null,
     note: purchaseOrder.note,
   };
 }
@@ -98,7 +125,7 @@ function buildPurchaseOrderDetailDto(
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
-): Promise<NextResponse<ApiResponse<GetPurchaseOrderDetailDto | null>>> {
+): Promise<NextResponse<ApiResponse<PurchaseOrderDetailDto | null>>> {
   const supabase = await createClient();
   const { id: idStr } = await context.params;
 
@@ -106,14 +133,14 @@ export async function GET(
   const { data: purchaseOrder, error: poError } =
     await fetchPurchaseOrderWithJoins(supabase, idStr);
 
+  if (poError) {
+    return NextResponse.json(error(poError.message), { status: 500 });
+  }
+
   if (!purchaseOrder) {
     return NextResponse.json(error("Purchase order not found"), {
       status: 404,
     });
-  }
-
-  if (poError) {
-    return NextResponse.json(error(poError.message), { status: 500 });
   }
 
   // Get purchase order items with product information
@@ -145,7 +172,7 @@ export async function GET(
     totalAmountLocal,
     totalAmountUSD
   );
-
+  console.log("Purchase Order Detail:", result);
   return NextResponse.json(success(result), { status: 200 });
 }
 
@@ -183,14 +210,145 @@ async function createPurchaseOrderAuditLogEntries(
     const { error: auditError } = await supabase
       .from("pruchase_orders_audit_log")
       .insert(auditEntries);
+
     if (auditError) {
-      console.error("Failed to log purchase order audit entries:", auditError);
+      return NextResponse.json(error(auditError.message), { status: 500 });
     }
   }
 }
 
+// Helper function to create audit log entries for purchase order item updates
+async function createPurchaseOrderItemAuditLogEntries(
+  supabase: any,
+  purchaseOrderId: number,
+  userId: string,
+  currentItems: any[], // Array of current DB items
+  updatedItems: any[] // Array of updated payload items
+) {
+  const auditEntries: Array<{
+    purchase_order_id: number;
+    purchase_order_item_id: number;
+    changed_by: string;
+    changed_field: string;
+    old_values: string;
+    new_values: string;
+    changed_at?: string;
+  }> = [];
+
+  for (const updatedItem of updatedItems) {
+    const currentItem = currentItems.find((ci) => ci.id === updatedItem.id);
+    if (!currentItem) continue;
+    for (const key of Object.keys(updatedItem)) {
+      if (
+        key !== "updated_at" &&
+        key !== "id" &&
+        updatedItem[key] !== undefined &&
+        currentItem[key] !== updatedItem[key]
+      ) {
+        auditEntries.push({
+          purchase_order_id: purchaseOrderId,
+          purchase_order_item_id: updatedItem.id,
+          changed_by: userId,
+          changed_field: key,
+          old_values: String(currentItem[key]),
+          new_values: String(updatedItem[key]),
+          changed_at: new Date().toISOString(),
+        });
+      }
+    }
+  }
+
+  if (auditEntries.length > 0) {
+    const { error: auditError } = await supabase
+      .from("pruchase_orders_item_audit_log")
+      .insert(auditEntries);
+
+    if (auditError) {
+      return NextResponse.json(error(auditError.message), { status: 500 });
+    }
+  }
+}
+
+// Helper function to update purchase order items
+async function updatePurchaseOrderItems(
+  supabase: any,
+  purchaseOrderId: string,
+  items: Array<{
+    id?: number; // optional for new items
+    product_id: number;
+    quantity: number;
+    unit_price_local: number;
+  }>
+) {
+  const { data: existingItems, error: fetchError } = await supabase
+    .from("purchase_order_items")
+    .select("*") // select all fields for audit logging
+    .eq("purchase_order_id", purchaseOrderId);
+
+  if (fetchError) {
+    throw new Error(fetchError.message);
+  }
+
+  const updatedItems: any[] = [];
+  const newItems: any[] = [];
+
+  const existingIds = new Set(
+    (existingItems || []).map((item: any) => item.id)
+  );
+
+  for (const item of items) {
+    const isExisting = item.id && existingIds.has(item.id);
+
+    if (isExisting) {
+      const updateObj = {
+        ...(item.product_id !== undefined && { product_id: item.product_id }),
+        ...(item.quantity !== undefined && { quantity: item.quantity }),
+        ...(item.unit_price_local !== undefined && {
+          unit_price_local: item.unit_price_local,
+        }),
+      };
+
+      if (Object.keys(updateObj).length > 0) {
+        const { error: updateError } = await supabase
+          .from("purchase_order_items")
+          .update(updateObj)
+          .eq("id", item.id);
+
+        if (updateError) throw new Error(updateError.message);
+
+        updatedItems.push({ ...item, id: item.id });
+      }
+    } else {
+      const newItem = {
+        purchase_order_id: Number(purchaseOrderId),
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price_local: item.unit_price_local,
+      };
+
+      const { data: inserted, error: insertError } = await supabase
+        .from("purchase_order_items")
+        .insert([newItem])
+        .select();
+
+      if (insertError) throw new Error(insertError.message);
+
+      if (inserted && inserted.length > 0) newItems.push(inserted[0]);
+    }
+  }
+
+  return { updatedItems, newItems, existingItems };
+}
+
 /**
  * This API route updates a purchase order by ID.
+ *
+ * Request body can include:
+ * - reason: string (required) - Reason for the update
+ * - items: Array<{product_id: number, quantity: number, unit_price_local: number}> (optional) - Updated items
+ * - Any of the updatable fields: supplier_id, region_id, budget_id, order_date, currency_id,
+ *   usd_exchange_rate, contact_person_id, sign_person_id, authorized_signer_id, status, note, expected_delivery_date
+ *
  * @param req - NextRequest object
  * @param context - Context object
  * @returns NextResponse ApiResponse<GetPurchaseOrderDetailDto | null>
@@ -198,7 +356,7 @@ async function createPurchaseOrderAuditLogEntries(
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
-): Promise<NextResponse<ApiResponse<GetPurchaseOrderDetailDto | null>>> {
+): Promise<NextResponse<ApiResponse<PurchaseOrderDetailDto | null>>> {
   const supabase = await createClient();
   const { id: idStr } = await context.params;
   const body = await req.json();
@@ -295,7 +453,44 @@ export async function PUT(
     { ...currentOrder, ...updateData }
   );
 
-  // Fetch the updated purchase order with joined data (reuse GET logic, but include budget join)
+  // Fetch current items before update
+  const { data: currentItems, error: currentItemsError } = await supabase
+    .from("purchase_order_items")
+    .select("*")
+    .eq("purchase_order_id", idStr);
+
+  if (currentItemsError) {
+    return NextResponse.json(error(currentItemsError.message), { status: 500 });
+  }
+
+  // Update purchase order items if provided in the body
+  if (body.items && Array.isArray(body.items)) {
+    try {
+      await updatePurchaseOrderItems(supabase, idStr, body.items);
+
+      // Audit log: log all changed fields for items
+      await createPurchaseOrderItemAuditLogEntries(
+        supabase,
+        Number(idStr),
+        user?.id || "system",
+        currentItems,
+        body.items
+      );
+    } catch (updateError: unknown) {
+      const errorMessage =
+        updateError instanceof Error
+          ? updateError.message
+          : "Unknown error occurred";
+      return NextResponse.json(
+        error(`Failed to update items: ${errorMessage}`),
+        {
+          status: 500,
+        }
+      );
+    }
+  }
+
+  // Fetch the updated purchase order with joined data
   const { data: purchaseOrder, error: poError } =
     await fetchPurchaseOrderWithJoins(supabase, idStr);
 
