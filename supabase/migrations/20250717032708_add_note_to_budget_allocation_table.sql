@@ -1,5 +1,3 @@
-alter table "public"."budgets" drop constraint "budgets_status_check";
-
 alter table "public"."budget_allocation" add column "created_by" uuid;
 
 alter table "public"."budget_allocation" add column "note" text;
