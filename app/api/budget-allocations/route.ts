@@ -26,40 +26,49 @@ export async function GET(
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
 
-  let query = supabase
+  let paginatedQuery = supabase
     .from("budget_allocation")
     .select("*", { count: "exact" })
     .neq("status", "Canceled");
 
-  if (q) {
-    query = query.ilike("allocation_number", `%${q}%`);
-  }
-
-  if (status) {
-    query = query.eq("status", status);
-  }
+  if (q) paginatedQuery = paginatedQuery.ilike("allocation_number", `%${q}%`);
+  if (status) paginatedQuery = paginatedQuery.eq("status", status);
+  if (startDate)
+    paginatedQuery = paginatedQuery.gte("allocation_date", startDate);
+  if (endDate) paginatedQuery = paginatedQuery.lte("allocation_date", endDate);
 
   if (sort === "equivalent_asc") {
-    query = query.order("equivalent", { ascending: true });
+    paginatedQuery = paginatedQuery.order("equivalent", { ascending: true });
   } else if (sort === "equivalent_desc") {
-    query = query.order("equivalent", { ascending: false });
+    paginatedQuery = paginatedQuery.order("equivalent", { ascending: false });
   } else {
-    query = query.order("allocation_date", { ascending: false });
+    paginatedQuery = paginatedQuery.order("allocation_date", {
+      ascending: false,
+    });
   }
 
-  if (startDate) {
-    query = query.gte("allocation_date", startDate);
-  }
-  if (endDate) {
-    query = query.lte("allocation_date", endDate);
-  }
+  paginatedQuery = paginatedQuery.range(from, to);
 
-  query = query.range(from, to);
-
-  const { data, count, error: fetchError } = await query;
+  const { data, count, error: fetchError } = await paginatedQuery;
 
   if (fetchError) {
     return NextResponse.json(error(fetchError.message), { status: 500 });
+  }
+
+  let statsQuery = supabase
+    .from("budget_allocation")
+    .select("*")
+    .neq("status", "Canceled");
+
+  if (q) statsQuery = statsQuery.ilike("allocation_number", `%${q}%`);
+  if (status) statsQuery = statsQuery.eq("status", status);
+  if (startDate) statsQuery = statsQuery.gte("allocation_date", startDate);
+  if (endDate) statsQuery = statsQuery.lte("allocation_date", endDate);
+
+  const { data: statsData, error: statsError } = await statsQuery;
+
+  if (statsError) {
+    return NextResponse.json(error(statsError.message), { status: 500 });
   }
 
   // Flatten all file paths from transfer_evidence arrays
@@ -98,13 +107,18 @@ export async function GET(
         : [],
     })) || [];
 
-  const filteredStats = items.reduce(
+  const statistics = statsData?.reduce(
     (acc, curr) => {
       const usd =
-        curr.equivalent_usd || curr.allocation_amount / curr.exchange_rate_usd;
+        curr.equivalent_usd ||
+        (curr.exchange_rate_usd
+          ? curr.allocation_amount / curr.exchange_rate_usd
+          : 0);
+
       acc.totalAllocations += 1;
-      acc.totalAllocatedUSD += usd;
+      if (curr.status === "Approved") acc.totalAllocatedUSD += usd;
       if (curr.status === "Pending") acc.totalPendingUSD += usd;
+
       return acc;
     },
     {
@@ -112,7 +126,11 @@ export async function GET(
       totalAllocatedUSD: 0,
       totalPendingUSD: 0,
     }
-  );
+  ) || {
+    totalAllocations: 0,
+    totalAllocatedUSD: 0,
+    totalPendingUSD: 0,
+  };
 
   // Stats
   // const allQuery = supabase.from("budget_allocation").select("*");
@@ -132,7 +150,7 @@ export async function GET(
     total: count || 0,
     page,
     pageSize,
-    statistics: filteredStats,
+    statistics: statistics,
   };
 
   return NextResponse.json(success(response, "Budget allocations retrieved"), {
