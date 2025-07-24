@@ -1,3 +1,4 @@
+import { getAuthenticatedUser } from "@/helper/getUser";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { error, success } from "@/lib/api-response";
@@ -7,6 +8,9 @@ export async function POST(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse<any> | ApiResponse<null>>> {
   const supabase = await createClient();
+
+  const user = await getAuthenticatedUser(supabase);
+
   const body = await req.json();
 
   const {
@@ -92,6 +96,7 @@ export async function POST(
         warehouse_id,
         quantity,
         invoice_id,
+        user_id: user.id,
         note: `Stocked in from invoice line item`,
       },
     ])

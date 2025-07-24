@@ -15,6 +15,8 @@ create table "public"."stock_transaction" (
     "type" text not null,
     "destination_warehouse_id" bigint,
     "note" text,
+    "reason" text null,
+    "user_id" uuid not null
     "created_at" timestamp with time zone not null default now(),
     "invoice_id" bigint not null
 );
@@ -53,6 +55,10 @@ alter table "public"."stock_transaction" validate constraint "stock_transaction_
 alter table "public"."stock_transaction" add constraint "stock_transaction_warehouse_id_fkey" FOREIGN KEY (warehouse_id) REFERENCES warehouse(id) not valid;
 
 alter table "public"."stock_transaction" validate constraint "stock_transaction_warehouse_id_fkey";
+
+alter table "public"."stock_transaction" add constraint "stock_transaction_user_id_fkey" FOREIGN KEY (user_id) REFERENCES profiles(id) not valid;
+
+alter table "public"."stock_transaction" validate constraint "stock_transaction_user_id_fkey";
 
 grant delete on table "public"."inventory" to "anon";
 

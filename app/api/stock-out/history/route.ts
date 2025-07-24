@@ -1,4 +1,3 @@
-// File: /app/api/stock-out/history/route.ts
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { error, success } from "@/lib/api-response";

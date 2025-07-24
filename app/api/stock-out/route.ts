@@ -1,4 +1,4 @@
-// File: /app/api/stock-out/route.ts
+import { getAuthenticatedUser } from "@/helper/getUser";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { error, success } from "@/lib/api-response";
@@ -8,6 +8,9 @@ export async function POST(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse<null>>> {
   const supabase = await createClient();
+
+  const user = await getAuthenticatedUser(supabase);
+
   const body = await req.json();
 
   const {
@@ -68,6 +71,7 @@ export async function POST(
       type: "OUT",
       reason,
       invoice_id,
+      user_id: user.id,
       destination_warehouse_id:
         reason === "Warehouse Transfer" ? destination_warehouse_id : null,
       note,
