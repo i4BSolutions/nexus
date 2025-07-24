@@ -67,6 +67,10 @@ alter table "public"."budgets" add constraint "budgets_planned_amount_check" CHE
 
 alter table "public"."budgets" validate constraint "budgets_planned_amount_check";
 
+alter table "public"."budgets" add constraint "budgets_status_check" CHECK ((status = ANY (ARRAY['Active'::text, 'Inactive'::text]))) not valid;
+
+alter table "public"."budgets" validate constraint "budgets_status_check";
+
 alter table "public"."budgets" add constraint "chk_valid_dates" CHECK ((start_date <= end_date)) not valid;
 
 alter table "public"."budgets" validate constraint "chk_valid_dates";
