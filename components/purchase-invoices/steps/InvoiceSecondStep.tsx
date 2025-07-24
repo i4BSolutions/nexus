@@ -342,7 +342,13 @@ export default function InvoiceSecondStep({
                                 },
                                 {
                                   type: "number",
-                                  min: 1,
+                                  min: form.getFieldValue([
+                                    "invoice_items",
+                                    name,
+                                    "checked",
+                                  ])
+                                    ? 1
+                                    : 0,
                                   message: "Quantity must be at least 1",
                                 },
                                 {
@@ -369,7 +375,15 @@ export default function InvoiceSecondStep({
                             >
                               <InputNumber
                                 type="number"
-                                min={1}
+                                min={
+                                  form.getFieldValue([
+                                    "invoice_items",
+                                    name,
+                                    "checked",
+                                  ])
+                                    ? 1
+                                    : 0
+                                }
                                 max={
                                   poDetailData?.product_items[name]?.available
                                 }

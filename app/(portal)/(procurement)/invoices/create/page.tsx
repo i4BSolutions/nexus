@@ -102,7 +102,7 @@ export default function InvoiceCreatePage() {
         invoice_items: poDetailData.product_items.map((item) => ({
           id: item.id,
           product: item.product,
-          invoice_quantity: item.quantity,
+          invoice_quantity: item.available,
           invoice_unit_price_local: item.unit_price_local,
           checked: false,
         })),
@@ -186,7 +186,7 @@ export default function InvoiceCreatePage() {
         setCurrentStep(currentStep + 1);
       }
     } catch {
-      message.error("Please fill in the required fields.");
+      message.error("Please check field level validations!");
     }
   };
 
