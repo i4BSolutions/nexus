@@ -1,6 +1,7 @@
 export interface PurchaseInvoiceItemInterface {
   id: number;
   product_name: string;
+  product_sku?: string;
   quantity: number;
   unit_price_local: number;
   unit_price_usd: number;
@@ -10,5 +11,5 @@ export interface PurchaseInvoiceItemInterface {
   po_unit_price_usd?: number;
   total_ordered?: number;
   total_available?: number;
-  total_remaining_to_stock_in?: number;
+  remaining_to_stock_in?: number;
 }
