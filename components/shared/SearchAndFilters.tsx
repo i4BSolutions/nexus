@@ -12,7 +12,7 @@ type Props = {
   searchPlaceholder?: string;
   showSearch?: boolean;
   onSearch?: (text: string) => void;
-  filters: FilterOption[];
+  filters?: FilterOption[];
   onFilterChange: (key: string, value?: string) => void;
   onClearFilters: () => void;
 };
@@ -35,37 +35,43 @@ const SearchAndFilters = ({
         />
       )}
     </Col>
-    <Col span={12} style={{ textAlign: "right" }}>
-      <Space>
-        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-          Filter(s):
-        </Typography.Text>
+    {filters ? (
+      <>
+        <Col span={12} style={{ textAlign: "right" }}>
+          <Space>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              Filter(s):
+            </Typography.Text>
 
-        {filters.map(({ key, label, placeholder, value, options }) => (
-          <Select
-            key={key}
-            allowClear
-            placeholder={placeholder || `Select ${label || key}`}
-            value={value}
-            style={{ width: 140, textAlign: "left" }}
-            onChange={(val) => onFilterChange(key, val)}
-          >
-            {options.map((opt) => (
-              <Select.Option key={opt.value} value={opt.value}>
-                {opt.label}
-              </Select.Option>
+            {filters?.map(({ key, label, placeholder, value, options }) => (
+              <Select
+                key={key}
+                allowClear
+                placeholder={placeholder || `Select ${label || key}`}
+                value={value}
+                style={{ width: 140, textAlign: "left" }}
+                onChange={(val) => onFilterChange(key, val)}
+              >
+                {options.map((opt) => (
+                  <Select.Option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </Select.Option>
+                ))}
+              </Select>
             ))}
-          </Select>
-        ))}
 
-        <Typography.Text
-          onClick={onClearFilters}
-          style={{ fontSize: 12, color: "#1890FF", cursor: "pointer" }}
-        >
-          Clear Filter(s)
-        </Typography.Text>
-      </Space>
-    </Col>
+            <Typography.Text
+              onClick={onClearFilters}
+              style={{ fontSize: 12, color: "#1890FF", cursor: "pointer" }}
+            >
+              Clear Filter(s)
+            </Typography.Text>
+          </Space>
+        </Col>
+      </>
+    ) : (
+      <></>
+    )}
   </Row>
 );
 

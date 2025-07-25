@@ -3,16 +3,40 @@
 import StockIn from "@/components/inventory/stock-management/StockIn";
 import StockOut from "@/components/inventory/stock-management/StockOut";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import { useCreate } from "@/hooks/react-query/useCreate";
+import { useList } from "@/hooks/react-query/useList";
+import { PurchaseInvoiceResponse } from "@/types/purchase-invoice/purchase-invoice.type";
+import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
 import { SwapOutlined } from "@ant-design/icons";
 import { Space, Tabs, TabsProps, Typography } from "antd";
-import React from "react";
+import { useRouter } from "next/navigation";
 
 const StockManagementPage = () => {
+  const router = useRouter();
+  const { data: piData, isLoading: piLoading } =
+    useList<PurchaseInvoiceResponse>("purchase-invoices");
+
+  const { data: warehousesData, isLoading: warehouseLoading } =
+    useList<WarehouseResponse>("warehouses");
+
+  const mutateStockIn = useCreate("stock-in");
+
   const tabItems: TabsProps["items"] = [
     {
       key: "stock-in",
       label: "Stock In",
-      children: <StockIn />,
+      children: (
+        <StockIn
+          invoices={piData}
+          invoiceLoading={piLoading}
+          warehouses={warehousesData?.items}
+          warehouseLoading={warehouseLoading}
+          onSubmit={(payload: any) => {
+            mutateStockIn.mutateAsync(payload);
+          }}
+          mutateStockInLoading={mutateStockIn.isPending}
+        />
+      ),
     },
     {
       key: "stock-out",
