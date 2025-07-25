@@ -124,7 +124,8 @@ export async function GET(
         product_id,
         quantity,
         unit_price_local
-      )
+      ),
+      supplier:supplier_id(name)
     `,
     { count: "exact" }
   );
@@ -179,6 +180,7 @@ export async function GET(
         (item.quantity * item.unit_price_local) / order.usd_exchange_rate,
       0
     ),
+    supplier: order.supplier.name,
     invoiced_amount: 0,
     allocated_amount: 0,
   }));
