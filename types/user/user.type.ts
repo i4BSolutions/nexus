@@ -20,3 +20,19 @@ export type UserFieldType = {
   view_dashboard: boolean;
   manage_users: boolean;
 };
+
+export type UserInterface = {
+  id: string;
+  email: string;
+  full_name: string;
+  username: string;
+  department: string;
+  created_at: string;
+};
+
+export type UsersResponse = {
+  dto: UserInterface[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
