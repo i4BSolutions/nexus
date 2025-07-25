@@ -1,6 +1,9 @@
+import { error, success } from "@/lib/api-response";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { UsersResponse } from "@/types/user/user.type";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Handles the creation of a new user in the system.
@@ -132,4 +135,75 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function GET(
+  req: NextRequest
+): Promise<NextResponse<ApiResponse<UsersResponse> | ApiResponse<null>>> {
+  const { searchParams } = new URL(req.url);
+
+  // pagination
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const pageSizeParam = searchParams.get("pageSize") || "10";
+  const pageSize = parseInt(pageSizeParam, 10);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const filterParams = searchParams.get("department");
+  const search = searchParams.get("search") || "";
+  const sortParam = searchParams.get("sort");
+
+  const supabase = await createClient();
+  let query = supabase.from("user_profiles").select("*", { count: "exact" });
+
+  if (search) {
+    query = query.or(
+      `full_name.ilike.%${search}%,username.ilike.%${search}%,email.ilike.%${search}%`
+    );
+  }
+
+  if (filterParams) {
+    query = query.eq("department", filterParams);
+  }
+
+  query = query.order("created_at", {
+    ascending: sortParam === "created_at_asc",
+  });
+
+  if (typeof to === "number") {
+    query = query.range(from, to);
+  }
+
+  const { data, count, error: usersError } = await query;
+
+  if (usersError) {
+    return NextResponse.json(
+      error("Failed to retrieve users: " + usersError.message, 500),
+      { status: 500 }
+    );
+  }
+
+  const userProfiles =
+    data?.map((user) => ({
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      username: user.username,
+      department: user.department,
+      created_at: user.created_at,
+    })) || [];
+
+  const response = {
+    dto: userProfiles,
+    total: count || 0,
+    page,
+    pageSize,
+  };
+
+  return NextResponse.json(
+    success<UsersResponse>(response, "Users retrieved successfully"),
+    {
+      status: 200,
+    }
+  );
 }
