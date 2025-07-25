@@ -36,3 +36,11 @@ export type UsersResponse = {
   page: number;
   pageSize: number;
 };
+
+export type UserFilterParams = {
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+  department?: number;
+  search?: string;
+};
