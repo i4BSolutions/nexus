@@ -32,18 +32,28 @@ async function fetchPurchaseInvoiceItemsById(supabase: any, idStr: string) {
 }
 
 // Map the purchase invoice items
-function mapPurchaseInvoiceItems(items: any[], usdExchangeRate: number) {
-  return items.map((item) => ({
-    id: item.id,
-    product_id: item.product_id,
-    product_name: item.product.name,
-    product_sku: item.product.sku,
-    quantity: item.quantity,
-    unit_price_local: item.unit_price_local,
-    unit_price_usd: item.unit_price_local / usdExchangeRate,
-    sub_total_local: item.unit_price_local * item.quantity,
-    sub_total_usd: (item.unit_price_local * item.quantity) / usdExchangeRate,
-  }));
+function mapPurchaseInvoiceItems(
+  items: any[],
+  usdExchangeRate: number,
+  stockedInMap: Record<number, number>
+) {
+  return items.map((item) => {
+    const alreadyIn = stockedInMap[item.id] || 0;
+    const remaining = item.quantity - alreadyIn;
+
+    return {
+      id: item.id,
+      product_id: item.product_id,
+      product_name: item.product.name,
+      product_sku: item.product.sku,
+      quantity: item.quantity,
+      unit_price_local: item.unit_price_local,
+      unit_price_usd: item.unit_price_local / usdExchangeRate,
+      sub_total_local: item.unit_price_local * item.quantity,
+      sub_total_usd: (item.unit_price_local * item.quantity) / usdExchangeRate,
+      remaining_to_stock_in: remaining, // ✅ add this field per item
+    };
+  });
 }
 
 // Format the purchase invoice items
@@ -110,6 +120,30 @@ export async function GET(
     });
   }
 
+  // Step 1.1: Fetch stock-in transactions for invoice line items
+  const { data: stockIns, error: stockInError } = await supabase
+    .from("stock_transaction")
+    .select("invoice_line_item_id, quantity")
+    .eq("type", "IN")
+    .in(
+      "invoice_line_item_id",
+      piItems.map((item: any) => item.id)
+    );
+
+  if (stockInError) {
+    return NextResponse.json(error("Failed to fetch stock-in data"), {
+      status: 500,
+    });
+  }
+
+  // Step 1.2: Build a map of total stocked in per invoice_line_item
+  const stockedInMap: Record<number, number> = {};
+  for (const tx of stockIns || []) {
+    const id = tx.invoice_line_item_id;
+    if (!stockedInMap[id]) stockedInMap[id] = 0;
+    stockedInMap[id] += tx.quantity;
+  }
+
   // Step 2: Get Invoice
   const { data: invoice, error: invoiceError } =
     await fetchPurchaseInvoiceWithJoins(supabase, idStr);
@@ -165,7 +199,8 @@ export async function GET(
   // Step 7: Map and format current invoice items
   const mappedItems = mapPurchaseInvoiceItems(
     piItems,
-    invoice.exchange_rate_to_usd
+    invoice.exchange_rate_to_usd,
+    stockedInMap
   );
 
   const formattedItems = formattedPurchaseInvoiceItems(

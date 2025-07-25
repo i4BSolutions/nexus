@@ -10,4 +10,5 @@ export interface PurchaseInvoiceItemInterface {
   po_unit_price_usd?: number;
   total_ordered?: number;
   total_available?: number;
+  total_remaining_to_stock_in?: number;
 }
