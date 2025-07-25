@@ -3,8 +3,18 @@
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import UserCard from "@/components/users/UserCard";
+import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
+import { UserFilterParams, UsersResponse } from "@/types/user/user.type";
 import { PlusOutlined, TeamOutlined } from "@ant-design/icons";
-import { Button, Flex, Input, Select } from "antd";
+import {
+  Button,
+  Flex,
+  Input,
+  Pagination,
+  Select,
+  Spin,
+  Typography,
+} from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
@@ -54,17 +64,27 @@ const dummyUsers = [
 ];
 
 export default function UsersPage() {
+  const router = useRouter();
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
-  const [department, setDepartment] = useState<string | undefined>(undefined);
-  const router = useRouter();
+  const [department, setDepartment] = useState<number>(0);
+
+  const { data: usersData, isPending: usersDataPending } = useGetWithParams<
+    UsersResponse,
+    UserFilterParams
+  >("users", {
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    sort: sortOrder
+      ? `created_at_${sortOrder === "ascend" ? "asc" : "desc"}`
+      : undefined,
+    department: department,
+    search: searchText,
+  });
 
   const clearFiltersHandler = () => {
-    setDepartment(undefined);
-    setSearchText("");
-    setSortOrder(undefined);
-    setPagination({ page: 1, pageSize: 10 });
+    setDepartment(0);
   };
 
   const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) => {
@@ -75,8 +95,12 @@ export default function UsersPage() {
     setSortOrder(value === "Date (Newest First)" ? "descend" : "ascend");
   };
 
-  const departmentChangeHandler = (value: string) => {
-    setDepartment(value === "All Departments" ? undefined : value);
+  const departmentChangeHandler = (value: number) => {
+    setDepartment(value === 0 ? 0 : value);
+  };
+
+  const paginationChangeHandler = (page: number, pageSize?: number) => {
+    setPagination({ page, pageSize: pageSize || 9 });
   };
 
   return (
@@ -131,7 +155,7 @@ export default function UsersPage() {
             <Flex justify="center" align="center" gap={12}>
               <span>Filter(s):</span>
               <Select
-                defaultValue="All Departments"
+                defaultValue={0}
                 style={{ width: 160 }}
                 onChange={departmentChangeHandler}
                 options={[
@@ -160,13 +184,45 @@ export default function UsersPage() {
           </Flex>
         </Flex>
 
-        {/* User Card View */}
-        <div className="grid grid-cols-3 items-center w-full gap-5 mt-4">
-          {dummyUsers.map((user) => (
-            <UserCard key={user.id} data={user} />
-          ))}
-        </div>
+        {usersDataPending ? (
+          <div className="flex justify-center items-center h-[500px]">
+            <Spin />
+          </div>
+        ) : usersData ? (
+          <div className="grid grid-cols-3 items-center w-full gap-5 mt-4">
+            {usersData.dto.map((user) => (
+              <UserCard key={user.id} data={user} />
+            ))}
+          </div>
+        ) : (
+          <div className="w-full grid place-items-center">
+            <Typography.Text type="secondary" className="!text-lg">
+              No users found
+            </Typography.Text>
+          </div>
+        )}
       </div>
+      {usersData && usersData.total > 9 && (
+        <Flex
+          justify="space-between"
+          align="center"
+          className="!pb-10 !pt-6"
+          style={{ alignSelf: "end" }}
+        >
+          <div>
+            <Typography.Text type="secondary">
+              Total {usersData.total} users
+            </Typography.Text>
+          </div>
+          <Pagination
+            defaultCurrent={1}
+            current={pagination.page}
+            pageSize={pagination.pageSize}
+            total={usersData.total}
+            onChange={paginationChangeHandler}
+          />
+        </Flex>
+      )}
     </section>
   );
 }

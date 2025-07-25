@@ -1,10 +1,11 @@
+import { UserInterface } from "@/types/user/user.type";
 import getAvatarUrl from "@/utils/getAvatarUrl";
 import { EditOutlined, EllipsisOutlined, EyeOutlined } from "@ant-design/icons";
 import { Button, Dropdown, Flex, MenuProps, Typography } from "antd";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 
-export default function UserCard({ data }: any) {
+export default function UserCard({ data }: { data: UserInterface }) {
   const router = useRouter();
 
   const items: MenuProps["items"] = [
@@ -43,7 +44,7 @@ export default function UserCard({ data }: any) {
           <Typography.Text type="secondary" style={{ fontSize: 16 }}>
             {data.department}
           </Typography.Text>
-          <span className="text-[30px] font-medium">{data.fullName}</span>
+          <span className="text-[30px] font-medium">{data.full_name}</span>
           <Typography.Text type="secondary">{data.username}</Typography.Text>
         </div>
         <Flex justify="space-between" align="center" className="!mb-3">
