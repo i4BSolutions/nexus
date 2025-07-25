@@ -17,10 +17,16 @@ export async function GET(
     .from("stock_transaction")
     .select(
       `
-      id, quantity, created_at, reason,
-      product:product_id ( name, sku ),
-      warehouse:warehouse_id ( name ),
-      invoice:invoice_id ( purchase_invoice_number )
+      id,
+      quantity,
+      created_at,
+      product:product_id (
+        name,
+        sku
+      ),
+      warehouse:warehouse_id (
+        name
+      )
     `
     )
     .eq("type", "OUT")
@@ -35,11 +41,10 @@ export async function GET(
 
   const result: StockTransactionHistory[] =
     data?.map((tx: any) => ({
-      product_name: tx.product?.name,
-      product_sku: tx.product?.sku,
-      invoice_number: tx.invoice?.purchase_invoice_number ?? null,
+      product_name: tx.product?.name || "Unknown Product",
+      product_sku: tx.product?.sku || "N/A",
       quantity: `-${tx.quantity}`,
-      warehouse: tx.warehouse?.name,
+      warehouse: tx.warehouse?.name || "Unknown Warehouse",
       date: new Date(tx.created_at).toLocaleDateString("en-US", {
         month: "short",
         day: "2-digit",
