@@ -16,7 +16,7 @@ create table "public"."stock_transaction" (
     "destination_warehouse_id" bigint,
     "note" text,
     "reason" text null,
-    "user_id" uuid not null
+    "user_id" uuid not null,
     "created_at" timestamp with time zone not null default now(),
     "invoice_id" bigint not null
 );

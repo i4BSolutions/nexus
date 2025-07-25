@@ -23,7 +23,7 @@ async function fetchPurchaseInvoiceWithJoins(supabase: any, idStr: string) {
     .single();
 }
 
-// fetch purchase invoice items by purchase invoice id
+// Fetch purchase invoice items by purchase invoice id
 async function fetchPurchaseInvoiceItemsById(supabase: any, idStr: string) {
   return await supabase
     .from("purchase_invoice_item")
@@ -31,12 +31,13 @@ async function fetchPurchaseInvoiceItemsById(supabase: any, idStr: string) {
     .eq("purchase_invoice_id", idStr);
 }
 
-// map the purchase invoice items
+// Map the purchase invoice items
 function mapPurchaseInvoiceItems(items: any[], usdExchangeRate: number) {
   return items.map((item) => ({
     id: item.id,
     product_id: item.product_id,
     product_name: item.product.name,
+    product_sku: item.product.sku,
     quantity: item.quantity,
     unit_price_local: item.unit_price_local,
     unit_price_usd: item.unit_price_local / usdExchangeRate,
@@ -45,24 +46,23 @@ function mapPurchaseInvoiceItems(items: any[], usdExchangeRate: number) {
   }));
 }
 
-// format the purchase invoice items
+// Format the purchase invoice items
 function formattedPurchaseInvoiceItems(
   items: any[],
   purchase_order: any,
-  ordered: number,
-  available: number
+  orderedMap: Record<string, number>,
+  availableMap: Record<string, number>
 ) {
   return items.map((item) => {
-    // Find the matching purchase order item by product_id
     const poItem = purchase_order.purchase_order_items.find(
       (po: any) => po.product_id === item.product_id
     );
 
     return {
       ...item,
-      total_ordered: ordered,
-      total_available: available,
-      po_unit_price_local: poItem ? poItem.unit_price_local : undefined,
+      total_ordered: orderedMap[item.product_id] || 0,
+      total_available: availableMap[item.product_id] || 0,
+      po_unit_price_local: poItem?.unit_price_local,
       po_unit_price_usd: poItem
         ? poItem.unit_price_local / purchase_order.usd_exchange_rate
         : undefined,
@@ -70,7 +70,7 @@ function formattedPurchaseInvoiceItems(
   });
 }
 
-// Fetch purchase invoice items by purchase order id to calculate ordered and available
+// Fetch purchase invoice items by PO id
 async function fetchPurchaseInvoiceItemsByPoId(
   supabase: any,
   purchaseOrderId: string
@@ -81,7 +81,7 @@ async function fetchPurchaseInvoiceItemsByPoId(
     .eq("purchase_order_id", purchaseOrderId);
 }
 
-// Fetch purchase order by purchase order id
+// Fetch purchase order
 async function fetchPurchaseOrder(supabase: any, purchaseOrderId: string) {
   return await supabase
     .from("purchase_order")
@@ -92,13 +92,7 @@ async function fetchPurchaseOrder(supabase: any, purchaseOrderId: string) {
     .single();
 }
 
-/**
- * Handles GET requests to retrieve a purchase invoice by its purchase_invoice_number.
- *
- * @param req - The incoming Next.js request object.
- * @param context - An object containing route parameters, specifically a promise resolving to the invoice ID.
- * @returns A promise that resolves to a NextResponse containing either:
- */
+// Main GET handler
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -106,22 +100,19 @@ export async function GET(
   const supabase = await createClient();
   const { id: idStr } = await context.params;
 
-  // Step 1: Get PI Item by ID
-  const { data: piItem, error: piItemError } = await supabase
-    .from("purchase_invoice_item")
-    .select("*, product:product_id(*)")
-    .eq("purchase_invoice_id", idStr)
-    .single();
+  // Step 1: Get PI Items
+  const { data: piItems, error: piItemError } =
+    await fetchPurchaseInvoiceItemsById(supabase, idStr);
 
-  if (piItemError || !piItem) {
-    return NextResponse.json(error("Purchase invoice item not found"), {
+  if (piItemError || !piItems || piItems.length === 0) {
+    return NextResponse.json(error("Purchase invoice items not found"), {
       status: 404,
     });
   }
 
-  // Step 2: Get PI Details by PI Item’s invoice ID
+  // Step 2: Get Invoice
   const { data: invoice, error: invoiceError } =
-    await fetchPurchaseInvoiceWithJoins(supabase, piItem.purchase_invoice_id);
+    await fetchPurchaseInvoiceWithJoins(supabase, idStr);
 
   if (invoiceError || !invoice) {
     return NextResponse.json(error("Purchase invoice not found"), {
@@ -129,7 +120,7 @@ export async function GET(
     });
   }
 
-  // Step 3: Get PO items by PO ID
+  // Step 3: Get PO
   const { data: purchaseOrder, error: poError } = await fetchPurchaseOrder(
     supabase,
     invoice.purchase_order_id
@@ -141,45 +132,50 @@ export async function GET(
     });
   }
 
-  const productId = piItem.product_id;
+  // Step 4: Calculate Ordered Quantity by product_id
+  const orderedMap: Record<string, number> = {};
+  for (const poItem of purchaseOrder.purchase_order_items || []) {
+    if (!orderedMap[poItem.product_id]) orderedMap[poItem.product_id] = 0;
+    orderedMap[poItem.product_id] += poItem.quantity;
+  }
 
-  const totalOrdered = purchaseOrder.purchase_order_items
-    .filter((item: any) => item.product_id === productId)
-    .reduce((sum: number, item: any) => sum + item.quantity, 0);
-
-  // Step 4: Get all PI Items by same PO ID
+  // Step 5: Fetch all PI Items by same PO to compute invoiced
   const { data: allPIItems, error: allPIError } =
     await fetchPurchaseInvoiceItemsByPoId(supabase, invoice.purchase_order_id);
 
-  if (allPIError) {
+  if (allPIError || !allPIItems) {
     return NextResponse.json(error("Failed to load related PI items"), {
       status: 500,
     });
   }
 
-  const totalInvoiced = allPIItems
-    .filter((item: any) => item.product_id === productId)
-    .reduce((sum: number, item: any) => sum + item.quantity, 0);
+  const invoicedMap: Record<string, number> = {};
+  for (const pi of allPIItems) {
+    if (!invoicedMap[pi.product_id]) invoicedMap[pi.product_id] = 0;
+    invoicedMap[pi.product_id] += pi.quantity;
+  }
 
-  // Step 5: Calculate available quantity
-  const availableQty = totalOrdered - totalInvoiced;
+  // Step 6: Calculate available quantity by product_id
+  const availableMap: Record<string, number> = {};
+  for (const productId in orderedMap) {
+    availableMap[productId] =
+      (orderedMap[productId] || 0) - (invoicedMap[productId] || 0);
+  }
 
-  // Finally, fetch current PI’s item list to respond
-  const { data: invoiceItems, error: itemsError } =
-    await fetchPurchaseInvoiceItemsById(supabase, invoice.id);
-
+  // Step 7: Map and format current invoice items
   const mappedItems = mapPurchaseInvoiceItems(
-    invoiceItems,
+    piItems,
     invoice.exchange_rate_to_usd
   );
 
   const formattedItems = formattedPurchaseInvoiceItems(
     mappedItems,
     purchaseOrder,
-    totalInvoiced,
-    availableQty
+    orderedMap,
+    availableMap
   );
 
+  // Final payload
   const formattedInvoice: PurchaseInvoiceInterface = {
     id: invoice.id,
     purchase_invoice_number: invoice.purchase_invoice_number,
@@ -189,7 +185,7 @@ export async function GET(
     usd_exchange_rate: invoice.exchange_rate_to_usd,
     status: invoice.status,
     note: invoice.note || "",
-    invoice_items: formattedItems || [],
+    invoice_items: formattedItems,
     purchase_order_id: purchaseOrder.id,
     purchase_order_no: purchaseOrder.purchase_order_no,
     purchase_order_currency_code: purchaseOrder.currency.currency_code,

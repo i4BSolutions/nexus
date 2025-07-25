@@ -1,4 +1,3 @@
-// File: /app/api/stock-in/history/route.ts
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { error, success } from "@/lib/api-response";
@@ -11,7 +10,6 @@ export async function GET(
   NextResponse<ApiResponse<StockTransactionHistory[]> | ApiResponse<null>>
 > {
   const supabase = await createClient();
-
   const { searchParams } = new URL(req.url);
   const limit = parseInt(searchParams.get("limit") || "10");
 
@@ -29,8 +27,10 @@ export async function GET(
       warehouse:warehouse_id (
         name
       ),
-      invoice:invoice_id (
-        purchase_invoice_number
+      purchase_invoice_item:invoice_line_item_id (
+        invoice:purchase_invoice_id (
+          purchase_invoice_number
+        )
       )
     `
     )
@@ -44,19 +44,19 @@ export async function GET(
     });
   }
 
-  const result: StockTransactionHistory[] =
-    data?.map((tx: any) => ({
-      product_name: tx.product?.name,
-      product_sku: tx.product?.sku,
-      invoice_number: tx.invoice?.purchase_invoice_number,
-      quantity: `+${tx.quantity}`,
-      warehouse: tx.warehouse?.name,
-      date: new Date(tx.created_at).toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      }),
-    })) ?? [];
+  const result: StockTransactionHistory[] = data.map((tx: any) => ({
+    product_name: tx.product?.name || "-",
+    product_sku: tx.product?.sku || "-",
+    invoice_number:
+      tx.purchase_invoice_item?.invoice?.purchase_invoice_number || "-",
+    quantity: `+${tx.quantity}`,
+    warehouse: tx.warehouse?.name || "-",
+    date: new Date(tx.created_at).toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    }),
+  }));
 
   return NextResponse.json(success(result, "Stock-in history retrieved"), {
     status: 200,
