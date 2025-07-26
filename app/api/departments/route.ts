@@ -26,12 +26,16 @@ export async function POST(
 
   if (dbError) {
     return NextResponse.json(
-      error(`Failed to create department: ${dbError.message}`, 500)
+      error(`Failed to create department: ${dbError.message}`, 500),
+      {
+        status: 500,
+      }
     );
   }
 
   return NextResponse.json(
-    success(data, "Department created successfully", 200)
+    success(data, "Department created successfully", 201),
+    { status: 201 }
   );
 }
 
@@ -45,11 +49,17 @@ export async function GET(): Promise<
 
   if (dbError) {
     return NextResponse.json(
-      error(`Failed to retrieve departments: ${dbError.message}`, 500)
+      error(`Failed to retrieve departments: ${dbError.message}`, 500),
+      {
+        status: 500,
+      }
     );
   }
 
   return NextResponse.json(
-    success(data, "Departments retrieved successfully", 200)
+    success(data, "Departments retrieved successfully", 200),
+    {
+      status: 200,
+    }
   );
 }
