@@ -5,7 +5,6 @@ import StockOut from "@/components/inventory/stock-management/StockOut";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useList } from "@/hooks/react-query/useList";
-import { ProductResponse } from "@/types/product/product.type";
 import { PurchaseInvoiceResponse } from "@/types/purchase-invoice/purchase-invoice.type";
 import { StockTransactionHistory } from "@/types/stock/stock.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
@@ -21,6 +20,9 @@ const StockManagementPage = () => {
 
   const { data: stockInHistoryData, isLoading: stockInHistoryLoading } =
     useList<StockTransactionHistory[]>("stock-in/history");
+
+  const { data: stockOutHistoryData, isLoading: stockOutHistoryLoading } =
+    useList<StockTransactionHistory[]>("stock-out/history");
 
   const mutateStockIn = useCreate("stock-in");
   const mutateStockOut = useCreate("stock-out");
@@ -51,6 +53,7 @@ const StockManagementPage = () => {
         <StockOut
           warehouses={warehousesData?.items}
           warehouseLoading={warehouseLoading}
+          stockOutHistories={stockOutHistoryData}
           onSubmit={(payload: any) => {
             mutateStockOut.mutateAsync(payload);
           }}

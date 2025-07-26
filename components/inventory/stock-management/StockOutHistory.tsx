@@ -7,7 +7,7 @@ interface StockInHistoryInterface {
   isLoading?: boolean;
 }
 
-const StockInHistory = ({ items, isLoading }: StockInHistoryInterface) => {
+const StockOutHistory = ({ items, isLoading }: StockInHistoryInterface) => {
   if (isLoading)
     return (
       <div className="flex items-center justify-center h-100vh">
@@ -65,7 +65,7 @@ const StockInHistory = ({ items, isLoading }: StockInHistoryInterface) => {
               {item.product_name}
             </Typography.Text>
             <Typography.Text
-              style={{ color: "#52C41A", fontSize: 16, fontWeight: 500 }}
+              style={{ color: "orange", fontSize: 16, fontWeight: 500 }}
             >
               {item.quantity}
             </Typography.Text>
@@ -89,12 +89,12 @@ const StockInHistory = ({ items, isLoading }: StockInHistoryInterface) => {
             </Typography.Text>
           </Flex>
 
-          <Flex style={{ justifyContent: "space-between" }}>
-            <Typography.Text
+          <Flex style={{ justifyContent: "flex-end" }}>
+            {/* <Typography.Text
               style={{ color: "#00000073", fontSize: 14, fontWeight: 400 }}
             >
               {item.invoice_number}
-            </Typography.Text>
+            </Typography.Text> */}
             <Typography.Text
               style={{ color: "#00000073", fontSize: 14, fontWeight: 400 }}
             >
@@ -107,4 +107,4 @@ const StockInHistory = ({ items, isLoading }: StockInHistoryInterface) => {
   );
 };
 
-export default StockInHistory;
+export default StockOutHistory;
