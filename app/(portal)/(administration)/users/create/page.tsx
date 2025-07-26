@@ -67,43 +67,39 @@ export default function UserCreationPage() {
       return;
     }
 
-    console.log("Success:", values);
     console.log("payload:", {
       full_name: values.full_name,
-      username: values.username,
+      username: "@" + values.username,
       email: values.email,
       department: values.department,
-      avatar: values.avatar || "",
       permissions: permissionKeys.reduce((acc, key) => {
         acc[`can_${key}`] = !!values[key as keyof UserFieldType];
         return acc;
       }, {} as Record<string, boolean>),
     });
 
-    try {
-      createUser(
-        {
-          full_name: values.full_name,
-          username: "@" + values.username,
-          email: values.email,
-          department: values.department,
-          avatar: values.avatar || "",
-          permissions: permissionKeys.reduce((acc, key) => {
-            acc[`can_${key}`] = !!values[key as keyof UserFieldType];
-            return acc;
-          }, {} as Record<string, boolean>),
+    createUser(
+      {
+        full_name: values.full_name,
+        username: "@" + values.username,
+        email: values.email,
+        department: values.department,
+        permissions: permissionKeys.reduce((acc, key) => {
+          acc[`can_${key}`] = !!values[key as keyof UserFieldType];
+          return acc;
+        }, {} as Record<string, boolean>),
+      },
+      {
+        onSuccess: () => {
+          message.success("User created successfully!");
+          router.back();
         },
-        {
-          onSuccess: () => {
-            message.success("User created successfully!");
-            router.back();
-          },
-        }
-      );
-    } catch (error) {
-      console.error("Error creating user:", error);
-      message.error("Failed to create user. Please try again.");
-    }
+        onError: (error) => {
+          console.error("Error creating user:", error);
+          message.error("Failed to create user. Please try again.");
+        },
+      }
+    );
   };
 
   const handleDepartmentCreate = (values: { name: string }) => {
