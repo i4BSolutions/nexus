@@ -25,6 +25,7 @@ export async function GET(
         `
         id,
         product:product_id (
+          id,
           name,
           sku
         ),
