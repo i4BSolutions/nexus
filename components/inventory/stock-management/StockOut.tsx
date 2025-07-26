@@ -1,5 +1,10 @@
-import { useList } from "@/hooks/react-query/useList";
-import { ProductInterface } from "@/types/product/product.type";
+import { useGetById } from "@/hooks/react-query/useGetById";
+import { InventoryInterface } from "@/types/inventory/inventory.type";
+import {
+  ProductInterface,
+  ProductResponse,
+} from "@/types/product/product.type";
+import { WarehouseInterface } from "@/types/warehouse/warehouse.type";
 import {
   MinusOutlined,
   PlusOutlined,
@@ -7,9 +12,11 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 import {
+  App,
   Button,
   Card,
   Col,
+  Empty,
   Flex,
   Form,
   Input,
@@ -17,32 +24,106 @@ import {
   Row,
   Select,
   Space,
+  Spin,
   Typography,
 } from "antd";
 
-import React from "react";
+import React, { useEffect } from "react";
 
 const { Option } = Select;
 const { TextArea } = Input;
 
 interface StockOutProps {
-  // onNext: (values: any) => void;
-  // onBack: () => void;
-  formData?: any;
+  warehouses: WarehouseInterface[] | undefined;
+  warehouseLoading?: boolean;
+  mutateLoading?: boolean;
+  onSubmit?: (payload: any) => void;
 }
 
-const StockOut = ({ formData }: StockOutProps) => {
+const StockOut = ({
+  warehouses,
+  warehouseLoading,
+  mutateLoading,
+  onSubmit,
+}: StockOutProps) => {
   const [form] = Form.useForm();
-
-  const { data: productsData, isLoading: productsLoading } = useList(
-    "products",
-    {
-      pageSize: "all" as any,
-      status: "true",
-    }
-  );
+  const { message } = App.useApp();
 
   const reason = Form.useWatch("reason", form);
+  const selectedWarehouseName = Form.useWatch("warehouse", form);
+
+  const selectedWarehouse = warehouses?.find(
+    (w) => w.name === selectedWarehouseName
+  );
+  console.log(selectedWarehouse?.id);
+
+  const { data: inventoryDataRaw, isLoading: inventoryLoading } = useGetById(
+    "inventory/get-by-warehouse-id",
+    selectedWarehouse?.id as any,
+    !!selectedWarehouse?.id
+  );
+  console.log(inventoryDataRaw);
+
+  const inventoryItems = (inventoryDataRaw as InventoryInterface[]) || [];
+
+  useEffect(() => {
+    if (inventoryItems.length) {
+      form.setFieldsValue({
+        items: inventoryItems.map((item) => ({
+          inventory_id: item.id,
+          quantity: 1,
+        })),
+      });
+    } else {
+      form.setFieldsValue({ items: [] });
+    }
+  }, [inventoryItems, form]);
+
+  const handleFinish = (values: any) => {
+    if (!values.items || values.items.length === 0) {
+      message.warning("Please select at least one item.");
+      return;
+    }
+
+    const warehouseId = selectedWarehouse?.id;
+    const payload = {
+      stock_out_items: values.items.map((item: any) => {
+        const baseItem: any = {
+          product_id: item.id,
+          warehouse_id: warehouseId,
+          quantity: item.quantity,
+          reason: values.reason,
+        };
+
+        if (
+          values.reason === "Warehouse Transfer" &&
+          values.destination_warehouse
+        ) {
+          const destinationWarehouse = warehouses?.find(
+            (w) => w.name === values.destination_warehouse
+          );
+          if (destinationWarehouse) {
+            baseItem.destination_warehouse_id = destinationWarehouse.id;
+          }
+        }
+
+        if (values.note) {
+          baseItem.note = values.note;
+        }
+
+        return baseItem;
+      }),
+    };
+
+    try {
+      onSubmit?.(payload);
+      message.success("Stock Out completed successfully!");
+      form.resetFields();
+    } catch (error) {
+      console.log(error);
+      message.error("Stock Out Failed. Please try again.");
+    }
+  };
 
   return (
     <Card
@@ -88,16 +169,28 @@ const StockOut = ({ formData }: StockOutProps) => {
         </div>
       }
     >
-      <Form layout="vertical" form={form} style={{ maxWidth: "100%" }}>
+      <Form
+        layout="vertical"
+        form={form}
+        style={{ maxWidth: "100%" }}
+        onFinish={handleFinish}
+      >
         <Form.Item
           label="Warehouse"
           name="warehouse"
-          rules={[
-            { required: true, message: "Please choose at least one warehouse" },
-          ]}
+          style={{ width: "100%" }}
+          rules={[{ required: true, message: "Please select warehouse" }]}
         >
-          <Select allowClear placeholder="Select Warehouse">
-            <Option value="Warehouse A">Warehouse A</Option>
+          <Select
+            allowClear
+            loading={warehouseLoading}
+            placeholder="Select Warehouse"
+          >
+            {warehouses?.map((warehouse) => (
+              <Option key={warehouse.id} value={warehouse.name}>
+                {warehouse.name}
+              </Option>
+            ))}
           </Select>
         </Form.Item>
         <Card style={{ marginBottom: 12 }}>
@@ -110,9 +203,15 @@ const StockOut = ({ formData }: StockOutProps) => {
             </Typography.Text>
           </Space>
 
-          <Form.List name="items">
-            {(fields, { add, remove }) => (
-              <>
+          {inventoryLoading ? (
+            <div className="grid place-items-center h-[200px]">
+              <Spin />
+            </div>
+          ) : inventoryItems.length === 0 ? (
+            <Empty description="No inventory items available for this warehouse." />
+          ) : (
+            <Form.List name="items">
+              {(fields) => (
                 <div
                   style={{
                     border: "1px solid #e0e0e0",
@@ -138,37 +237,8 @@ const StockOut = ({ formData }: StockOutProps) => {
                   </Row>
 
                   {fields.map(({ key, name, ...restField }, index) => {
-                    const items = (form.getFieldValue("items") as any[]) || [];
-                    const quantity = items[name]?.quantity || 0;
-                    // Find the selected product
-                    const selectedProductId = items[name]?.product;
-                    const selectedProduct = (productsData as any)?.items?.find(
-                      (p: ProductInterface) => p.id === selectedProductId
-                    );
-
-                    const price = items[name]?.unit_price || 0;
-                    const exchangeRate = formData?.exchange_rate
-                      ? Number(formData.exchange_rate)
-                      : 0;
-                    const priceUSD = exchangeRate
-                      ? (price / exchangeRate).toFixed(2)
-                      : "0.00";
-                    const subtotal = quantity * price;
-                    const subtotalUSD = exchangeRate
-                      ? (subtotal / exchangeRate).toFixed(2)
-                      : "0.00";
-
-                    // Exclude already selected products except for the current row
-                    const selectedProductIds = items
-                      .map((item: any, idx: number) =>
-                        idx !== name ? item?.product : null
-                      )
-                      .filter(Boolean);
-                    const availableProducts =
-                      (productsData as any)?.items?.filter(
-                        (product: ProductInterface) =>
-                          !selectedProductIds.includes(product.id)
-                      ) || [];
+                    const item = inventoryItems[name];
+                    if (!item) return null;
 
                     return (
                       <Row
@@ -183,75 +253,27 @@ const StockOut = ({ formData }: StockOutProps) => {
                               : undefined,
                         }}
                       >
-                        {/* Product Select */}
+                        {/* Product Name */}
                         <Col span={6}>
-                          <Form.Item
-                            {...restField}
-                            name={[name, "product"]}
-                            rules={[
-                              {
-                                required: true,
-                                message: "Product is required",
-                              },
-                            ]}
-                            style={{ marginBottom: 0 }}
-                          >
-                            <Select
-                              placeholder={
-                                productsLoading
-                                  ? "Loading products..."
-                                  : "Select Product"
-                              }
-                              options={availableProducts.map(
-                                (product: ProductInterface) => ({
-                                  value: product.id,
-                                  label: product.name,
-                                })
-                              )}
-                              loading={productsLoading}
-                              showSearch
-                              filterOption={(input, option) => {
-                                const label = option?.label;
-                                if (typeof label === "string") {
-                                  return label
-                                    .toLowerCase()
-                                    .includes(input.toLowerCase());
-                                }
-                                return false;
-                              }}
-                              onChange={(value) => {
-                                // Auto-select the currency from previous step
-                                const currentItems =
-                                  form.getFieldValue("items") || [];
-                                currentItems[name] = {
-                                  ...currentItems[name],
-                                  product: value,
-                                  currency_code_id: formData?.currency || "",
-                                };
-                                form.setFieldValue("items", currentItems);
-                                // forceUpdate();
-                              }}
-                            />
-                          </Form.Item>
+                          <Typography.Text>{item.product.name}</Typography.Text>
                         </Col>
 
-                        {/* Quantity */}
+                        {/* Product SKU */}
                         <Col span={4}>
                           <Flex style={{ gap: 4 }}>
                             <TagOutlined />
                             <Typography.Text>
-                              {selectedProduct?.sku}
+                              {item.product.sku}
                             </Typography.Text>
                           </Flex>
                         </Col>
 
-                        {/* Currency and Unit Price */}
+                        {/* Stock */}
                         <Col span={6}>
-                          <Typography.Text>
-                            {selectedProduct?.stock}
-                          </Typography.Text>
+                          <Typography.Text>{item.quantity}</Typography.Text>
                         </Col>
 
+                        {/* Quantity Input */}
                         <Col span={6}>
                           <Form.Item
                             {...restField}
@@ -262,28 +284,16 @@ const StockOut = ({ formData }: StockOutProps) => {
                                 message: "Quantity is required",
                               },
                               {
-                                pattern: /^[1-9]\d*$/,
-                                message: "Quantity cannot be 0",
-                              },
-                              {
-                                validator: (_, value) => {
-                                  if (value && parseFloat(value) <= 0) {
-                                    return Promise.reject(
-                                      new Error(
-                                        "Quantity must be greater than 0"
-                                      )
-                                    );
-                                  }
-                                  return Promise.resolve();
-                                },
+                                type: "number",
+                                min: 1,
+                                message: "Quantity must be at least 1",
                               },
                             ]}
                             style={{ marginBottom: 0 }}
                           >
                             <InputNumber
-                              addonBefore={<MinusOutlined />}
-                              addonAfter={<PlusOutlined />}
-                              min={0}
+                              min={1}
+                              max={item.quantity}
                               style={{ width: "100%" }}
                             />
                           </Form.Item>
@@ -292,18 +302,9 @@ const StockOut = ({ formData }: StockOutProps) => {
                     );
                   })}
                 </div>
-                <Col span={12}>
-                  <Button
-                    onClick={() => add()}
-                    icon={<PlusOutlined />}
-                    style={{ marginTop: 16 }}
-                  >
-                    Add More
-                  </Button>
-                </Col>
-              </>
-            )}
-          </Form.List>
+              )}
+            </Form.List>
+          )}
         </Card>
         <Form.Item
           label="Reason"
@@ -334,9 +335,13 @@ const StockOut = ({ formData }: StockOutProps) => {
             ]}
           >
             <Select allowClear placeholder="Select destination warehouse">
-              <Option value="Warehouse B">Warehouse B</Option>
-              <Option value="Warehouse C">Warehouse C</Option>
-              <Option value="External Site">External Site</Option>
+              {warehouses
+                ?.filter((w) => w.name !== form.getFieldValue("warehouse"))
+                .map((w) => (
+                  <Option key={w.id} value={w.name}>
+                    {w.name}
+                  </Option>
+                ))}
             </Select>
           </Form.Item>
         )}
@@ -344,8 +349,19 @@ const StockOut = ({ formData }: StockOutProps) => {
           <TextArea placeholder="Enter note" />
         </Form.Item>
         <Flex style={{ justifyContent: "space-between" }}>
-          <Button type="default">Reset</Button>
-          <Button type="primary" htmlType="submit">
+          <Button
+            type="default"
+            onClick={() => form.resetFields()}
+            disabled={mutateLoading}
+          >
+            Reset
+          </Button>
+          <Button
+            type="primary"
+            htmlType="submit"
+            disabled={mutateLoading}
+            loading={mutateLoading}
+          >
             Complete Stock Out
           </Button>
         </Flex>

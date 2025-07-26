@@ -56,6 +56,10 @@ alter table "public"."stock_transaction" add constraint "stock_transaction_wareh
 
 alter table "public"."stock_transaction" validate constraint "stock_transaction_warehouse_id_fkey";
 
+alter table "public"."stock_transaction" add constraint "stock_transaction_user_id_fkey" FOREIGN KEY (user_id) REFERENCES profiles(id) not valid;
+
+alter table "public"."stock_transaction" validate constraint "stock_transaction_user_id_fkey";
+
 grant delete on table "public"."inventory" to "anon";
 
 grant insert on table "public"."inventory" to "anon";

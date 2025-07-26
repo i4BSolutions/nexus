@@ -5,21 +5,25 @@ import StockOut from "@/components/inventory/stock-management/StockOut";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useList } from "@/hooks/react-query/useList";
+import { ProductResponse } from "@/types/product/product.type";
 import { PurchaseInvoiceResponse } from "@/types/purchase-invoice/purchase-invoice.type";
+import { StockTransactionHistory } from "@/types/stock/stock.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
 import { SwapOutlined } from "@ant-design/icons";
 import { Space, Tabs, TabsProps, Typography } from "antd";
-import { useRouter } from "next/navigation";
 
 const StockManagementPage = () => {
-  const router = useRouter();
   const { data: piData, isLoading: piLoading } =
     useList<PurchaseInvoiceResponse>("purchase-invoices");
 
   const { data: warehousesData, isLoading: warehouseLoading } =
     useList<WarehouseResponse>("warehouses");
 
+  const { data: stockInHistoryData, isLoading: stockInHistoryLoading } =
+    useList<StockTransactionHistory[]>("stock-in/history");
+
   const mutateStockIn = useCreate("stock-in");
+  const mutateStockOut = useCreate("stock-out");
 
   const tabItems: TabsProps["items"] = [
     {
@@ -30,7 +34,9 @@ const StockManagementPage = () => {
           invoices={piData}
           invoiceLoading={piLoading}
           warehouses={warehousesData?.items}
+          stockInHistories={stockInHistoryData}
           warehouseLoading={warehouseLoading}
+          stockInHistoryLoading={stockInHistoryLoading}
           onSubmit={(payload: any) => {
             mutateStockIn.mutateAsync(payload);
           }}
@@ -41,7 +47,15 @@ const StockManagementPage = () => {
     {
       key: "stock-out",
       label: "Stock Out",
-      children: <StockOut />,
+      children: (
+        <StockOut
+          warehouses={warehousesData?.items}
+          warehouseLoading={warehouseLoading}
+          onSubmit={(payload: any) => {
+            mutateStockOut.mutateAsync(payload);
+          }}
+        />
+      ),
     },
   ];
 

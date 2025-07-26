@@ -1,25 +1,23 @@
+import { StockTransactionHistory } from "@/types/stock/stock.type";
 import { Button, Card, Flex, Typography } from "antd";
 import React from "react";
 
-export interface StockInHistoryProps {
-  id: number;
-  product_name: string;
-  stock: number;
-  product_sku: string;
-  warehouse_name: string;
-  invoice_number: string;
-  date: string;
-}
-
 interface StockInHistoryInterface {
-  items: StockInHistoryProps[];
+  items: StockTransactionHistory[] | undefined;
+  isLoading?: boolean;
 }
 
-const StockInHistory = ({ items }: StockInHistoryInterface) => {
+const StockInHistory = ({ items, isLoading }: StockInHistoryInterface) => {
   return (
     <Card
       variant="outlined"
-      bodyStyle={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}
+      styles={{
+        body: {
+          paddingTop: 0,
+          paddingLeft: 0,
+          paddingRight: 0,
+        },
+      }}
       title={
         <Flex
           style={{
@@ -38,9 +36,9 @@ const StockInHistory = ({ items }: StockInHistoryInterface) => {
         </Flex>
       }
     >
-      {items.map((item, index) => (
+      {items?.map((item, index) => (
         <div
-          key={item.id}
+          key={index}
           style={{
             padding: "12px 24px",
             borderBottom:
@@ -62,7 +60,7 @@ const StockInHistory = ({ items }: StockInHistoryInterface) => {
             <Typography.Text
               style={{ color: "#52C41A", fontSize: 16, fontWeight: 500 }}
             >
-              +{item.stock}
+              {item.quantity}
             </Typography.Text>
           </Flex>
 
@@ -80,7 +78,7 @@ const StockInHistory = ({ items }: StockInHistoryInterface) => {
             <Typography.Text
               style={{ color: "#00000073", fontSize: 14, fontWeight: 400 }}
             >
-              {item.warehouse_name}
+              {item.warehouse}
             </Typography.Text>
           </Flex>
 
