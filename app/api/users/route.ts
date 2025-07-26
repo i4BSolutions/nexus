@@ -163,7 +163,7 @@ export async function GET(
   }
 
   if (filterParams) {
-    query = query.eq("department", filterParams);
+    query = query.eq("department", parseInt(filterParams, 10));
   }
 
   query = query.order("created_at", {

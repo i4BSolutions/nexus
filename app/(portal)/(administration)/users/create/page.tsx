@@ -67,17 +67,6 @@ export default function UserCreationPage() {
       return;
     }
 
-    console.log("payload:", {
-      full_name: values.full_name,
-      username: "@" + values.username,
-      email: values.email,
-      department: values.department,
-      permissions: permissionKeys.reduce((acc, key) => {
-        acc[`can_${key}`] = !!values[key as keyof UserFieldType];
-        return acc;
-      }, {} as Record<string, boolean>),
-    });
-
     createUser(
       {
         full_name: values.full_name,

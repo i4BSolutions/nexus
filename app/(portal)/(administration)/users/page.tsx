@@ -3,7 +3,9 @@
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import UserCard from "@/components/users/UserCard";
+import { useGetAll } from "@/hooks/react-query/useGetAll";
 import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
+import { DepartmentInterface } from "@/types/departments/department.type";
 import { UserFilterParams, UsersResponse } from "@/types/user/user.type";
 import { PlusOutlined, TeamOutlined } from "@ant-design/icons";
 import {
@@ -70,6 +72,10 @@ export default function UsersPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [department, setDepartment] = useState<number>(0);
 
+  const { data: departmentsData, isLoading: isDepartmentsLoading } = useGetAll<
+    DepartmentInterface[]
+  >("departments", ["departments"]);
+
   const { data: usersData, isPending: usersDataPending } = useGetWithParams<
     UsersResponse,
     UserFilterParams
@@ -102,6 +108,14 @@ export default function UsersPage() {
   const paginationChangeHandler = (page: number, pageSize?: number) => {
     setPagination({ page, pageSize: pageSize || 9 });
   };
+
+  if (isDepartmentsLoading) {
+    return (
+      <div className="flex justify-center items-center h-[500px]">
+        <Spin />
+      </div>
+    );
+  }
 
   return (
     <section className="px-6 grid place-items-center w-full">
@@ -159,18 +173,11 @@ export default function UsersPage() {
                 style={{ width: 160 }}
                 onChange={departmentChangeHandler}
                 options={[
-                  {
-                    value: 0,
-                    label: "All Departments",
-                  },
-                  {
-                    value: 1,
-                    label: "Finance",
-                  },
-                  {
-                    value: 2,
-                    label: "Administration",
-                  },
+                  { value: 0, label: "All Departments" },
+                  ...(departmentsData?.map((dept) => ({
+                    value: dept.id,
+                    label: dept.name,
+                  })) || []),
                 ]}
               />
               <Button
