@@ -36,7 +36,10 @@ export async function POST(req: Request) {
           email.split("@")[0].charAt(0).toUpperCase() +
           email.split("@")[0].slice(1),
         username:
-          "@admin" + session.user.id.slice(0, 3) + session.user.id.slice(-3),
+          "@" +
+          email.split("@")[0] +
+          session.user.id.slice(0, 3) +
+          session.user.id.slice(-3),
         department: 3,
         permissions: {
           can_read_purchase_orders: true,
