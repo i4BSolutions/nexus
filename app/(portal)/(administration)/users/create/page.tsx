@@ -1,6 +1,9 @@
 "use client";
 
+import DepartmentCreateModal from "@/components/users/DepartmentCreateModal";
 import { useCreate } from "@/hooks/react-query/useCreate";
+import { useGetAll } from "@/hooks/react-query/useGetAll";
+import { DepartmentInterface } from "@/types/departments/department.type";
 import { UserFieldType } from "@/types/user/user.type";
 import getAvatarUrl from "@/utils/getAvatarUrl";
 import {
@@ -22,20 +25,33 @@ import {
   FormProps,
   Input,
   Row,
+  Select,
   Space,
+  Spin,
   Typography,
 } from "antd";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function UserCreationPage() {
   const router = useRouter();
   const { message } = App.useApp();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCancel = () => {
     router.back();
   };
 
   const { mutate: createUser } = useCreate("users");
+
+  const { mutate: createDepartment } = useCreate("departments", [
+    "departments",
+  ]);
+
+  const { data: departmentsData, isLoading: isDepartmentsLoading } = useGetAll<
+    DepartmentInterface[]
+  >("departments", ["departments"]);
 
   const onFinish: FormProps<UserFieldType>["onFinish"] = (values) => {
     const permissionKeys = Object.keys(values).filter(
@@ -50,6 +66,7 @@ export default function UserCreationPage() {
       message.error("Please select at least one permission for the user.");
       return;
     }
+
     console.log("Success:", values);
     console.log("payload:", {
       full_name: values.full_name,
@@ -62,11 +79,12 @@ export default function UserCreationPage() {
         return acc;
       }, {} as Record<string, boolean>),
     });
+
     try {
       createUser(
         {
           full_name: values.full_name,
-          username: values.username,
+          username: "@" + values.username,
           email: values.email,
           department: values.department,
           avatar: values.avatar || "",
@@ -87,6 +105,27 @@ export default function UserCreationPage() {
       message.error("Failed to create user. Please try again.");
     }
   };
+
+  const handleDepartmentCreate = (values: { name: string }) => {
+    console.log("Creating department with values:", values);
+    createDepartment(values, {
+      onSuccess: () => {
+        message.success("Department created successfully!");
+        setIsModalOpen(false);
+      },
+      onError: (error) => {
+        console.error("Error creating department:", error);
+        message.error("Failed to create department. Please try again.");
+      },
+    });
+  };
+
+  if (isDepartmentsLoading)
+    return (
+      <div className="h-[500px] grid place-items-center">
+        <Spin />
+      </div>
+    );
 
   return (
     <section className="max-w-7xl mx-auto py-4 px-6">
@@ -177,7 +216,7 @@ export default function UserCreationPage() {
               style={{ width: "100%" }}
               rules={[{ required: true, message: "Please enter username!" }]}
             >
-              <Input placeholder="Enter username" />
+              <Input placeholder="Enter username" prefix={"@"} />
             </Form.Item>
           </div>
 
@@ -193,12 +232,42 @@ export default function UserCreationPage() {
               <Input placeholder="Enter email address" />
             </Form.Item>
             <Form.Item
-              label="Department"
+              label={
+                <div className="flex justify-between w-full">
+                  <span className="block">Department</span>
+                  <Button
+                    type="link"
+                    size="small"
+                    onClick={() => setIsModalOpen(true)}
+                    style={{ padding: 0, margin: 0 }}
+                  >
+                    Create New
+                  </Button>
+                </div>
+              }
               name="department"
               style={{ width: "100%" }}
-              rules={[{ required: true, message: "Please enter department!" }]}
+              rules={[{ required: true, message: "Please select department!" }]}
             >
-              <Input placeholder="eg. Finance" />
+              {departmentsData && (
+                <Select
+                  placeholder="Select department"
+                  loading={isDepartmentsLoading}
+                  options={
+                    departmentsData.map((department) => ({
+                      label: department.name,
+                      value: department.id,
+                    })) || []
+                  }
+                  showSearch
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    option
+                      ? option.label.toLowerCase().includes(input.toLowerCase())
+                      : false
+                  }
+                />
+              )}
             </Form.Item>
           </div>
         </div>
@@ -702,6 +771,11 @@ export default function UserCreationPage() {
           </Button>
         </div>
       </Form>
+      <DepartmentCreateModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleDepartmentCreate}
+      />
     </section>
   );
 }
