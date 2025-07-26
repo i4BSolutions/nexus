@@ -81,7 +81,7 @@ export default function UserCreationPage() {
       {
         onSuccess: () => {
           message.success("User created successfully!");
-          router.back();
+          router.push("/users");
         },
         onError: (error) => {
           console.error("Error creating user:", error);

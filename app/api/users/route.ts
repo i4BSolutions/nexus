@@ -49,30 +49,25 @@ export async function POST(req: Request) {
 
     switch (true) {
       case !email:
-        return NextResponse.json(
-          { error: "Email is required" },
-          { status: 400 }
-        );
+        return NextResponse.json(error("Email is required", 400), {
+          status: 400,
+        });
       case !full_name:
-        return NextResponse.json(
-          { error: "Full name is required" },
-          { status: 400 }
-        );
+        return NextResponse.json(error("Full name is required", 400), {
+          status: 400,
+        });
       case !username:
-        return NextResponse.json(
-          { error: "Username is required" },
-          { status: 400 }
-        );
+        return NextResponse.json(error("Username is required", 400), {
+          status: 400,
+        });
       case !department:
-        return NextResponse.json(
-          { error: "Department is required" },
-          { status: 400 }
-        );
+        return NextResponse.json(error("Department is required", 400), {
+          status: 400,
+        });
       case !permissions:
-        return NextResponse.json(
-          { error: "Permissions are required" },
-          { status: 400 }
-        );
+        return NextResponse.json(error("Permissions are required", 400), {
+          status: 400,
+        });
     }
 
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
@@ -83,8 +78,10 @@ export async function POST(req: Request) {
 
     if (userExists) {
       return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 400 }
+        error("User with this email already exists", 400),
+        {
+          status: 400,
+        }
       );
     }
 
@@ -97,9 +94,11 @@ export async function POST(req: Request) {
           permissions,
         },
       });
+
     if (inviteError) {
-      console.log("Invite user error:", inviteError);
-      return NextResponse.json({ error: inviteError.message }, { status: 500 });
+      return NextResponse.json(error(inviteError.message, 500), {
+        status: 500,
+      });
     }
 
     const supabase = await createClient();
@@ -117,21 +116,26 @@ export async function POST(req: Request) {
       });
 
     if (profileUserError) {
-      console.log("Insert profile user error:", profileUserError);
       await supabaseAdmin.auth.admin.deleteUser(authUserData.user.id);
-      return NextResponse.json(
-        { error: profileUserError.message },
-        { status: 500 }
-      );
+      return NextResponse.json(error(profileUserError.message, 500), {
+        status: 500,
+      });
     }
 
     return NextResponse.json(
-      { authUserData, profileUserData },
+      success(
+        {
+          authUserData,
+          profileUserData,
+        },
+        "User created successfully",
+        201
+      ),
       { status: 201 }
     );
   } catch (err) {
     return NextResponse.json(
-      { error: (err as Error).message },
+      error("Failed to create user: " + (err as Error).message, 500),
       { status: 500 }
     );
   }
@@ -154,7 +158,9 @@ export async function GET(
   const sortParam = searchParams.get("sort");
 
   const supabase = await createClient();
-  let query = supabase.from("user_profiles").select("*", { count: "exact" });
+  let query = supabase
+    .from("user_profiles")
+    .select("*, department:departments(id, name)", { count: "exact" });
 
   if (search) {
     query = query.or(
@@ -189,7 +195,10 @@ export async function GET(
       email: user.email,
       full_name: user.full_name,
       username: user.username,
-      department: user.department,
+      department: {
+        id: user.department.id,
+        name: user.department.name,
+      },
       created_at: user.created_at,
     })) || [];
 
@@ -201,7 +210,7 @@ export async function GET(
   };
 
   return NextResponse.json(
-    success<UsersResponse>(response, "Users retrieved successfully"),
+    success<UsersResponse>(response, "Users retrieved successfully", 200),
     {
       status: 200,
     }

@@ -42,7 +42,7 @@ export default function UserCard({ data }: { data: UserInterface }) {
       <div className="px-6 py-3">
         <div className="text-center flex flex-col mb-3">
           <Typography.Text type="secondary" style={{ fontSize: 16 }}>
-            {data.department}
+            {data.department.name}
           </Typography.Text>
           <span className="text-[30px] font-medium">{data.full_name}</span>
           <Typography.Text type="secondary">{data.username}</Typography.Text>

@@ -26,7 +26,10 @@ export type UserInterface = {
   email: string;
   full_name: string;
   username: string;
-  department: string;
+  department: {
+    id: number;
+    name: string;
+  };
   created_at: string;
 };
 
