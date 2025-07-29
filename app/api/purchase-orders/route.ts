@@ -97,14 +97,22 @@ export async function GET(
 > {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSizeParam = searchParams.get("pageSize") || "10";
-  const pageSize = parseInt(pageSizeParam, 10);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+
   const poNumber = searchParams.get("q") || "";
   const statusParam = searchParams.get("status");
   const sortParam = searchParams.get("sort");
+
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const hasPageSize = searchParams.has("pageSize");
+  const pageSizeParam = searchParams.get("pageSize");
+  const pageSize = pageSizeParam ? parseInt(pageSizeParam, 10) : undefined;
+  let from: number | undefined;
+  let to: number | undefined;
+
+  if (hasPageSize && pageSize !== undefined) {
+    from = (page - 1) * pageSize;
+    to = from + pageSize - 1;
+  }
 
   let query = supabase.from("purchase_order").select(
     `
@@ -142,7 +150,7 @@ export async function GET(
     ascending: sortParam === "order_date_asc",
   });
 
-  if (typeof to === "number") {
+  if (typeof from === "number" && typeof to === "number") {
     query = query.range(from, to);
   }
 
@@ -190,7 +198,7 @@ export async function GET(
     dto: orders || [],
     total: count || 0,
     page,
-    pageSize: pageSize,
+    pageSize: pageSize || "all",
     statistics: {
       total: count || 0,
       total_approved: orders

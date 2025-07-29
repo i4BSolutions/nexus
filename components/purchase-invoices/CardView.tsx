@@ -91,7 +91,7 @@ export default function CardView({
                       }}
                     />
                   </Col>
-                  <Col span={12}>
+                  <Col span={14}>
                     <Typography.Text className="!text-xl !font-semibold">
                       {item.purchase_invoice_number}
                     </Typography.Text>
@@ -99,7 +99,7 @@ export default function CardView({
                       <StatusBadge status={item.status} />
                     </div>
                   </Col>
-                  <Col span={6} className="!grid !place-items-center">
+                  <Col span={2} className="!grid !place-items-center">
                     <Dropdown
                       menu={{ items }}
                       trigger={["click"]}

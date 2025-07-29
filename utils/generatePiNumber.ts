@@ -1,5 +1,5 @@
 export function generatePiNumber(latestPiNumber: string): string {
-  if (!latestPiNumber) return "INV-2025-0001";
+  if (!latestPiNumber) return "INV-2025-100000";
 
   const [prefix, year, numberStr] = latestPiNumber.split("-");
 

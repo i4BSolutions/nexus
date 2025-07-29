@@ -38,3 +38,24 @@ export interface PurchaseInvoiceResponse {
     delivered: number;
   };
 }
+
+export interface InvoiceFormProps {
+  formData?: PurchaseInvoiceInterface;
+  handleNext?: (data: PurchaseInvoiceInterface) => void;
+}
+
+export interface InvoiceFieldType {
+  invoice_number: string;
+  invoice_date: string;
+  due_date: string;
+  currency: number;
+  usd_exchange_rate: number;
+  purchase_order: number;
+  invoice_items: {
+    checked: boolean;
+    product: number;
+    invoice_quantity: number;
+    invoice_unit_price_local: number;
+  }[];
+  note?: string;
+}

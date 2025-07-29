@@ -1,10 +1,16 @@
 "use client";
 
 // React and Next.js Imports
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // Ant Design Components
+import {
+  CarryOutOutlined,
+  DollarOutlined,
+  FileTextOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Flex,
@@ -15,15 +21,8 @@ import {
   Typography,
 } from "antd";
 import Input, { SearchProps } from "antd/es/input";
-import {
-  CarryOutOutlined,
-  DollarOutlined,
-  FileTextOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
 
 // Types
-import { SortOrder } from "antd/es/table/interface";
 import { StatItem } from "@/types/shared/stat-item.type";
 
 // Components
@@ -32,13 +31,13 @@ import HeaderSection from "@/components/shared/HeaderSection";
 import StatisticsCards from "@/components/shared/StatisticsCards";
 
 // Hooks
+import CardView from "@/components/purchase-invoices/CardView";
+import TableView from "@/components/purchase-invoices/TableView";
 import { useList } from "@/hooks/react-query/useList";
 import {
   PurchaseInvoiceDto,
   PurchaseInvoiceResponse,
 } from "@/types/purchase-invoice/purchase-invoice.type";
-import CardView from "@/components/purchase-invoices/CardView";
-import TableView from "@/components/purchase-invoices/TableView";
 
 export default function InvoicesPage() {
   const [statItems, setStatItems] = useState<StatItem[]>();
@@ -228,7 +227,7 @@ export default function InvoicesPage() {
         bgColor="#FFC53D"
         icon={<FileTextOutlined style={{ fontSize: 20, color: "white" }} />}
         onAddNew={() => router.push("/invoices/create")}
-        buttonText="New Purchase Order"
+        buttonText="New Invoice"
         buttonIcon={<PlusOutlined />}
       />
 

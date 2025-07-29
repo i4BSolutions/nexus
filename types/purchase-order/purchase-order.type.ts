@@ -38,7 +38,7 @@ export interface PurchaseOrderResponse {
   dto: PurchaseOrderDto[];
   total: number;
   page: number;
-  pageSize: number;
+  pageSize: number | string;
   statistics: {
     total: number;
     total_approved: number;
