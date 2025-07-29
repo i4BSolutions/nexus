@@ -17,145 +17,38 @@ import {
   Col,
   Checkbox,
 } from "antd";
-import { useEffect, useState } from "react";
-import {
-  DownloadOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  TagOutlined,
-} from "@ant-design/icons";
-import { ColumnsType } from "antd/es/table";
-import StockInHistory, { StockInHistoryProps } from "./StockInHistory";
+import { useEffect } from "react";
+import { DownloadOutlined, TagOutlined } from "@ant-design/icons";
+import StockInHistory from "./StockInHistory";
 import {
   PurchaseInvoiceInterface,
   PurchaseInvoiceResponse,
 } from "@/types/purchase-invoice/purchase-invoice.type";
 import { WarehouseInterface } from "@/types/warehouse/warehouse.type";
 import { useGetById } from "@/hooks/react-query/useGetById";
+import { StockTransactionHistory } from "@/types/stock/stock.type";
 
 const { Option } = Select;
-const { Text } = Typography;
 const { TextArea } = Input;
-
-type LineItem = {
-  name: string;
-  sku: string;
-  invoiced: number;
-  remaining: number;
-};
-
-const invoiceLineItems: LineItem[] = [
-  { name: "iPhone 16", sku: "AA - 00001", invoiced: 3, remaining: 3 },
-  { name: "iPhone 16 Pro", sku: "AA - 00002", invoiced: 1, remaining: 1 },
-];
-
-const stockInHistoryItems: StockInHistoryProps[] = [
-  {
-    id: 1,
-    product_name: "MacBook Pro M3",
-    stock: 20,
-    product_sku: "MBP-M3-001",
-    warehouse_name: "Warehouse A",
-    invoice_number: "INV-2025-001",
-    date: "Jul 10, 2025",
-  },
-  {
-    id: 2,
-    product_name: "iPhone 16 Pro Max",
-    stock: 35,
-    product_sku: "IPH16PM-002",
-    warehouse_name: "Warehouse B",
-    invoice_number: "INV-2025-002",
-    date: "Jul 11, 2025",
-  },
-  {
-    id: 3,
-    product_name: "Samsung Galaxy S25",
-    stock: 50,
-    product_sku: "SGS25-003",
-    warehouse_name: "Warehouse C",
-    invoice_number: "INV-2025-003",
-    date: "Jul 12, 2025",
-  },
-  {
-    id: 4,
-    product_name: "Dell XPS 13",
-    stock: 18,
-    product_sku: "DX13-004",
-    warehouse_name: "Warehouse A",
-    invoice_number: "INV-2025-004",
-    date: "Jul 13, 2025",
-  },
-  {
-    id: 5,
-    product_name: "iPad Air 6",
-    stock: 25,
-    product_sku: "IPAD6-005",
-    warehouse_name: "Warehouse B",
-    invoice_number: "INV-2025-005",
-    date: "Jul 14, 2025",
-  },
-  {
-    id: 6,
-    product_name: "Google Pixel 9",
-    stock: 22,
-    product_sku: "PIXEL9-006",
-    warehouse_name: "Warehouse A",
-    invoice_number: "INV-2025-006",
-    date: "Jul 15, 2025",
-  },
-  {
-    id: 7,
-    product_name: "HP EliteBook 850",
-    stock: 30,
-    product_sku: "HP850-007",
-    warehouse_name: "Warehouse C",
-    invoice_number: "INV-2025-007",
-    date: "Jul 16, 2025",
-  },
-  {
-    id: 8,
-    product_name: "Lenovo ThinkPad X1",
-    stock: 40,
-    product_sku: "TPX1-008",
-    warehouse_name: "Warehouse B",
-    invoice_number: "INV-2025-008",
-    date: "Jul 17, 2025",
-  },
-  {
-    id: 9,
-    product_name: "Asus ROG Zephyrus",
-    stock: 15,
-    product_sku: "ROGZ-009",
-    warehouse_name: "Warehouse A",
-    invoice_number: "INV-2025-009",
-    date: "Jul 18, 2025",
-  },
-  {
-    id: 10,
-    product_name: "AirPods Pro 3",
-    stock: 60,
-    product_sku: "APP3-010",
-    warehouse_name: "Warehouse C",
-    invoice_number: "INV-2025-010",
-    date: "Jul 19, 2025",
-  },
-];
 
 interface StockFormProps {
   invoices: PurchaseInvoiceResponse | undefined;
   warehouses: WarehouseInterface[] | undefined;
+  stockInHistories: StockTransactionHistory[] | undefined;
   invoiceLoading?: boolean;
   warehouseLoading?: boolean;
   mutateStockInLoading?: boolean;
+  stockInHistoryLoading?: boolean;
   onSubmit?: (payload: any) => void;
 }
 
 const StockInForm = ({
   invoices,
   warehouses,
+  stockInHistories,
   invoiceLoading,
   warehouseLoading,
+  stockInHistoryLoading,
   mutateStockInLoading,
   onSubmit,
 }: StockFormProps) => {
@@ -588,7 +481,10 @@ const StockInForm = ({
         </Typography.Text>
       </Divider>
 
-      <StockInHistory items={stockInHistoryItems} />
+      <StockInHistory
+        items={stockInHistories}
+        isLoading={stockInHistoryLoading}
+      />
     </>
   );
 };
