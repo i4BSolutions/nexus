@@ -38,6 +38,8 @@ import { useList } from "@/hooks/react-query/useList";
 export default function WarehousePage() {
   const { message } = App.useApp();
 
+  const router = useRouter();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWarehouse, setEditingWarehouse] =
     useState<WarehouseInterface | null>(null);
@@ -142,7 +144,7 @@ export default function WarehousePage() {
       title: "Total Items in hand",
       dataIndex: "total_items",
       defaultSortOrder: "descend",
-      sorter: (a, b) => a.total_items - b.total_items,
+      sorter: (a, b) => (a.total_items ?? 0) - (b.total_items ?? 0),
       onCell: () => ({
         style: {
           borderRight: "none",
@@ -160,7 +162,7 @@ export default function WarehousePage() {
       title: "Total value (USD)",
       dataIndex: "total_amount",
       defaultSortOrder: "descend",
-      sorter: (a, b) => a.total_amount - b.total_amount,
+      sorter: (a, b) => (a.total_amount ?? 0) - (b.total_amount ?? 0),
       onCell: () => ({
         style: {
           borderRight: "none",
@@ -178,7 +180,7 @@ export default function WarehousePage() {
         <Space style={{ display: "flex", gap: 0 }}>
           <Button
             type="link"
-            onClick={() => console.log("view")}
+            onClick={() => router.push(`/warehouses/${record.id}`)}
             style={{ padding: 0 }}
           >
             View

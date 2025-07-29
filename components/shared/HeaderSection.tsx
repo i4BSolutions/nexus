@@ -5,6 +5,7 @@ const HeaderSection = ({
   title,
   description,
   bgColor,
+  iconColor,
   icon,
   onAddNew,
   buttonText,
@@ -13,6 +14,7 @@ const HeaderSection = ({
   title: string;
   description?: string;
   bgColor?: string;
+  iconColor?: string;
   icon: React.ReactNode;
   onAddNew: () => void;
   buttonText?: string;
@@ -40,7 +42,7 @@ const HeaderSection = ({
         }}
       >
         {React.cloneElement(icon as any, {
-          style: { fontSize: 20, color: "white" },
+          style: { fontSize: 20, color: iconColor ? iconColor : "white" },
         })}
       </div>
       <Space direction="vertical" size={0}>
