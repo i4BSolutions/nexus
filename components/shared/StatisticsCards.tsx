@@ -59,11 +59,14 @@ const StatisticsCards = ({ stats }: { stats: StatItem[] }) => (
             {item.icon}
           </div>
         </Space>
-        {index !== 0 && (
+        {item.footerContent && (
+          <div style={{ marginTop: 8 }}>{item.footerContent}</div>
+        )}
+        {/* {index !== 0 && (
           <Typography.Text type="secondary">
             Across {stats[0].total_approved || 0} {item.approved_text}
           </Typography.Text>
-        )}
+        )} */}
       </Card>
     ))}
   </Flex>

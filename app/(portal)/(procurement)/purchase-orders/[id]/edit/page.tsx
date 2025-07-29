@@ -554,6 +554,16 @@ export default function PoEditPage() {
                 style={{ width: "100%" }}
                 rules={[
                   { required: true, message: "Exchange rate is required!" },
+                  {
+                    validator: (_, value) => {
+                      if (value && parseFloat(value) <= 0) {
+                        return Promise.reject(
+                          new Error("Exchange rate must be greater than 0")
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  },
                 ]}
               >
                 <Input type="number" size="large" />
@@ -701,12 +711,8 @@ export default function PoEditPage() {
                                 message: "Quantity is required",
                               },
                               {
-                                pattern: /^[1-9]\d*$/,
-                                message: "Quantity cannot be 0",
-                              },
-                              {
                                 validator: (_, value) => {
-                                  if (value && parseFloat(value) <= 0) {
+                                  if (value === 0 || parseFloat(value) <= 0) {
                                     return Promise.reject(
                                       new Error(
                                         "Quantity must be greater than 0"
@@ -719,7 +725,7 @@ export default function PoEditPage() {
                             ]}
                             style={{ marginBottom: 0 }}
                           >
-                            <InputNumber min={0} style={{ width: 80 }} />
+                            <InputNumber type="number" style={{ width: 80 }} />
                           </Form.Item>
                         </Col>
 
@@ -733,12 +739,23 @@ export default function PoEditPage() {
                                   required: true,
                                   message: "Unit price cannot be 0",
                                 },
+                                {
+                                  validator: (_, value) => {
+                                    if (value === 0 || parseFloat(value) <= 0) {
+                                      return Promise.reject(
+                                        new Error(
+                                          "Unit price must be greater than 0"
+                                        )
+                                      );
+                                    }
+                                    return Promise.resolve();
+                                  },
+                                },
                               ]}
                               style={{ marginBottom: 0 }}
                             >
                               <InputNumber
                                 type="number"
-                                min={0.01}
                                 style={{ width: 150 }}
                                 suffix={getCurrencyCode(
                                   form.getFieldValue("currency")
@@ -1077,7 +1094,16 @@ export default function PoEditPage() {
             <Button onClick={() => router.back()}>Cancel</Button>
             <Button
               type="primary"
-              onClick={() => setIsReasonModalOpen(true)}
+              onClick={async () => {
+                try {
+                  await form.validateFields();
+                  setIsReasonModalOpen(true);
+                } catch (error) {
+                  message.error(
+                    "Please fill in all required fields before saving."
+                  );
+                }
+              }}
               style={{ marginLeft: 8 }}
             >
               Save

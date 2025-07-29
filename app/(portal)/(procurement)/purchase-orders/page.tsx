@@ -18,7 +18,7 @@ import {
   ShoppingCartOutlined,
   UpCircleOutlined,
 } from "@ant-design/icons";
-import { Button, Flex, Input, Segmented, Select, Spin } from "antd";
+import { Button, Flex, Input, Segmented, Select, Spin, Typography } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
@@ -34,6 +34,7 @@ export default function PurchaseOrdersPage() {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
@@ -88,6 +89,12 @@ export default function PurchaseOrdersPage() {
           tooltip: "Total value of all purchase orders",
           prefix: "$",
           approved_text: "approved POs",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {poData.statistics.total || 0}
+              approved POs
+            </Typography.Text>
+          ),
         },
         {
           title: "% Invoiced",
@@ -98,6 +105,11 @@ export default function PurchaseOrdersPage() {
           borderColor: "#ADC6FF",
           tooltip: "Percentage of total POs that have been invoiced",
           suffix: "%",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {poData.statistics.total || 0} approved POs
+            </Typography.Text>
+          ),
         },
         {
           title: "% Allocated",
@@ -108,6 +120,11 @@ export default function PurchaseOrdersPage() {
           borderColor: "#D3ADF7",
           tooltip: "Percentage of total POs that have been allocated",
           suffix: "%",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {poData.statistics.total || 0} approved POs
+            </Typography.Text>
+          ),
         },
       ]);
     }
@@ -168,7 +185,7 @@ export default function PurchaseOrdersPage() {
           icon={
             <ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />
           }
-          onAddNew={() => router.push("/purchase-orders/create")}
+          onAddNew={() => setShowCreateModal(true)}
           buttonText="New Purchase Order"
           buttonIcon={<PlusOutlined />}
         />

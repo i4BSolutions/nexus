@@ -34,7 +34,6 @@ export default function PoCardView({
   paginationChangeHandler: (page: number, pageSize?: number) => void;
 }) {
   const router = useRouter();
-
   return (
     <section className="py-6 w-full max-w-[1140px]">
       <div className="grid grid-cols-3 items-center w-full gap-5">

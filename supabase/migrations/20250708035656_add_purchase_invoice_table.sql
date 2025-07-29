@@ -12,7 +12,6 @@ create table "public"."purchase_invoice" (
     "note" text
 );
 
-
 alter table "public"."purchase_invoice" enable row level security;
 
 create table "public"."purchase_invoice_item" (

@@ -48,7 +48,7 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
       "budgets",
       {
         pageSize: "all" as any,
-        status: "Active",
+        status: "true",
       }
     );
 

@@ -1,14 +1,10 @@
 import { PurchaseInvoiceDto } from "@/types/purchase-invoice/purchase-invoice.type";
 
 import {
-  CarryOutOutlined,
   DollarOutlined,
   EditOutlined,
   EllipsisOutlined,
   EyeOutlined,
-  FileTextOutlined,
-  InfoOutlined,
-  PlusOutlined,
 } from "@ant-design/icons";
 
 import type { MenuProps } from "antd";
@@ -21,7 +17,6 @@ import {
   Progress,
   Row,
   Space,
-  Tooltip,
   Typography,
 } from "antd";
 import { useRouter } from "next/navigation";
@@ -44,7 +39,10 @@ export default function CardView({
 
   return (
     <section className="py-4">
-      <div className="flex flex-wrap gap-4">
+      <div
+        className="grid gap-4"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(325px, 1fr))" }}
+      >
         {data.map((item: PurchaseInvoiceDto) => {
           const items: MenuProps["items"] = [
             {
@@ -69,7 +67,7 @@ export default function CardView({
           return (
             <div
               key={item.id}
-              className="border-2 border-[#F5F5F5] rounded-[16px] w-[320px]"
+              className="border-2 border-[#F5F5F5] rounded-[16px] w-full"
             >
               <div
                 className="py-3 rounded-t-[14px]"
@@ -190,7 +188,47 @@ export default function CardView({
                       Delivery Progress
                     </Typography.Text>
                   </Col>
-                  <Progress percent={19} />
+                  <Progress percent={19} strokeColor="#52C41A" />
+                  <Space
+                    style={{
+                      width: "100%",
+                      justifyContent: "space-between",
+                      marginTop: 8,
+                    }}
+                  >
+                    <Space>
+                      <div
+                        style={{
+                          color: "#52C41A",
+                          background: "#F6FFED",
+                          border: "1px solid #B7EB8F",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 400,
+                          padding: "2px 8px",
+                          maxWidth: "fit-content",
+                        }}
+                      >
+                        10% Delivered
+                      </div>
+                    </Space>
+                    <Space>
+                      <div
+                        style={{
+                          color: "#F5222D",
+                          background: "#FFF1F0",
+                          border: "1px solid #FFA39E",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 400,
+                          padding: "2px 8px",
+                          maxWidth: "fit-content",
+                        }}
+                      >
+                        90% Pending
+                      </div>
+                    </Space>
+                  </Space>
                 </Row>
               </div>
             </div>
