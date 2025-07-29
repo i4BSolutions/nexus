@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, forwardRef, useImperativeHandle } from "react";
-import { Space, Typography, Form, Row, Col, Tag, App } from "antd";
 import { ShoppingCartOutlined } from "@ant-design/icons";
+import { App, Col, Form, Row, Skeleton, Space, Tag, Typography } from "antd";
+import { forwardRef, useEffect, useImperativeHandle } from "react";
 
 // Hooks
-import { useList } from "@/hooks/react-query/useList";
 import { useGetById } from "@/hooks/react-query/useGetById";
+import { useList } from "@/hooks/react-query/useList";
 
 // Types
-import { SupplierInterface } from "@/types/supplier/supplier.type";
-import { PurchaseOrderRegionInterface } from "@/types/purchase-order/purchase-order-region.type";
+import { Budget } from "@/types/budgets/budgets.type";
+import { PersonInterface } from "@/types/person/person.type";
 import {
   ProductCurrencyInterface,
   ProductInterface,
   ProductResponse,
 } from "@/types/product/product.type";
-import { PersonInterface } from "@/types/person/person.type";
+import { PurchaseOrderRegionInterface } from "@/types/purchase-order/purchase-order-region.type";
+import { SupplierInterface } from "@/types/supplier/supplier.type";
 
 interface StepReviewSubmitProps {
   onNext: (values: any) => void;
@@ -47,12 +48,43 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
       formData?.currency
     );
 
+    const { data: budgetData, isLoading: budgetLoading } = useGetById(
+      "budgets",
+      formData?.budget
+    );
+
     const { data: productsData = [] } = useList("products", {
       page: 1,
       pageSize: "all" as any,
     });
 
     const { data: personsData = [] } = useList("persons");
+
+    const getTotal = () => {
+      const items = formData.items;
+      const exchangeRate = formData.exchange_rate;
+      let totalLocal = 0;
+
+      items.forEach((item: any) => {
+        if (!item || !item.product) return;
+        const price = item.unit_price || 0;
+        totalLocal += (item.quantity || 0) * price;
+      });
+
+      const totalUSD = exchangeRate
+        ? (totalLocal / exchangeRate).toFixed(2)
+        : "0.00";
+
+      return {
+        totalLocal: totalLocal.toLocaleString(),
+        totalUSD: totalUSD.toLocaleString(),
+      };
+    };
+
+    const isSufficient =
+      (budgetData as Budget)?.planned_amount_usd -
+        Number(getTotal()?.totalUSD) >
+      0;
 
     useEffect(() => {
       // Pre-populate form with existing data
@@ -76,6 +108,7 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
           product_id: item.product,
           quantity: item.quantity,
           unit_price_local: item.unit_price,
+          is_foc: item.foc ? item.foc : false,
         }));
 
         const body = {
@@ -99,29 +132,6 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
       } catch (error: any) {
         message.error(error.message || "Failed to create purchase order");
       }
-    };
-
-    const getTotal = () => {
-      const items = formData?.items || [];
-      const exchangeRate = Number(formData?.exchange_rate) || 0;
-      let totalLocal = 0;
-
-      items.forEach((item: any) => {
-        if (!item || !item.product || item.foc) return;
-
-        const price = Number(item.unit_price) || 0;
-        const quantity = Number(item.quantity) || 0;
-
-        totalLocal += quantity * price;
-      });
-
-      const totalUSD =
-        exchangeRate > 0 ? (totalLocal / exchangeRate).toFixed(2) : "0.00";
-
-      return {
-        totalLocal: totalLocal.toLocaleString(),
-        totalUSD: totalUSD.toLocaleString(),
-      };
     };
 
     return (
@@ -210,10 +220,47 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
                     <Space>
                       <Typography.Text type="secondary">Budget</Typography.Text>
                     </Space>
-                    <Space>
-                      <Typography.Title level={5}>
-                        {formData?.budget_name || "-"}
+                    <Space direction="vertical" size={0}>
+                      {budgetLoading && <Skeleton active />}
+                      <Typography.Title level={5} style={{ margin: 0 }}>
+                        {(budgetData as Budget)?.budget_name} (
+                        {(budgetData as Budget)?.project_name})
                       </Typography.Title>
+                      <Space>
+                        <Typography.Text type="secondary">
+                          Available:{" "}
+                          {(
+                            (budgetData as Budget)?.planned_amount_usd || 0
+                          ).toLocaleString()}{" "}
+                          USD
+                        </Typography.Text>
+                        <Space
+                          style={{ display: "flex", alignItems: "center" }}
+                        >
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: 6,
+                              height: 6,
+                              borderRadius: "50%",
+                              background: isSufficient ? "#4CD964" : "#FF4D4F",
+                              marginRight: 2,
+                              marginBottom: 2,
+                            }}
+                          />
+                          <Typography.Text
+                            style={{
+                              fontWeight: 400,
+                              color: "#222",
+                              margin: 0,
+                            }}
+                          >
+                            {isSufficient
+                              ? "Sufficient Amount"
+                              : "Insufficient Amount"}
+                          </Typography.Text>
+                        </Space>
+                      </Space>
                     </Space>
                   </Space>
                 </Space>

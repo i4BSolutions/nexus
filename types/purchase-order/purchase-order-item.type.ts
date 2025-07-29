@@ -1,9 +1,12 @@
 export interface PurchaseOrderItemInterface {
   id: number;
-  purchase_order_id: number;
-  product_id: number;
+  product: number;
+  product_name: string;
   quantity: number;
   unit_price_local: number;
-  created_at?: string;
-  updated_at?: string;
+  unit_price_usd: number;
+  sub_total_local: number;
+  sub_total_usd: number;
+  invoiced?: number;
+  available?: number;
 }

@@ -2,7 +2,7 @@ import React from "react";
 
 export type StatItem = {
   title: string;
-  value: number;
+  value: number | any;
   icon: React.ReactNode;
   bgColor: string;
   gradient: string;
@@ -11,4 +11,6 @@ export type StatItem = {
   prefix?: string;
   suffix?: string;
   total_approved?: number;
+  approved_text?: string;
+  footerContent?: any;
 };

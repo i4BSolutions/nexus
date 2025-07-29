@@ -2,6 +2,7 @@ import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { PurchaseOrderInterface } from "@/types/purchase-order/purchase-order.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
+import dayjs from "dayjs";
 import { NextRequest, NextResponse } from "next/server";
 import { PurchaseOrderResponse } from "../../../types/purchase-order/purchase-order.type";
 
@@ -66,6 +67,7 @@ export async function POST(
     product_id: item.product_id,
     quantity: item.quantity,
     unit_price_local: item.unit_price_local,
+    is_foc: item.is_foc,
   }));
 
   if (itemsToInsert.length > 0) {
@@ -96,14 +98,22 @@ export async function GET(
 > {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSizeParam = searchParams.get("pageSize") || "10";
-  const pageSize = parseInt(pageSizeParam, 10);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+
   const poNumber = searchParams.get("q") || "";
   const statusParam = searchParams.get("status");
   const sortParam = searchParams.get("sort");
+
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const hasPageSize = searchParams.has("pageSize");
+  const pageSizeParam = searchParams.get("pageSize");
+  const pageSize = pageSizeParam ? parseInt(pageSizeParam, 10) : undefined;
+  let from: number | undefined;
+  let to: number | undefined;
+
+  if (hasPageSize && pageSize !== undefined) {
+    from = (page - 1) * pageSize;
+    to = from + pageSize - 1;
+  }
 
   let query = supabase.from("purchase_order").select(
     `
@@ -142,7 +152,7 @@ export async function GET(
     ascending: sortParam === "order_date_asc",
   });
 
-  if (typeof to === "number") {
+  if (typeof from === "number" && typeof to === "number") {
     query = query.range(from, to);
   }
 
@@ -163,9 +173,11 @@ export async function GET(
   const orders = data?.map((order) => ({
     id: order.id,
     purchase_order_no: order.purchase_order_no,
-    order_date: order.order_date,
+    order_date: dayjs(order.order_date).format("MMM D, YYYY"),
     status: order.status,
-    expected_delivery_date: order.expected_delivery_date,
+    expected_delivery_date: dayjs(order.expected_delivery_date).format(
+      "MMM D, YYYY"
+    ),
     usd_exchange_rate: order.usd_exchange_rate,
     currency_code: order.product_currency.currency_code,
     contact_person: order.contact_person.name,
@@ -189,7 +201,7 @@ export async function GET(
     dto: orders || [],
     total: count || 0,
     page,
-    pageSize: pageSize,
+    pageSize: pageSize || "all",
     statistics: {
       total: count || 0,
       total_approved: orders

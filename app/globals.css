@@ -52,3 +52,8 @@
 .custom-next-arrow:hover {
   color: darkred !important;
 }
+
+.ant-form-item-label > label {
+  display: block;
+  width: 100%;
+}

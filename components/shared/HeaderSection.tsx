@@ -4,6 +4,8 @@ import { Typography, Button, Space } from "antd";
 const HeaderSection = ({
   title,
   description,
+  bgColor,
+  iconColor,
   icon,
   onAddNew,
   buttonText,
@@ -11,6 +13,8 @@ const HeaderSection = ({
 }: {
   title: string;
   description?: string;
+  bgColor?: string;
+  iconColor?: string;
   icon: React.ReactNode;
   onAddNew: () => void;
   buttonText?: string;
@@ -30,7 +34,7 @@ const HeaderSection = ({
         style={{
           width: 32,
           height: 32,
-          background: "#40A9FF",
+          background: bgColor ? bgColor : "#40A9FF",
           borderRadius: "100%",
           display: "flex",
           justifyContent: "center",
@@ -38,7 +42,7 @@ const HeaderSection = ({
         }}
       >
         {React.cloneElement(icon as any, {
-          style: { fontSize: 20, color: "white" },
+          style: { fontSize: 20, color: iconColor ? iconColor : "white" },
         })}
       </div>
       <Space direction="vertical" size={0}>

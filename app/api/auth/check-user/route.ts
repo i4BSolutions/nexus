@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { data, error } = await supabase
-    .from("profiles")
+    .from("user_profiles")
     .select("*")
     .eq("email", email);
 

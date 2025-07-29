@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
 
 import PoCardView from "@/components/purchase-orders/PoCardView";
 import PoTableView from "@/components/purchase-orders/PoTableView";
@@ -20,30 +20,31 @@ import {
   PurchaseOrderResponse,
 } from "@/types/purchase-order/purchase-order.type";
 import { SortOrder } from "antd/es/table/interface";
+import { useEffect, useState } from "react";
 import { useList } from "@/hooks/react-query/useList";
-import { Button, Flex, Segmented, Select, Spin } from "antd";
+import { Button, Flex, Segmented, Select, Spin, Typography } from "antd";
 import Input, { SearchProps } from "antd/es/input";
 import StatisticsCards from "@/components/shared/StatisticsCards";
-import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
 
 export default function PurchaseOrdersPage() {
+  const router = useRouter();
   const [statItems, setStatItems] = useState<StatItem[]>();
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
   const [data, setData] = useState<PurchaseOrderDto[]>();
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [searchText, setSearchText] = useState("");
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
-
   const [showCreateModal, setShowCreateModal] = useState(false);
+
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
     "purchase-orders",
     {
       page: pagination.page,
       pageSize: pagination.pageSize,
       sort: sortOrder
-        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
+        ? `id_${sortOrder === "ascend" ? "asc" : "desc"}`
         : undefined,
       status: status,
       q: searchText,
@@ -88,6 +89,13 @@ export default function PurchaseOrdersPage() {
           borderColor: "#87E8DE",
           tooltip: "Total value of all purchase orders",
           prefix: "$",
+          approved_text: "approved POs",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {poData.statistics.total || 0}
+              approved POs
+            </Typography.Text>
+          ),
         },
         {
           title: "% Invoiced",
@@ -98,6 +106,11 @@ export default function PurchaseOrdersPage() {
           borderColor: "#ADC6FF",
           tooltip: "Percentage of total POs that have been invoiced",
           suffix: "%",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {poData.statistics.total || 0} approved POs
+            </Typography.Text>
+          ),
         },
         {
           title: "% Allocated",
@@ -108,6 +121,11 @@ export default function PurchaseOrdersPage() {
           borderColor: "#D3ADF7",
           tooltip: "Percentage of total POs that have been allocated",
           suffix: "%",
+          footerContent: (
+            <Typography.Text type="secondary">
+              Across {poData.statistics.total || 0} approved POs
+            </Typography.Text>
+          ),
         },
       ]);
     }
@@ -137,6 +155,12 @@ export default function PurchaseOrdersPage() {
 
   const viewChangeHandler = (value: "Card" | "Table") => {
     setViewMode(value);
+    if (value === "Card") {
+      setPagination({ page: 1, pageSize: 9 });
+    }
+    if (value === "Table") {
+      setPagination({ page: 1, pageSize: 10 });
+    }
   };
 
   const clearFiltersHandler = () => {
@@ -151,89 +175,91 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <section className="px-6">
-      <Breadcrumbs
-        items={[{ title: "Home", href: "/" }, { title: "Purchase Orders" }]}
-      />
-      <HeaderSection
-        title="Purchase Orders"
-        description="Manage and track all purchase orders"
-        icon={<ShoppingCartOutlined />}
-        onAddNew={() => {
-          setShowCreateModal(true);
-        }}
-        buttonText="New Purchase Order"
-        buttonIcon={<PlusOutlined />}
-      />
-      <StatisticsCards stats={statItems} />
-      <Flex justify="center" align="center" gap={12}>
-        <Input.Search
-          placeholder="Search By PO Number"
-          allowClear
-          onSearch={onSearchHandler}
+    <section className="px-6 grid place-items-center w-full">
+      <div className="w-full max-w-[1140px]">
+        <Breadcrumbs
+          items={[{ title: "Home", href: "/" }, { title: "Purchase Orders" }]}
         />
-        {viewMode === "Card" ? (
-          <>
-            <Flex justify="center" align="center" gap={12}>
-              <span>Sort:</span>
-              <Select
-                defaultValue="Date (Newest First)"
-                style={{ width: 160 }}
-                onChange={onSortHandler}
-                options={[
-                  {
-                    value: "Date (Newest First)",
-                    label: "Date (Newest First)",
-                  },
-                  {
-                    value: "Date (Oldest First)",
-                    label: "Date (Oldest First)",
-                  },
-                ]}
-              />
-            </Flex>
-
-            <div className="bg-[#D9D9D9] w-[1px] h-7" />
-          </>
-        ) : (
-          <div className="bg-transparent w-[425px] h-7" />
-        )}
+        <HeaderSection
+          title="Purchase Orders"
+          description="Manage and track all purchase orders"
+          icon={
+            <ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />
+          }
+          onAddNew={() => setShowCreateModal(true)}
+          buttonText="New Purchase Order"
+          buttonIcon={<PlusOutlined />}
+        />
+        <StatisticsCards stats={statItems} />
         <Flex justify="center" align="center" gap={12}>
-          <span>Filter(s):</span>
-          <Select
-            defaultValue="All Status"
-            style={{ width: 160 }}
-            onChange={statusChangeHandler}
-            options={[
-              {
-                value: "All Status",
-                label: "All Status",
-              },
-              {
-                value: "Draft",
-                label: "Draft",
-              },
-              {
-                value: "Approved",
-                label: "Approved",
-              },
-            ]}
+          <Input.Search
+            placeholder="Search By PO Number"
+            allowClear
+            onSearch={onSearchHandler}
           />
-          <Button
-            type="link"
-            style={{ padding: 0 }}
-            onClick={clearFiltersHandler}
-          >
-            Clear Filter(s)
-          </Button>
+          {viewMode === "Card" ? (
+            <>
+              <Flex justify="center" align="center" gap={12}>
+                <span>Sort:</span>
+                <Select
+                  defaultValue="Date (Newest First)"
+                  style={{ width: 160 }}
+                  onChange={onSortHandler}
+                  options={[
+                    {
+                      value: "Date (Newest First)",
+                      label: "Date (Newest First)",
+                    },
+                    {
+                      value: "Date (Oldest First)",
+                      label: "Date (Oldest First)",
+                    },
+                  ]}
+                />
+              </Flex>
+
+              <div className="bg-[#D9D9D9] w-[1px] h-7" />
+            </>
+          ) : (
+            <div className="bg-transparent w-[425px] h-7" />
+          )}
+          <Flex justify="center" align="center" gap={12}>
+            <span>Filter(s):</span>
+            <Select
+              defaultValue="All Status"
+              style={{ width: 160 }}
+              onChange={statusChangeHandler}
+              options={[
+                {
+                  value: "All Status",
+                  label: "All Status",
+                },
+                {
+                  value: "Draft",
+                  label: "Draft",
+                },
+                {
+                  value: "Approved",
+                  label: "Approved",
+                },
+              ]}
+            />
+            <Button
+              type="link"
+              style={{ padding: 0 }}
+              onClick={clearFiltersHandler}
+            >
+              Clear Filter(s)
+            </Button>
+          </Flex>
+          <div className="bg-[#D9D9D9] w-[1px] h-7" />
+          <Segmented<"Card" | "Table">
+            options={["Card", "Table"]}
+            style={{ borderRadius: 9, border: "1px solid #D9D9D9" }}
+            onChange={viewChangeHandler}
+          />
         </Flex>
-        <div className="bg-[#D9D9D9] w-[1px] h-7" />
-        <Segmented<"Card" | "Table">
-          options={["Card", "Table"]}
-          style={{ borderRadius: 9, border: "1px solid #D9D9D9" }}
-          onChange={viewChangeHandler}
-        />
-      </Flex>
+      </div>
       {viewMode === "Card" ? (
         <PoCardView
           data={data}

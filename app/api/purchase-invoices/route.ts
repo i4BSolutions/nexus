@@ -1,0 +1,353 @@
+import { error, success } from "@/lib/api-response";
+import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+
+import {
+  PurchaseInvoiceInterface,
+  PurchaseInvoiceResponse,
+} from "@/types/purchase-invoice/purchase-invoice.type";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { PurchaseOrderItemInterface } from "@/types/purchase-order/purchase-order-item.type";
+
+// Step 1: Get Purchase Order Items Quantity
+async function getPurchaseOrderItems(
+  purchase_order_id: number
+): Promise<PurchaseOrderItemInterface[]> {
+  const supabase = await createClient();
+
+  const { data: purchaseOrderItems, error: purchaseOrderItemsError } =
+    await supabase
+      .from("purchase_order_items")
+      .select("*")
+      .eq("purchase_order_id", purchase_order_id);
+
+  if (purchaseOrderItemsError) {
+    throw new Error(purchaseOrderItemsError.message);
+  }
+
+  return purchaseOrderItems;
+}
+
+// Step 2: Check if the purchase order items quantity is greater than the purchase invoice items quantity
+async function checkPurchaseOrderItemsQuantity(
+  purchaseOrderItems: any,
+  invoiceItems: any,
+  purchase_order_id: number
+) {
+  const supabase = await createClient();
+
+  // Fetch all previous invoice items for this purchase order
+  const { data: previousInvoiceItems, error } = await supabase
+    .from("purchase_invoice_item")
+    .select("product_id, quantity")
+    .eq("purchase_order_id", purchase_order_id);
+
+  if (error) throw new Error(error.message);
+
+  // Sum previous quantities by product_id
+  const previousQuantities: Record<number, number> = {};
+
+  for (const item of previousInvoiceItems) {
+    previousQuantities[item.product_id] =
+      (previousQuantities[item.product_id] || 0) + item.quantity;
+  }
+
+  // Map purchase order items by product_id for easy lookup
+  const poItemMap = Object.fromEntries(
+    purchaseOrderItems.map((item: any) => [item.product_id, item])
+  );
+
+  // Check each item in the new invoice
+  for (const invoiceItem of invoiceItems) {
+    const poItem = poItemMap[invoiceItem.product_id];
+    if (!poItem) return false; // Product not in purchase order
+
+    const prevQty = previousQuantities[invoiceItem.product_id] || 0;
+    const availableQty = poItem.quantity - prevQty;
+
+    if (invoiceItem.quantity > availableQty) {
+      return false; // Exceeds available quantity
+    }
+  }
+
+  return true;
+}
+/**
+ * This API route creates a purchase invoice.
+ * @param req - NextRequest object
+ * @returns NextResponse ApiResponse<PurchaseInvoiceInterface | null>
+ */
+export async function POST(
+  req: NextRequest
+): Promise<
+  NextResponse<ApiResponse<PurchaseInvoiceInterface> | ApiResponse<null>>
+> {
+  const supabase = await createClient();
+  const body = await req.json();
+
+  const {
+    purchase_invoice_number,
+    purchase_order_id,
+    invoice_date,
+    due_date,
+    currency_id,
+    usd_exchange_rate,
+    note,
+    status,
+    invoice_items,
+  } = body;
+
+  // Step 1: Get Purchase Order Items Quantity
+  const purchaseOrderItems = await getPurchaseOrderItems(purchase_order_id);
+
+  if (!purchaseOrderItems || purchaseOrderItems.length === 0) {
+    return NextResponse.json(error("Purchase order items not found"), {
+      status: 404,
+    });
+  }
+
+  // Step 2: Check if the purchase order items quantity is greater than the purchase invoice items quantity
+  const isPurchaseOrderItemsQuantityGreater =
+    await checkPurchaseOrderItemsQuantity(
+      purchaseOrderItems,
+      invoice_items,
+      purchase_order_id
+    );
+
+  if (!isPurchaseOrderItemsQuantityGreater) {
+    return NextResponse.json(
+      error(
+        "Purchase order items available quantity is less than the purchase invoice items quantity"
+      ),
+      {
+        status: 400,
+      }
+    );
+  }
+
+  // Step 3: Create purchase invoice
+  const invoiceData = {
+    purchase_invoice_number,
+    purchase_order_id,
+    invoice_date,
+    due_date,
+    currency_id,
+    exchange_rate_to_usd: usd_exchange_rate,
+    note,
+    status,
+  };
+
+  const { data: invoice, error: invoiceError } = await supabase
+    .from("purchase_invoice")
+    .insert(invoiceData)
+    .select()
+    .single();
+
+  if (invoiceError) {
+    return NextResponse.json(error(invoiceError.message), { status: 500 });
+  }
+
+  const itemsToInsert = (invoice_items || []).map((item: any) => ({
+    purchase_invoice_id: invoice.id,
+    purchase_order_id: purchase_order_id,
+    product_id: item.product_id,
+    quantity: item.quantity,
+    unit_price_local: item.unit_price_local,
+  }));
+
+  if (itemsToInsert.length > 0) {
+    const { error: itemsError } = await supabase
+      .from("purchase_invoice_item")
+      .insert(itemsToInsert);
+
+    if (itemsError) {
+      return NextResponse.json(error(itemsError.message), { status: 500 });
+    }
+  }
+
+  return NextResponse.json(
+    success(invoice, "Purchase invoice created successfully"),
+    { status: 200 }
+  );
+}
+
+/**
+ * This function retrieves statistics for purchase invoices.
+ * It calculates the total number of invoices and the total USD value.
+ * @returns Promise<{ total_invoices: number, total_usd: number, delivered: number }>
+ */
+async function getStatistics() {
+  const supabase = await createClient();
+
+  let statsQuery = supabase.from("purchase_invoice").select(
+    `
+      exchange_rate_to_usd,
+      invoice_items:purchase_invoice_item (
+        quantity,
+        unit_price_local
+      )
+    `
+  );
+  const { data: allInvoicesForStats, error: statsError } = await statsQuery;
+
+  let totalAmountUsd = 0;
+  let totalInvoices = 0;
+
+  if (!statsError && allInvoicesForStats) {
+    totalInvoices = allInvoicesForStats.length;
+    totalAmountUsd = allInvoicesForStats.reduce((total, invoice) => {
+      const invoiceTotal = invoice.invoice_items.reduce(
+        (sum: number, item: any) =>
+          sum +
+          (item.quantity * item.unit_price_local) /
+            invoice.exchange_rate_to_usd,
+        0
+      );
+      return total + invoiceTotal;
+    }, 0);
+  }
+
+  return {
+    total_invoices: totalInvoices,
+    total_usd: totalAmountUsd,
+    delivered: 0, // Need to calculate actual delivered percentage
+  };
+}
+
+/**
+ * This API route retrieves all purchase invoices from the database with
+ * pagination support
+ * descending order by default
+ * and optional filtering by status
+ * sorting by invoice number, date, or amount
+ * @param req - NextRequest object
+ * @returns NextResponse ApiResponse<PurchaseInvoiceResponse>
+ */
+export async function GET(
+  req: NextRequest
+): Promise<
+  NextResponse<ApiResponse<PurchaseInvoiceResponse> | ApiResponse<any>>
+> {
+  const supabase = await createClient();
+  const { searchParams } = new URL(req.url);
+
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const pageSizeParam = searchParams.get("pageSize") || "10";
+  const pageSize = parseInt(pageSizeParam, 10);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const search = searchParams.get("q") || "";
+
+  const status = searchParams.get("status");
+  const dateSort = searchParams.get("dateSort");
+  const amountSort = searchParams.get("amountSort");
+
+  // Build the query
+  let query = supabase.from("purchase_invoice").select(
+    `
+      id,
+      purchase_invoice_number,
+      purchase_order_no:purchase_order (purchase_order_no),
+      invoice_date,
+      due_date,
+      product_currency (
+        currency_code
+      ),
+      exchange_rate_to_usd,
+      status,
+      note,
+      invoice_items:purchase_invoice_item (
+        product_id,
+        quantity,
+        unit_price_local
+      )
+    `,
+    { count: "exact" }
+  );
+
+  if (search) {
+    query = query.ilike("purchase_invoice_number", `%${search}%`);
+  }
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  if (dateSort === "date_asc") {
+    query = query.order("invoice_date", { ascending: true });
+  } else if (dateSort === "date_desc") {
+    query = query.order("invoice_date", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+
+  const needAmountSort =
+    amountSort === "amount_asc" || amountSort === "amount_desc";
+
+  if (!needAmountSort) {
+    query = query.range(from, to); // apply DB pagination only if sorting by date
+  }
+
+  const {
+    data: invoices,
+    count,
+    error: dbError,
+  } = (await query) as unknown as {
+    data: any[] | null;
+    count: number | null;
+    error: Error | null;
+  };
+
+  if (dbError) {
+    return NextResponse.json(error(dbError.message), { status: 500 });
+  }
+
+  let formatDto: any = invoices?.map((invoice) => ({
+    id: invoice.id,
+    purchase_invoice_number: invoice.purchase_invoice_number,
+    purchase_order_no: invoice.purchase_order_no.purchase_order_no,
+    invoice_date: invoice.invoice_date,
+    due_date: invoice.due_date,
+    currency_code: invoice.product_currency.currency_code,
+    usd_exchange_rate: invoice.exchange_rate_to_usd,
+    total_amount_local: invoice.invoice_items.reduce(
+      (total: number, item: { quantity: number; unit_price_local: number }) =>
+        total + item.quantity * item.unit_price_local,
+      0
+    ),
+    total_amount_usd: invoice.invoice_items.reduce(
+      (total: number, item: { quantity: number; unit_price_local: number }) =>
+        total +
+        (item.quantity * item.unit_price_local) / invoice.exchange_rate_to_usd,
+      0
+    ),
+    status: invoice.status,
+    note: invoice.note || "",
+  }));
+
+  if (amountSort === "amount_asc") {
+    formatDto.sort((a: any, b: any) => a.total_amount_usd - b.total_amount_usd);
+  } else if (amountSort === "amount_desc") {
+    formatDto.sort((a: any, b: any) => b.total_amount_usd - a.total_amount_usd);
+  }
+
+  if (needAmountSort) {
+    formatDto = formatDto.slice(from, to + 1);
+  }
+
+  const statisticsData = await getStatistics();
+
+  const data = {
+    items: formatDto,
+    total: count || 0,
+    page,
+    pageSize: pageSize,
+    statistics: statisticsData,
+  };
+
+  return NextResponse.json(
+    success(data, "Purchase invoice retrived successfully"),
+    { status: 200 }
+  );
+}
