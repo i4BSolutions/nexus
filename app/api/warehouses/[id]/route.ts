@@ -102,14 +102,25 @@ export async function GET(
   const productIds = inventory.map((inv) => inv.product.id);
   const { data: invoiceItems } = await supabase
     .from("purchase_invoice_item")
-    .select("product_id, unit_price_local")
+    .select("product_id, unit_price_local, quantity")
     .in("product_id", productIds);
 
-  const priceMap: Record<number, number> = {};
+  const totalCostMap: Record<number, number> = {};
+  const totalQtyMap: Record<number, number> = {};
+  const wacMap: Record<number, number> = {};
+
   for (const item of invoiceItems || []) {
-    if (!priceMap[item.product_id]) {
-      priceMap[item.product_id] = item.unit_price_local;
-    }
+    const productId = item.product_id;
+    const unitPrice = item.unit_price_local;
+    const qty = item.quantity;
+
+    totalCostMap[productId] = (totalCostMap[productId] || 0) + unitPrice * qty;
+    totalQtyMap[productId] = (totalQtyMap[productId] || 0) + qty;
+  }
+
+  for (const productId in totalCostMap) {
+    const totalQty = totalQtyMap[productId];
+    wacMap[+productId] = totalQty > 0 ? totalCostMap[productId] / totalQty : 0;
   }
 
   // Fetch incoming and outgoing stock per product in this warehouse
@@ -132,7 +143,7 @@ export async function GET(
   });
 
   const inventoryDetails = inventory.map((inv) => {
-    const unitPrice = priceMap[inv.product.id] || 0;
+    const unitPrice = wacMap[inv.product.id] || 0;
     const incoming = incomingMap[inv.product.id] || 0;
     const outgoing = outgoingMap[inv.product.id] || 0;
 
