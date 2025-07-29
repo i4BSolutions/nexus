@@ -18,7 +18,7 @@ const CreateBudgetPage = () => {
 
   const handleNext = (values: BudgetFormInput) => {
     console.log("Step values:", values);
-    setFormData({ ...formData, ...values, status: "Active" });
+    setFormData({ ...formData, ...values, status: true });
     setCurrentStep((prevStep) => prevStep + 1);
   };
 

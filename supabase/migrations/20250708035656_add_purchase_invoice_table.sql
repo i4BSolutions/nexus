@@ -12,7 +12,6 @@ create table "public"."purchase_invoice" (
     "note" text
 );
 
-
 alter table "public"."purchase_invoice" enable row level security;
 
 create table "public"."purchase_invoice_item" (
@@ -28,7 +27,6 @@ create table "public"."purchase_invoice_item" (
 
 
 alter table "public"."purchase_invoice_item" enable row level security;
-
 
 CREATE UNIQUE INDEX purchase_invoice_item_pkey ON public.purchase_invoice_item USING btree (id);
 
@@ -145,5 +143,3 @@ grant trigger on table "public"."purchase_invoice_item" to "service_role";
 grant truncate on table "public"."purchase_invoice_item" to "service_role";
 
 grant update on table "public"."purchase_invoice_item" to "service_role";
-
-

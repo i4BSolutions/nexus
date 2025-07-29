@@ -27,7 +27,7 @@ export function useList<T>(
   const queryString = new URLSearchParams(queryParams).toString();
 
   return useQuery({
-    queryKey: [resource, "list", page, pageSize, q, status, sort],
+    queryKey: [resource, "list"],
     queryFn: () => apiGet<T>(`/api/${resource}?${queryString}`),
     placeholderData: (previousData) => previousData,
   });

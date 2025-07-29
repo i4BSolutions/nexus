@@ -2,8 +2,13 @@
 
 import { BudgetFormInput } from "@/schemas/budgets/budgets.schema";
 import { Col, DatePicker, Form, Input, Row, Space } from "antd";
-import dayjs from "dayjs";
-import React, { forwardRef, useEffect, useImperativeHandle } from "react";
+import dayjs, { Dayjs } from "dayjs";
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
 
 const { RangePicker } = DatePicker;
 
@@ -22,6 +27,7 @@ const StepBudgetDetails = forwardRef<
   StepBudgetDetailsProps
 >(({ onNext, onBack, formData }, ref) => {
   const [form] = Form.useForm();
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
 
   useEffect(() => {
     if (formData) {
@@ -31,6 +37,7 @@ const StepBudgetDetails = forwardRef<
           dayjs(formData.start_date),
           dayjs(formData.end_date),
         ];
+        setStartDate(dayjs(formData.start_date));
       }
       form.setFieldsValue(initialValues);
     }
@@ -52,6 +59,21 @@ const StepBudgetDetails = forwardRef<
   useImperativeHandle(ref, () => ({
     submitForm: handleNext,
   }));
+
+  const handleRangeChange = (dates: [Dayjs | null, Dayjs | null] | null) => {
+    if (dates && dates[0]) {
+      setStartDate(dates[0]);
+    } else {
+      setStartDate(null);
+    }
+  };
+
+  const disableDate = (current: Dayjs) => {
+    const today = dayjs().subtract(1, "day");
+    if (current.isBefore(today)) return true;
+    if (startDate && current.isBefore(startDate, "day")) return true;
+    return false;
+  };
 
   return (
     <div>
@@ -89,9 +111,8 @@ const StepBudgetDetails = forwardRef<
           rules={[{ required: true, message: "Project period is required" }]}
         >
           <RangePicker
-            disabledDate={(current) => {
-              return current < dayjs().subtract(1, "day");
-            }}
+            disabledDate={disableDate}
+            onCalendarChange={handleRangeChange}
             style={{ width: "100%" }}
           />
         </Form.Item>

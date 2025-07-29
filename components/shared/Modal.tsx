@@ -8,6 +8,7 @@ type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
+  icon: ReactNode;
 };
 
 export default function Modal({
@@ -16,6 +17,7 @@ export default function Modal({
   isOpen,
   onClose,
   children,
+  icon,
 }: ModalProps) {
   if (!isOpen) return null;
 
@@ -24,18 +26,7 @@ export default function Modal({
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
         <div className="rounded-t-2xl bg-gradient-to-r from-[#f3e9ff] to-[#faf7fd] px-6 pt-6 pb-4 flex gap-4 items-center">
           <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#a084fa]">
-            <svg
-              width="24"
-              height="24"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" stroke="none" fill="none" />
-              <path d="M12 8v8M8 12h8" />
-            </svg>
+            {icon && icon}
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-1">

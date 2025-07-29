@@ -10,7 +10,7 @@ export function mapBudgetStatsToItems(data: BudgetStatistics): StatItem[] {
   return [
     {
       title: "Total Planned",
-      value: data.totalPlannedUSD,
+      value: `$ ${data.totalPlannedUSD}`,
       tooltip: "Sum of all planned budgets across all active projects",
       icon: <DollarOutlined />,
       bgColor: "#87E8DE",
@@ -20,7 +20,7 @@ export function mapBudgetStatsToItems(data: BudgetStatistics): StatItem[] {
     },
     {
       title: "Total Allocated",
-      value: data.totalAllocatedUSD,
+      value: `$ ${data.totalAllocatedUSD}`,
       tooltip: "Total budget already allocated to project teams",
       icon: <DownCircleOutlined />,
       bgColor: "#91D5FF",
@@ -34,7 +34,7 @@ export function mapBudgetStatsToItems(data: BudgetStatistics): StatItem[] {
     },
     {
       title: "Total Invoiced",
-      value: data.totalInvoicedUSD,
+      value: `$ ${data.totalInvoicedUSD}`,
       tooltip: "Actual amount invoiced or spent across all campaigns",
       icon: <UpCircleOutlined />,
       bgColor: "#D3ADF7",

@@ -1,10 +1,8 @@
 "use client";
 
 import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
-import { useEffect, useState } from "react";
-
-import CardView from "@/components/purchase-orders/CardView";
-import TableView from "@/components/purchase-orders/TableView";
+import PoCardView from "@/components/purchase-orders/PoCardView";
+import PoTableView from "@/components/purchase-orders/PoTableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import StatisticsCards from "@/components/shared/StatisticsCards";
@@ -25,19 +23,20 @@ import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PurchaseOrdersPage() {
+  const router = useRouter();
   const [statItems, setStatItems] = useState<StatItem[]>();
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
   const [data, setData] = useState<PurchaseOrderDto[]>();
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [searchText, setSearchText] = useState("");
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const router = useRouter();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
     "purchase-orders",
@@ -45,7 +44,7 @@ export default function PurchaseOrdersPage() {
       page: pagination.page,
       pageSize: pagination.pageSize,
       sort: sortOrder
-        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
+        ? `id_${sortOrder === "ascend" ? "asc" : "desc"}`
         : undefined,
       status: status,
       q: searchText,
@@ -59,7 +58,8 @@ export default function PurchaseOrdersPage() {
         purchase_order_no: item.purchase_order_no,
         order_date: item.order_date,
         status: item.status,
-        amount: item.amount,
+        amount_local: item.amount_local,
+        amount_usd: item.amount_usd,
         currency_code: item.currency_code,
         usd_exchange_rate: item.usd_exchange_rate,
         contact_person: item.contact_person,
@@ -155,6 +155,12 @@ export default function PurchaseOrdersPage() {
 
   const viewChangeHandler = (value: "Card" | "Table") => {
     setViewMode(value);
+    if (value === "Card") {
+      setPagination({ page: 1, pageSize: 9 });
+    }
+    if (value === "Table") {
+      setPagination({ page: 1, pageSize: 10 });
+    }
   };
 
   const clearFiltersHandler = () => {
@@ -177,14 +183,13 @@ export default function PurchaseOrdersPage() {
         <HeaderSection
           title="Purchase Orders"
           description="Manage and track all purchase orders"
-          icon={<ShoppingCartOutlined />}
-          onAddNew={() => {
-            setShowCreateModal(true);
-          }}
+          icon={
+            <ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />
+          }
+          onAddNew={() => setShowCreateModal(true)}
           buttonText="New Purchase Order"
           buttonIcon={<PlusOutlined />}
         />
-
         <StatisticsCards stats={statItems} />
         <Flex justify="center" align="center" gap={12}>
           <Input.Search
@@ -254,22 +259,22 @@ export default function PurchaseOrdersPage() {
             onChange={viewChangeHandler}
           />
         </Flex>
-        {viewMode === "Card" ? (
-          <CardView
-            data={data}
-            pagination={pagination}
-            paginationChangeHandler={paginationChangeHandler}
-            total={total}
-          />
-        ) : (
-          <TableView
-            data={data}
-            pagination={pagination}
-            paginationChangeHandler={paginationChangeHandler}
-            total={total}
-          />
-        )}
       </div>
+      {viewMode === "Card" ? (
+        <PoCardView
+          data={data}
+          pagination={pagination}
+          paginationChangeHandler={paginationChangeHandler}
+          total={total}
+        />
+      ) : (
+        <PoTableView
+          data={data}
+          pagination={pagination}
+          paginationChangeHandler={paginationChangeHandler}
+          total={total}
+        />
+      )}
 
       {/* Create Options Modal */}
       <CreateOptionsModal

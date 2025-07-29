@@ -17,6 +17,10 @@ export default function LoginPage() {
 
   const loginHandler = async () => {
     if (!email) return;
+    if (!navigator.onLine) {
+      message.error("You are offline! Please check your internet connection.");
+      return;
+    }
     startOtpRequest(async () => {
       try {
         await signInWithOtp(email);
@@ -39,30 +43,34 @@ export default function LoginPage() {
 
   const googleLoginHandler = async () => {
     startGoogleRequest(async () => {
-      const data = await fetch(
-        `/api/auth/check-user?email=${encodeURIComponent(email)}`
-      );
-      const { exists } = await data.json();
-      if (exists) {
-        const supabase = createClient();
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: `${location.origin}/api/auth/callback`,
-          },
-        });
-      } else {
-        message.error("Account not provisioned in system!");
-        await fetch("/api/auth/login-audit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            method: "Google SSO",
-          }),
-        });
+      try {
+        const data = await fetch(
+          `/api/auth/check-user?email=${encodeURIComponent(email)}`
+        );
+        const { exists } = await data.json();
+        if (exists && data.status === 200) {
+          const supabase = createClient();
+          await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: `${location.origin}/api/auth/callback`,
+            },
+          });
+        } else if (!exists && data.status === 200) {
+          message.error("Account not provisioned in system!");
+          await fetch("/api/auth/login-audit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              method: "Google SSO",
+            }),
+          });
+        }
+      } catch (error) {
+        message.error("Please check your internet connection!");
       }
     });
   };

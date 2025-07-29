@@ -26,7 +26,8 @@ export interface PurchaseOrderDto {
   status: string;
   currency_code: string;
   usd_exchange_rate: number;
-  amount: number;
+  amount_local: number;
+  amount_usd: number;
   contact_person: string;
   expected_delivery_date: string;
   invoiced_amount?: number;
@@ -37,7 +38,7 @@ export interface PurchaseOrderResponse {
   dto: PurchaseOrderDto[];
   total: number;
   page: number;
-  pageSize: number;
+  pageSize: number | string;
   statistics: {
     total: number;
     total_approved: number;
@@ -45,23 +46,4 @@ export interface PurchaseOrderResponse {
     invoiced_percentage: number;
     allocated_percentage: number;
   };
-}
-
-export interface GetPurchaseOrderDetailDto {
-  id: number;
-  purchase_order_no: string;
-  supplier: string;
-  region: string;
-  order_date: string;
-  expected_delivery_date: string;
-  budget: string;
-  currency_code: string;
-  usd_exchange_rate: number;
-  product_items: PurchaseOrderItemInterface[];
-  total_amount_local: number;
-  total_amount_usd: number;
-  contact_person: string;
-  sign_person?: string;
-  authorized_sign_person?: string;
-  note?: string;
 }

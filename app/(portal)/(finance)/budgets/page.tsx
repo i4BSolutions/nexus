@@ -23,12 +23,13 @@ import { SortOrder } from "antd/es/table/interface";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+import { useSoftDeleteBudget } from "@/hooks/budget-statistics/useSoftDeleteBudget";
 
 export default function BudgetsPage() {
   const router = useRouter();
-  const [statItems, setStatItems] = useState<StatItem[]>([]);
+  const [openPopConfirm, setOpenPopConfirm] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
-  const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<string | undefined>("");
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
   const [sortField, setSortField] = useState<string | undefined>();
@@ -43,7 +44,7 @@ export default function BudgetsPage() {
     page: pagination.page,
     pageSize: pagination.pageSize,
     q: searchText,
-    status: statusFilter || "",
+    status: statusFilter,
     sort: sortParam,
   });
   const budgets = budgetsData as BudgetResponse;
@@ -56,6 +57,8 @@ export default function BudgetsPage() {
   const stats = statsData
     ? mapBudgetStatsToItems(statsData as BudgetStatistics)
     : [];
+
+  const softDeleteBudget = useSoftDeleteBudget();
 
   const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) => {
     setSearchText(value);
@@ -87,6 +90,10 @@ export default function BudgetsPage() {
     setViewMode(value);
     console.log(`View changed to ${value}`);
   };
+
+  const handleSoftDeleteBudget = useCallback((budget: Budget) => {
+    softDeleteBudget.mutateAsync(budget.id);
+  }, []);
 
   const handleAddNewBudget = useCallback(() => {
     router.push("/budgets/create");
@@ -160,7 +167,7 @@ export default function BudgetsPage() {
             <Flex justify="center" align="center" gap={12}>
               <span>Filter(s):</span>
               <Select
-                defaultValue="All Status"
+                value={statusFilter ?? "All Status"}
                 style={{ width: 160 }}
                 onChange={statusChangeHandler}
                 options={[
@@ -169,11 +176,11 @@ export default function BudgetsPage() {
                     label: "All Status",
                   },
                   {
-                    value: "Active",
+                    value: "true",
                     label: "Active",
                   },
                   {
-                    value: "Inactive",
+                    value: "false",
                     label: "Inactive",
                   },
                 ]}
@@ -194,7 +201,10 @@ export default function BudgetsPage() {
             />
           </Flex>
           {viewMode === "Card" ? (
-            <BudgetCard data={budgets} />
+            <BudgetCard
+              data={budgets}
+              onStatusChange={handleSoftDeleteBudget}
+            />
           ) : (
             <TableView data={budgets.items} />
           )}
