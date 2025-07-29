@@ -48,28 +48,29 @@ export async function GET(
     ? [data.transfer_evidence]
     : [];
 
-  // Generate signed URLs
-  const { data: signedUrls, error: signedError } = await supabase.storage
-    .from(bucket)
-    .createSignedUrls(transferEvidencePaths, 60 * 60); // valid for 1 hour
+  let transfer_evidence_urls: { key: string; url: string | null }[] = [];
 
-  if (signedError) {
-    return NextResponse.json(error(signedError.message), { status: 500 });
-  }
+  if (transferEvidencePaths.length > 0) {
+    const { data: signedUrls, error: signedError } = await supabase.storage
+      .from(bucket)
+      .createSignedUrls(transferEvidencePaths, 60 * 60); // valid for 1 hour
 
-  const signedMap = new Map<string, string>();
-  signedUrls?.forEach(
-    (entry: { path: string | null; signedUrl: string | null }) => {
+    if (signedError) {
+      return NextResponse.json(error(signedError.message), { status: 500 });
+    }
+
+    const signedMap = new Map<string, string>();
+    signedUrls?.forEach((entry) => {
       if (entry.path && entry.signedUrl) {
         signedMap.set(entry.path, entry.signedUrl);
       }
-    }
-  );
+    });
 
-  const transfer_evidence_urls = transferEvidencePaths.map((path: string) => ({
-    key: path,
-    url: signedMap.get(path) || null,
-  }));
+    transfer_evidence_urls = transferEvidencePaths.map((path: string) => ({
+      key: path,
+      url: signedMap.get(path) || null,
+    }));
+  }
 
   const response: BudgetAllocationsInterface = {
     ...data,

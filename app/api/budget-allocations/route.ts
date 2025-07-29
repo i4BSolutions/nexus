@@ -55,6 +55,36 @@ export async function GET(
     return NextResponse.json(error(fetchError.message), { status: 500 });
   }
 
+  let allocatedUSDQuery = supabase
+    .from("budget_allocation")
+    .select("*")
+    .eq("status", "Approved")
+    .neq("status", "Canceled");
+
+  if (q)
+    allocatedUSDQuery = allocatedUSDQuery.ilike("allocation_number", `%${q}%`);
+  if (startDate)
+    allocatedUSDQuery = allocatedUSDQuery.gte("allocation_date", startDate);
+  if (endDate)
+    allocatedUSDQuery = allocatedUSDQuery.lte("allocation_date", endDate);
+
+  const { data: allocatedData, error: allocatedError } =
+    await allocatedUSDQuery;
+
+  if (allocatedError) {
+    return NextResponse.json(error(allocatedError.message), { status: 500 });
+  }
+
+  const totalAllocatedUSD =
+    allocatedData?.reduce((sum, curr) => {
+      const usd =
+        curr.equivalent_usd ||
+        (curr.exchange_rate_usd
+          ? curr.allocation_amount / curr.exchange_rate_usd
+          : 0);
+      return sum + usd;
+    }, 0) || 0;
+
   let statsQuery = supabase
     .from("budget_allocation")
     .select("*")
@@ -66,10 +96,32 @@ export async function GET(
   if (endDate) statsQuery = statsQuery.lte("allocation_date", endDate);
 
   const { data: statsData, error: statsError } = await statsQuery;
-
   if (statsError) {
     return NextResponse.json(error(statsError.message), { status: 500 });
   }
+
+  const { totalAllocations, totalPendingUSD } = (statsData || []).reduce(
+    (acc, curr) => {
+      const usd =
+        curr.equivalent_usd ||
+        (curr.exchange_rate_usd
+          ? curr.allocation_amount / curr.exchange_rate_usd
+          : 0);
+      acc.totalAllocations += 1;
+      if (curr.status === "Pending") acc.totalPendingUSD += usd;
+      return acc;
+    },
+    {
+      totalAllocations: 0,
+      totalPendingUSD: 0,
+    }
+  );
+
+  const statistics = {
+    totalAllocatedUSD,
+    totalPendingUSD,
+    totalAllocations,
+  };
 
   // Flatten all file paths from transfer_evidence arrays
   const allFilePaths = (data || [])
@@ -106,31 +158,6 @@ export async function GET(
           )
         : [],
     })) || [];
-
-  const statistics = statsData?.reduce(
-    (acc, curr) => {
-      const usd =
-        curr.equivalent_usd ||
-        (curr.exchange_rate_usd
-          ? curr.allocation_amount / curr.exchange_rate_usd
-          : 0);
-
-      acc.totalAllocations += 1;
-      if (curr.status === "Approved") acc.totalAllocatedUSD += usd;
-      if (curr.status === "Pending") acc.totalPendingUSD += usd;
-
-      return acc;
-    },
-    {
-      totalAllocations: 0,
-      totalAllocatedUSD: 0,
-      totalPendingUSD: 0,
-    }
-  ) || {
-    totalAllocations: 0,
-    totalAllocatedUSD: 0,
-    totalPendingUSD: 0,
-  };
 
   // Stats
   // const allQuery = supabase.from("budget_allocation").select("*");
