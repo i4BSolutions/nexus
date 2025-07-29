@@ -36,7 +36,7 @@ const LinkedPO = ({ data }: { data: any }) => {
       dataIndex: "supplier",
       key: "supplier",
       defaultSortOrder: "descend",
-      render: (supplier) => <span>{supplier}</span>,
+      render: (supplier) => <span>{supplier?.name}</span>,
     },
     {
       title: "ORDER DATE",
