@@ -13,7 +13,6 @@ import { NextRequest, NextResponse } from "next/server";
  * descending order by default
  * sorting by name/ capacity/ total items/ total value
  */
-// TODO: Link with stock management
 export async function GET(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse<WarehouseResponse> | ApiResponse<null>>> {
@@ -44,11 +43,62 @@ export async function GET(
     });
   }
 
-  const mappedData: WarehouseInterface[] = (data || []).map((w) => ({
-    ...w,
-    total_items: Math.floor(Math.random() * 1000), // simulate 0-999 items
-    total_amount: parseFloat((Math.random() * 100000).toFixed(2)), // simulate monetary total
-  }));
+  const { data: inventoryData, error: inventoryError } = await supabase
+    .from("inventory")
+    .select("product_id, warehouse_id, quantity");
+
+  if (inventoryError) {
+    return NextResponse.json(error("Failed to fetch inventory", 500), {
+      status: 500,
+    });
+  }
+
+  const { data: priceData, error: priceError } = await supabase
+    .from("purchase_invoice_item")
+    .select("product_id, unit_price_local, created_at")
+    .order("created_at", { ascending: false });
+
+  if (priceError) {
+    return NextResponse.json(error("Failed to fetch unit prices", 500), {
+      status: 500,
+    });
+  }
+
+  const latestPriceMap: Record<number, number> = {};
+
+  for (const row of priceData || []) {
+    if (!(row.product_id in latestPriceMap)) {
+      latestPriceMap[row.product_id] = row.unit_price_local;
+    }
+  }
+
+  type Totals = Record<number, { total_items: number; total_amount: number }>;
+  const warehouseTotals: Totals = {};
+
+  for (const row of inventoryData || []) {
+    const { product_id, warehouse_id, quantity } = row;
+    const unit_price = latestPriceMap[product_id] || 0;
+
+    if (!warehouseTotals[warehouse_id]) {
+      warehouseTotals[warehouse_id] = { total_items: 0, total_amount: 0 };
+    }
+
+    warehouseTotals[warehouse_id].total_items += quantity;
+    warehouseTotals[warehouse_id].total_amount += quantity * unit_price;
+  }
+
+  const mappedData: WarehouseInterface[] = (data || []).map((w) => {
+    const totals = warehouseTotals[w.id] || {
+      total_items: 0,
+      total_amount: 0,
+    };
+
+    return {
+      ...w,
+      total_items: totals.total_items,
+      total_amount: parseFloat(totals.total_amount.toFixed(2)),
+    };
+  });
 
   const response: WarehouseResponse = {
     items: mappedData || [],
