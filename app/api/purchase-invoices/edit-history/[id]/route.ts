@@ -14,7 +14,7 @@ export async function GET(
   // 1. Fetch audit logs
   const { data: auditLogs, error: auditError } = await supabase
     .from("pruchase_invoice_audit_log")
-    .select("*, profiles(name)")
+    .select("*, user_profiles(name)")
     .eq("purchase_invoice_id", id)
     .order("changed_at", { ascending: true });
 
@@ -58,7 +58,7 @@ export async function GET(
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )[0]; // Latest before or equal
 
-    log.changed_by = log.profiles.name;
+    log.changed_by = log.user_profiles.name;
 
     return {
       ...log,
