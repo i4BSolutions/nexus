@@ -50,7 +50,7 @@ export default function CardView({
               key: "view",
               icon: <EyeOutlined />,
               onClick: () => {
-                router.push(`/purchase-orders/${item.purchase_invoice_number}`);
+                router.push(`/invoices/${item.id}`);
               },
             },
             {
@@ -58,9 +58,7 @@ export default function CardView({
               key: "edit",
               icon: <EditOutlined />,
               onClick: () => {
-                router.push(
-                  `/purchase-orders/${item.purchase_invoice_number}/edit`
-                );
+                router.push(`/invoices/${item.id}/edit`);
               },
             },
           ];
@@ -176,7 +174,10 @@ export default function CardView({
                     </Typography.Text>
                   </div>
                   <div>
-                    <Link className="m-0 font-medium text-base">
+                    <Link
+                      href={`/purchase-orders/${item.purchase_order_no}`}
+                      className="m-0 font-medium text-base"
+                    >
                       {item.purchase_order_no}
                     </Link>
                   </div>
