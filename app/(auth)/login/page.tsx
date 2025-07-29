@@ -13,7 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [otpPending, startOtpRequest] = useTransition();
   const [googlePending, startGoogleRequest] = useTransition();
-  const emailRegex = /\.(com|org|net|edu|gov|io|co)$/i;
+  const emailRegex = /\.(com|org|net|edu|gov|io|co|info)$/i;
 
   const loginHandler = async () => {
     if (!email) return;
