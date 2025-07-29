@@ -52,6 +52,7 @@ export interface PurchaseInvoiceHistory {
   old_values: string;
   reason: string;
   reason_created_at: string;
+}
 
 export interface InvoiceFormProps {
   formData?: PurchaseInvoiceInterface;

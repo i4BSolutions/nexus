@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  MailOutlined,
-  MobileOutlined,
-  ShopOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import { Button, Form, Input, Radio, Space, Typography } from "antd";
 import React, { useEffect } from "react";
 
@@ -56,6 +51,7 @@ const WarehouseModal: React.FC<WarehouseModalProps> = ({
           : "Fill in the details to add a new warehouse location."
       }
       onClose={onClose}
+      icon={<PlusOutlined style={{ color: "#FFFFFF" }} />}
     >
       <Form
         form={form}
