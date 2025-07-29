@@ -25,6 +25,7 @@ type StockTransaction = {
     name: string;
     sku: string;
   };
+  reason: string;
 };
 
 // Helper function to format date/time
@@ -205,7 +206,8 @@ export async function GET(
         product:product_id (
           name,
           sku
-        )
+        ),
+        reason
       `
     )
     .eq("warehouse_id", id)
@@ -219,6 +221,7 @@ export async function GET(
     type: m.type,
     invoice_line_item_id: m.invoice_line_item_id,
     product: Array.isArray(m.product) ? m.product[0] : m.product,
+    reason: m.reason || "",
   }));
 
   const stockMovementLogs = movements.map((m) => {
@@ -233,7 +236,7 @@ export async function GET(
       quantity: m.quantity,
       reference: m.invoice_line_item_id
         ? `INV-${m.invoice_line_item_id.toString().padStart(4, "0")}`
-        : "-",
+        : m.reason,
     };
   });
 
