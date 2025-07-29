@@ -8,14 +8,7 @@ function hashStringToNumber(seed: string): number {
 }
 
 export default function getAvatarUrl(seed: string) {
-  const colors = [
-    "F9F0FF", // lavender
-    "FEE4E2", // pink
-    "FDF2FA", // rose
-    "EFF8FF", // light blue
-    "ECFDF3", // green
-    "FFF7ED", // orange
-  ];
+  const colors = ["D3ADF7", "FFA39E", "F78FB3", "69C0FF", "95DE64", "FFC069"];
 
   const hash = hashStringToNumber(seed);
   const deterministicColor = colors[hash % colors.length];
