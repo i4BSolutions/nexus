@@ -28,7 +28,7 @@ alter table "public"."budget_allocation_activity_logs" add constraint "budget_al
 
 alter table "public"."budget_allocation_activity_logs" validate constraint "budget_allocation_activity_logs_po_id_fkey";
 
-alter table "public"."budget_allocation_activity_logs" add constraint "budget_allocation_activity_logs_user_id_fkey" FOREIGN KEY (user_id) REFERENCES profiles(id) not valid;
+alter table "public"."budget_allocation_activity_logs" add constraint "budget_allocation_activity_logs_user_id_fkey" FOREIGN KEY (user_id) REFERENCES user_profiles(id) not valid;
 
 alter table "public"."budget_allocation_activity_logs" validate constraint "budget_allocation_activity_logs_user_id_fkey";
 
