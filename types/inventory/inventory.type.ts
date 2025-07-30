@@ -10,6 +10,7 @@ export interface InventoryInterface {
 }
 
 export interface InventoryListInterface {
+  id: number;
   sku: string;
   name: string;
   warehouse: string;

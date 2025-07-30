@@ -72,6 +72,7 @@ export async function GET(
   const itemDetails = inventory.map((inv) => {
     const unitPrice = wacMap[inv.product.id] || 0;
     return {
+      id: inv.id,
       sku: inv.product.sku,
       name: inv.product.name,
       warehouse: inv.warehouse,
