@@ -46,11 +46,34 @@ export default function VerifyOtpClientPage() {
       console.log("OTP verification result:", result);
       if (res.ok) {
         router.push("/");
+        await fetch("/api/auth/login-audit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            type: "SUCCESS",
+            user_id: result.data?.user_id || null,
+            method: "Email OTP",
+          }),
+        });
       }
     } catch (error: any) {
       message.error(
         error.message || "An error occurred during OTP verification"
       );
+      await fetch("/api/auth/login-audit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          type: "FAILED",
+          method: "Email OTP",
+        }),
+      });
       throw error;
     }
   };

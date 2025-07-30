@@ -13,7 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [otpPending, startOtpRequest] = useTransition();
   const [googlePending, startGoogleRequest] = useTransition();
-  const emailRegex = /\.(com|org|net|edu|gov|io|co)$/i;
+  const emailRegex = /\.(com|org|net|edu|gov|io|co|info)$/i;
 
   const loginHandler = async () => {
     if (!email) return;
@@ -34,6 +34,7 @@ export default function LoginPage() {
           },
           body: JSON.stringify({
             email,
+            type: "FAILED",
             method: "OTP",
           }),
         });
@@ -42,13 +43,18 @@ export default function LoginPage() {
   };
 
   const googleLoginHandler = async () => {
+    if (!email) return;
+    if (!navigator.onLine) {
+      message.error("You are offline! Please check your internet connection.");
+      return;
+    }
     startGoogleRequest(async () => {
       try {
         const data = await fetch(
           `/api/auth/check-user?email=${encodeURIComponent(email)}`
         );
-        const { exists } = await data.json();
-        if (exists && data.status === 200) {
+        const { user_id } = await data.json();
+        if (user_id && data.status === 200) {
           const supabase = createClient();
           await supabase.auth.signInWithOAuth({
             provider: "google",
@@ -56,7 +62,19 @@ export default function LoginPage() {
               redirectTo: `${location.origin}/api/auth/callback`,
             },
           });
-        } else if (!exists && data.status === 200) {
+          await fetch("/api/auth/login-audit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              type: "SUCCESS",
+              user_id,
+              method: "Google SSO",
+            }),
+          });
+        } else if (!user_id && data.status === 200) {
           message.error("Account not provisioned in system!");
           await fetch("/api/auth/login-audit", {
             method: "POST",
@@ -65,6 +83,7 @@ export default function LoginPage() {
             },
             body: JSON.stringify({
               email,
+              type: "FAILED",
               method: "Google SSO",
             }),
           });

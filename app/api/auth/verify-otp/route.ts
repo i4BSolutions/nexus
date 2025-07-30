@@ -2,8 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  let email: string | undefined;
+
   try {
-    const { email, code, isAdmin } = await req.json();
+    const { email: reqEmail, code, isAdmin } = await req.json();
+    email = reqEmail;
 
     if (!email || !code) {
       return NextResponse.json(
@@ -90,8 +93,33 @@ export async function POST(req: Request) {
       }
     }
 
+    await fetch("/api/auth/login-audit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        type: "SUCCESS",
+        user_id: session.user.id,
+        method: "Google SSO",
+      }),
+    });
+
     return NextResponse.json({ session });
   } catch (err) {
+    await fetch("/api/auth/login-audit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        type: "FAILED",
+        method: "Google SSO",
+      }),
+    });
+
     return NextResponse.json(
       { error: (err as Error).message },
       { status: 500 }
