@@ -40,6 +40,17 @@ export async function GET(
     });
   }
 
+  const { data: auditLogData, error: auditLogError } = await supabase
+    .from("login_audit_log")
+    .select("*")
+    .eq("user_id", id);
+
+  if (auditLogError) {
+    return NextResponse.json(error("Failed to retrieve audit log", 500), {
+      status: 500,
+    });
+  }
+
   const userDetail: UserDetailResponse = {
     full_name: data.full_name,
     username: data.username,
@@ -49,6 +60,15 @@ export async function GET(
       name: data.department.name,
     },
     permissions: data.permissions,
+    login_audit_log: auditLogData?.map((log) => ({
+      id: log.id,
+      ip_address: log.ip_address,
+      city: log.location.city,
+      country: log.location.country,
+      device: log.device_info.device,
+      browser: log.device_info.browser,
+      created_at: log.created_at,
+    })),
     created_at: data.created_at,
     updated_at: data.updated_at,
   };

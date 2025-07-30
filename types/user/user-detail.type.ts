@@ -23,6 +23,15 @@ export interface UserDetailResponse {
     view_dashboard: boolean;
     manage_users: boolean;
   };
+  login_audit_log?: {
+    id: number;
+    ip_address: string;
+    city: string;
+    country: string;
+    device: string;
+    browser: string;
+    created_at: string;
+  }[];
   created_at: string;
   updated_at: string;
 }
