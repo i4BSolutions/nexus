@@ -1,7 +1,9 @@
 "use client";
 
+import Inventory from "@/components/inventory/stock-management/Inventory";
 import StockIn from "@/components/inventory/stock-management/StockIn";
 import StockOut from "@/components/inventory/stock-management/StockOut";
+import Transactions from "@/components/inventory/stock-management/Transactions";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useList } from "@/hooks/react-query/useList";
@@ -28,6 +30,11 @@ const StockManagementPage = () => {
   const mutateStockOut = useCreate("stock-out");
 
   const tabItems: TabsProps["items"] = [
+    {
+      key: "inventory",
+      label: "Inventory",
+      children: <Inventory />,
+    },
     {
       key: "stock-in",
       label: "Stock In",
@@ -59,6 +66,11 @@ const StockManagementPage = () => {
           }}
         />
       ),
+    },
+    {
+      key: "transactions",
+      label: "Transactions",
+      children: <Transactions />,
     },
   ];
 
