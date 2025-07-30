@@ -13,11 +13,10 @@ export async function GET(
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
   const search = searchParams.get("q")?.toLowerCase() || "";
+  const warehouseFilter = searchParams.get("warehouse");
 
-  // 1. Fetch all inventory across warehouses
-  const { data: rawInventory, error: inventoryError } = await supabase.from(
-    "inventory"
-  ).select(`
+  // 1. Fetch inventory (filtered by warehouse if needed)
+  let inventoryQuery = supabase.from("inventory").select(`
       id,
       quantity,
       warehouse:warehouse_id (
@@ -30,6 +29,12 @@ export async function GET(
         category
       )
     `);
+
+  if (warehouseFilter) {
+    inventoryQuery = inventoryQuery.eq("warehouse_id", warehouseFilter);
+  }
+
+  const { data: rawInventory, error: inventoryError } = await inventoryQuery;
 
   if (inventoryError || !rawInventory) {
     return NextResponse.json(error("Failed to fetch inventory", 500), {
@@ -85,7 +90,7 @@ export async function GET(
   // 4. Filter & paginate
   let filtered = itemDetails;
   if (search) {
-    filtered = itemDetails.filter((item) =>
+    filtered = filtered.filter((item) =>
       `${item.name} ${item.sku} ${item.warehouse}`
         .toLowerCase()
         .includes(search)
