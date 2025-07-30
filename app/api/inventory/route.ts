@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { success, error } from "@/lib/api-response";
-import { InventoryListInterface } from "@/types/inventory/inventory.type";
+import { InventoryResponse } from "@/types/inventory/inventory.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
 
 export async function GET(
   req: NextRequest
-): Promise<NextResponse<ApiResponse<InventoryListInterface[] | any>>> {
+): Promise<NextResponse<ApiResponse<InventoryResponse | any>>> {
   const supabase = await createClient();
   const { searchParams } = req.nextUrl;
 
@@ -109,9 +109,11 @@ export async function GET(
     success(
       {
         items: paged,
-        total_item_count: totalItemCount,
+        total_item_count: inventory.length,
         total_inventory_value: totalInventoryValue,
-        total_rows: filtered.length,
+        total: totalItemCount,
+        page,
+        pageSize,
       },
       "Inventory fetched successfully"
     ),
