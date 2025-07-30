@@ -8,3 +8,12 @@ export interface InventoryInterface {
   };
   created_at: string;
 }
+
+export interface InventoryListInterface {
+  sku: string;
+  name: string;
+  warehouse: string;
+  current_stock: number;
+  unit_price: number;
+  total_value: number;
+}
