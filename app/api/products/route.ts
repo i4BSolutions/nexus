@@ -4,7 +4,10 @@ import {
   ProductInterface,
   ProductResponse,
 } from "@/types/product/product.type";
-import { ApiResponse } from "@/types/shared/api-response-type";
+import {
+  ApiResponse,
+  PaginatedResponse,
+} from "@/types/shared/api-response-type";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -16,8 +19,8 @@ export async function GET(
   const search = searchParams.get("search")?.trim() || "";
   const category = searchParams.get("category") || "";
   const stockStatus = searchParams.get("stock_status");
-  const isActiveParam = searchParams.get("status");
   const sort = searchParams.get("sort") || "sku";
+  const isActiveParam = searchParams.get("is_active");
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSizeParam = searchParams.get("pageSize") || "10";

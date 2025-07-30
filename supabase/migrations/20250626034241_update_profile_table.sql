@@ -42,12 +42,6 @@ revoke update on table "public"."profiles" from "service_role";
 
 alter table "public"."profiles" drop constraint "profiles_id_fkey";
 
-alter table "public"."budget_audit_logs" drop constraint "budget_audit_logs_performed_by_fkey";
-
-alter table "public"."budgets" drop constraint "budgets_created_by_fkey";
-
-alter table "public"."supplier_audit_log" drop constraint "supplier_audit_log_changed_by_fkey";
-
 alter table "public"."profiles" drop constraint "profiles_pkey";
 
 drop index if exists "public"."profiles_pkey";
@@ -82,18 +76,6 @@ alter table "public"."user_profiles" validate constraint "profiles_id_fkey";
 alter table "public"."user_profiles" add constraint "user_profiles_email_key" UNIQUE using index "user_profiles_email_key";
 
 alter table "public"."user_profiles" add constraint "user_profiles_username_key" UNIQUE using index "user_profiles_username_key";
-
-alter table "public"."budget_audit_logs" add constraint "budget_audit_logs_performed_by_fkey" FOREIGN KEY (performed_by) REFERENCES user_profiles(id) not valid;
-
-alter table "public"."budget_audit_logs" validate constraint "budget_audit_logs_performed_by_fkey";
-
-alter table "public"."budgets" add constraint "budgets_created_by_fkey" FOREIGN KEY (created_by) REFERENCES user_profiles(id) not valid;
-
-alter table "public"."budgets" validate constraint "budgets_created_by_fkey";
-
-alter table "public"."supplier_audit_log" add constraint "supplier_audit_log_changed_by_fkey" FOREIGN KEY (changed_by) REFERENCES user_profiles(id) ON DELETE CASCADE not valid;
-
-alter table "public"."supplier_audit_log" validate constraint "supplier_audit_log_changed_by_fkey";
 
 grant delete on table "public"."user_profiles" to "anon";
 
