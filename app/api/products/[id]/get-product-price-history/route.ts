@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
 import { ProductPriceHistoryInterface } from "@/types/product/product.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
-import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _req: NextRequest,

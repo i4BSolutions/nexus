@@ -61,4 +61,4 @@ grant truncate on table "public"."departments" to "service_role";
 
 grant update on table "public"."departments" to "service_role";
 
-
+alter table "public"."departments" disable row level security;

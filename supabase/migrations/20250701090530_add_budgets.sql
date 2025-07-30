@@ -47,11 +47,11 @@ alter table "public"."budget_audit_logs" add constraint "budget_audit_logs_budge
 
 alter table "public"."budget_audit_logs" validate constraint "budget_audit_logs_budget_id_fkey";
 
-alter table "public"."budget_audit_logs" add constraint "budget_audit_logs_performed_by_fkey" FOREIGN KEY (performed_by) REFERENCES profiles(id) not valid;
+alter table "public"."budget_audit_logs" add constraint "budget_audit_logs_performed_by_fkey" FOREIGN KEY (performed_by) REFERENCES user_profiles(id) not valid;
 
 alter table "public"."budget_audit_logs" validate constraint "budget_audit_logs_performed_by_fkey";
 
-alter table "public"."budgets" add constraint "budgets_created_by_fkey" FOREIGN KEY (created_by) REFERENCES profiles(id) not valid;
+alter table "public"."budgets" add constraint "budgets_created_by_fkey" FOREIGN KEY (created_by) REFERENCES user_profiles(id) not valid;
 
 alter table "public"."budgets" validate constraint "budgets_created_by_fkey";
 
