@@ -93,33 +93,8 @@ export async function POST(req: Request) {
       }
     }
 
-    await fetch("/api/auth/login-audit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        type: "SUCCESS",
-        user_id: session.user.id,
-        method: "Google SSO",
-      }),
-    });
-
     return NextResponse.json({ session });
   } catch (err) {
-    await fetch("/api/auth/login-audit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        type: "FAILED",
-        method: "Google SSO",
-      }),
-    });
-
     return NextResponse.json(
       { error: (err as Error).message },
       { status: 500 }

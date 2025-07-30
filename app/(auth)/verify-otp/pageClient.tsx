@@ -43,9 +43,7 @@ export default function VerifyOtpClientPage() {
         }),
       });
       const result = await res.json();
-      console.log("OTP verification result:", result);
       if (res.ok) {
-        router.push("/");
         await fetch("/api/auth/login-audit", {
           method: "POST",
           headers: {
@@ -54,10 +52,11 @@ export default function VerifyOtpClientPage() {
           body: JSON.stringify({
             email,
             type: "SUCCESS",
-            user_id: result.data?.user_id || null,
+            user_id: result.session.user.id,
             method: "Email OTP",
           }),
         });
+        router.push("/");
       }
     } catch (error: any) {
       message.error(
@@ -74,7 +73,6 @@ export default function VerifyOtpClientPage() {
           method: "Email OTP",
         }),
       });
-      throw error;
     }
   };
 
@@ -94,13 +92,9 @@ export default function VerifyOtpClientPage() {
     }
   };
 
-  const onInput: OTPProps["onInput"] = (value) => {
-    console.log("onInput:", value);
-  };
-
   if ((email && token) || verifying) {
     return (
-      <section className="!h-screen bg-[url(/loginBg.jpg)] bg-cover flex flex-col items-center justify-start pt-20">
+      <section className="!h-screen bg-[url(/loginBg.jpg)] bg-cover flex flex-col gap-8 items-center justify-start pt-20">
         <Typography.Title className="text-white">
           Verifying {email}
         </Typography.Title>
@@ -113,7 +107,7 @@ export default function VerifyOtpClientPage() {
     <section className="!h-screen bg-[url(/loginBg.jpg)] bg-cover flex flex-col items-center justify-start pt-20">
       <Typography.Title>Check your email for the OTP</Typography.Title>
       <Space direction="horizontal" size="large" className="mt-6">
-        <Input.OTP onChange={onChange} onInput={onInput} size="large" />
+        <Input.OTP onChange={onChange} size="large" />
       </Space>
     </section>
   );

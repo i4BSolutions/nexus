@@ -22,7 +22,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  console.log("User data", data);
+  if (data.length === 0) {
+    return NextResponse.json({ user_id: null }, { status: 200 });
+  }
 
   return NextResponse.json({ user_id: data[0].id }, { status: 200 });
 }
