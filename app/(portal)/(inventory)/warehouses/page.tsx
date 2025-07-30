@@ -126,7 +126,7 @@ export default function WarehousePage() {
       title: "CAPACITY",
       dataIndex: "capacity",
       defaultSortOrder: "descend",
-      sorter: (a, b) => a.capacity - b.capacity,
+      sorter: (a, b) => a?.capacity - b?.capacity,
       onCell: () => ({
         style: {
           borderRight: "none",
@@ -135,7 +135,7 @@ export default function WarehousePage() {
       render: (formatField) => (
         <div>
           <Typography.Text>
-            {formatField.toLocaleString()} Units
+            {formatField?.toLocaleString()} Units
           </Typography.Text>
         </div>
       ),
