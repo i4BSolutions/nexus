@@ -26,3 +26,13 @@ export interface StockTransactionInterfaceResponse {
   page: number;
   pageSize: number;
 }
+
+export type StockTransactionFilterParams = {
+  start_date?: string;
+  end_date?: string;
+  direction?: "All Directions" | "Stock In" | "Stock Out";
+  warehouse?: string;
+  product?: string;
+  page?: number;
+  pageSize?: number;
+};

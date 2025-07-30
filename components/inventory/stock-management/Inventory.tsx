@@ -77,14 +77,16 @@ const Inventory = () => {
         title: "PRODUCT SKU",
         dataIndex: "sku",
         key: "sku",
-        sorter: true,
+        sorter: (a, b) => a.sku.localeCompare(b.sku),
+        sortDirections: ["ascend", "descend"],
         render: (text) => <Typography.Text>{text}</Typography.Text>,
       },
       {
         title: "NAME",
         dataIndex: "name",
         key: "name",
-        sorter: true,
+        sorter: (a, b) => a.name.localeCompare(b.name),
+        sortDirections: ["ascend", "descend"],
         render: (text) => <Typography.Text>{text}</Typography.Text>,
       },
       {
@@ -105,7 +107,7 @@ const Inventory = () => {
         key: "unit_price",
         render: (value) => (
           <Typography.Text>
-            {typeof value === "number" ? `$${value.toLocaleString()}` : "-"}
+            {typeof value === "number" ? `${value.toLocaleString()} USD` : "-"}
           </Typography.Text>
         ),
       },
@@ -115,7 +117,7 @@ const Inventory = () => {
         key: "total_value",
         render: (value) => (
           <Typography.Text>
-            {typeof value === "number" ? `$${value.toLocaleString()}` : "-"}
+            {typeof value === "number" ? `${value.toLocaleString()} USD` : "-"}
           </Typography.Text>
         ),
       },
