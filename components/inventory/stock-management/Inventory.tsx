@@ -1,130 +1,132 @@
 "use client";
 
 import StatisticsCards from "@/components/shared/StatisticsCards";
+import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
+import { useList } from "@/hooks/react-query/useList";
+import {
+  InventoryListFilterParams,
+  InventoryListInterface,
+  InventoryListResponse,
+} from "@/types/inventory/inventory.type";
+import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
 import { DollarCircleOutlined } from "@ant-design/icons";
 import {
+  Alert,
+  App,
   Button,
+  Empty,
   Flex,
   Input,
+  Pagination,
   Select,
   Table,
   TableProps,
   Typography,
 } from "antd";
 import { SearchProps } from "antd/es/input";
-import React, { useState } from "react";
-
-type TableColumns = {
-  product_sku: string;
-  product_name: string;
-  warehouse: string;
-  in_stock_unit: number;
-  unit_price: number;
-  total_value: number;
-};
-
-const table_data: TableColumns[] = [
-  {
-    product_sku: "PRD-001",
-    product_name: "Wireless Mouse",
-    warehouse: "Warehouse A",
-    in_stock_unit: 150,
-    unit_price: 25.5,
-    total_value: 3825,
-  },
-  {
-    product_sku: "PRD-002",
-    product_name: "Mechanical Keyboard",
-    warehouse: "Warehouse B",
-    in_stock_unit: 80,
-    unit_price: 75.0,
-    total_value: 6000,
-  },
-  {
-    product_sku: "PRD-003",
-    product_name: "USB-C Cable",
-    warehouse: "Warehouse A",
-    in_stock_unit: 500,
-    unit_price: 5.0,
-    total_value: 2500,
-  },
-  {
-    product_sku: "PRD-004",
-    product_name: "Laptop Stand",
-    warehouse: "Warehouse C",
-    in_stock_unit: 60,
-    unit_price: 42.99,
-    total_value: 2579.4,
-  },
-  {
-    product_sku: "PRD-005",
-    product_name: "External SSD 1TB",
-    warehouse: "Warehouse B",
-    in_stock_unit: 35,
-    unit_price: 120.0,
-    total_value: 4200,
-  },
-];
+import React, { useMemo, useState } from "react";
 
 const Inventory = () => {
+  const { message } = App.useApp();
   const [searchText, setSearchText] = useState("");
-  const [status, setStatus] = useState<string | undefined>(undefined);
+  const [warehouseId, setWarehouseId] = useState<string | undefined>(undefined);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+
+  const {
+    data: inventoryListData,
+    isLoading: inventoryListLoading,
+    error: inventoryListError,
+  } = useGetWithParams<InventoryListResponse, InventoryListFilterParams>(
+    "inventory",
+    {
+      q: searchText,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      warehouse: warehouseId,
+    }
+  );
+
+  const {
+    data: warehousesData,
+    isLoading: warehouseLoading,
+    error: warehouseError,
+  } = useList<WarehouseResponse>("warehouses");
 
   const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) => {
     setSearchText(value);
-    // setPagination((prev) => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const statusChangeHandler = (value: string) => {
-    setStatus(value === "All Warehouses" ? undefined : value);
-    // setPagination((prev) => ({ ...prev, page: 1 }));
+    setWarehouseId(value === "All Warehouses" ? undefined : value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const clearFiltersHandler = () => {
-    setStatus(undefined);
+    setWarehouseId(undefined);
     setSearchText("");
   };
 
-  const columns: TableProps<TableColumns>["columns"] = [
-    {
-      title: "PRODUCT SKU",
-      dataIndex: "product_sku",
-      key: "product_sku",
-      render: (text) => <Typography.Text>{text}</Typography.Text>,
-    },
-    {
-      title: "NAME",
-      dataIndex: "product_name",
-      key: "product_name",
-      render: (name) => <Typography.Text>{name}</Typography.Text>,
-    },
-    {
-      title: "WAREHOUSE",
-      dataIndex: "warehouse",
-      key: "warehouse",
-      render: (warehouse) => <Typography.Text>{warehouse}</Typography.Text>,
-    },
-    {
-      title: "IN-STOCK UNITS",
-      dataIndex: "in_stock_unit",
-      key: "in_stock_unit",
-      render: (in_stock_unit) => (
-        <Typography.Text>{in_stock_unit}</Typography.Text>
-      ),
-    },
-    {
-      title: "UNIT PRICE",
-      dataIndex: "unit_price",
-      key: "unit_price",
-      render: (unit_price) => <Typography.Text>{unit_price}</Typography.Text>,
-    },
-    {
-      title: "TOTAL VALUE",
-      dataIndex: "total_value",
-      key: "total_value",
-      render: (total_value) => <Typography.Text>{total_value}</Typography.Text>,
-    },
-  ];
+  const paginationChangeHandler = (page: number, pageSize?: number) => {
+    setPagination({ page, pageSize: pageSize || 10 });
+  };
+
+  const columns = useMemo<TableProps<InventoryListInterface>["columns"]>(
+    () => [
+      {
+        title: "PRODUCT SKU",
+        dataIndex: "sku",
+        key: "sku",
+        sorter: true,
+        render: (text) => <Typography.Text>{text}</Typography.Text>,
+      },
+      {
+        title: "NAME",
+        dataIndex: "name",
+        key: "name",
+        sorter: true,
+        render: (text) => <Typography.Text>{text}</Typography.Text>,
+      },
+      {
+        title: "WAREHOUSE",
+        dataIndex: "warehouse",
+        key: "warehouse",
+        render: (text) => <Typography.Text>{text}</Typography.Text>,
+      },
+      {
+        title: "IN-STOCK UNITS",
+        dataIndex: "current_stock",
+        key: "current_stock",
+        render: (value) => <Typography.Text>{value}</Typography.Text>,
+      },
+      {
+        title: "UNIT PRICE",
+        dataIndex: "unit_price",
+        key: "unit_price",
+        render: (value) => (
+          <Typography.Text>
+            {typeof value === "number" ? `$${value.toLocaleString()}` : "-"}
+          </Typography.Text>
+        ),
+      },
+      {
+        title: "TOTAL VALUE",
+        dataIndex: "total_value",
+        key: "total_value",
+        render: (value) => (
+          <Typography.Text>
+            {typeof value === "number" ? `$${value.toLocaleString()}` : "-"}
+          </Typography.Text>
+        ),
+      },
+    ],
+    []
+  );
+
+  if (inventoryListError || warehouseError) {
+    message.error(inventoryListError?.message || warehouseError?.message);
+    return <Empty description="Server Error." />;
+  }
 
   return (
     <>
@@ -132,18 +134,17 @@ const Inventory = () => {
         stats={[
           {
             title: "Total Items",
-            value: "",
+            value: inventoryListData?.total_item_count ?? 0,
             tooltip: "Total Items",
             icon: <DollarCircleOutlined />,
             bgColor: "#36CFC9",
             gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFFFFF 100%)",
             borderColor: "#87E8DE",
             total_approved: 0,
-            prefix: "$",
           },
           {
             title: "Total Inventory Value (USD)",
-            value: "",
+            value: inventoryListData?.total_inventory_value ?? 0,
             tooltip: "Total Inventory Value (USD)",
             icon: <DollarCircleOutlined />,
             bgColor: "#73D13D",
@@ -156,7 +157,7 @@ const Inventory = () => {
       />
       <Flex justify="space-between" align="center" style={{ marginBottom: 18 }}>
         <Input.Search
-          placeholder="Search By Allocated Number"
+          placeholder="Search By Product SKU or Name"
           allowClear
           onSearch={onSearchHandler}
           style={{ maxWidth: 420 }}
@@ -165,14 +166,15 @@ const Inventory = () => {
           <span>Filter(s):</span>
 
           <Select
-            defaultValue="All Warehouses"
-            style={{ width: 160 }}
+            loading={warehouseLoading}
+            value={warehouseId ?? "All Warehouses"}
             onChange={statusChangeHandler}
             options={[
-              {
-                value: "All Warehouses",
-                label: "All Warehouses",
-              },
+              { value: "All Warehouses", label: "All Warehouses" },
+              ...(warehousesData?.items.map((w) => ({
+                value: w.id,
+                label: w.name,
+              })) || []),
             ]}
           />
           <Button
@@ -187,26 +189,25 @@ const Inventory = () => {
 
       <Table
         columns={columns}
-        dataSource={table_data}
+        loading={inventoryListLoading}
+        dataSource={inventoryListData?.items}
         pagination={false}
         rowKey="id"
         scroll={{ x: true }}
         style={{ border: "2px solid #F5F5F5", borderRadius: "8px" }}
-        // footer={() => (
-        //   <Flex justify="space-between" align="center" gap={4}>
-        //     <Typography.Text>
-        //       Showing {pagination.pageSize * (pagination.page - 1) + 1} to{" "}
-        //       {Math.min(pagination.pageSize * pagination.page, total)} of{" "}
-        //       {total} items
-        //     </Typography.Text>
-        //     <Pagination
-        //       current={pagination.page}
-        //       pageSize={pagination.pageSize}
-        //       total={total}
-        //       onChange={paginationChangeHandler}
-        //     />
-        //   </Flex>
-        // )}
+        footer={() => (
+          <Flex justify="space-between" align="center" gap={4}>
+            <Typography.Text>
+              Total {inventoryListData?.total_item_count} items
+            </Typography.Text>
+            <Pagination
+              current={pagination.page}
+              pageSize={pagination.pageSize}
+              total={inventoryListData?.total_item_count}
+              onChange={paginationChangeHandler}
+            />
+          </Flex>
+        )}
       />
     </>
   );
