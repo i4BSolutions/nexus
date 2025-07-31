@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 
 import {
+  Alert,
   App,
   Button,
   Dropdown,
@@ -18,6 +19,7 @@ import {
 } from "antd";
 import {
   ArrowLeftOutlined,
+  CloseCircleOutlined,
   DownloadOutlined,
   EditOutlined,
   EllipsisOutlined,
@@ -123,7 +125,7 @@ export default function PiDetailsPage() {
           Failed to load invoice details. Please try again later.
         </Typography.Text>
       ) : (
-        <>
+        <div className="gap-2 flex flex-col">
           {/* Breadcrumbs Section */}
           <Breadcrumbs
             items={[
@@ -147,41 +149,61 @@ export default function PiDetailsPage() {
                 <Typography.Title level={3} style={{ marginBottom: 0 }}>
                   {invoiceData?.purchase_invoice_number}
                 </Typography.Title>
-                <Tag
-                  color={invoiceData?.status ? "green" : "red"}
-                  style={{ marginTop: 0 }}
-                >
-                  {invoiceData?.status}
-                </Tag>
+                {invoiceData?.is_voided ? (
+                  <Tag color="red" style={{ marginTop: 0 }}>
+                    Voided
+                  </Tag>
+                ) : (
+                  <Tag
+                    color={invoiceData?.status ? "green" : "red"}
+                    style={{ marginTop: 0 }}
+                  >
+                    {invoiceData?.status}
+                  </Tag>
+                )}
               </Space>
             </Flex>
 
             {/* Right Section */}
-            <Flex align="center" gap={8}>
-              <Button icon={<DownloadOutlined />}>
-                <PDFDownloadLink
-                  document={<PiDetailPDF data={invoiceData ?? []} />}
-                  fileName={`PI_${id}.pdf`}
+            {invoiceData?.is_voided ? (
+              <></>
+            ) : (
+              <Flex align="center" gap={8}>
+                <Button icon={<DownloadOutlined />}>
+                  <PDFDownloadLink
+                    document={<PiDetailPDF data={invoiceData ?? []} />}
+                    fileName={`PI_${id}.pdf`}
+                  >
+                    Download PDF
+                  </PDFDownloadLink>
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<EditOutlined />}
+                  onClick={() => router.push(`/invoices/${params.id}/edit`)}
                 >
-                  Download PDF
-                </PDFDownloadLink>
-              </Button>
-              <Button
-                type="primary"
-                icon={<EditOutlined />}
-                onClick={() => router.push(`/invoices/${params.id}/edit`)}
-              >
-                Edit Invoice
-              </Button>
-              <Dropdown
-                menu={{ items: dropDownItems }}
-                trigger={["click"]}
-                placement="bottomRight"
-              >
-                <Button icon={<EllipsisOutlined />} />
-              </Dropdown>
-            </Flex>
+                  Edit Invoice
+                </Button>
+                <Dropdown
+                  menu={{ items: dropDownItems }}
+                  trigger={["click"]}
+                  placement="bottomRight"
+                >
+                  <Button icon={<EllipsisOutlined />} />
+                </Dropdown>
+              </Flex>
+            )}
           </Flex>
+
+          {invoiceData?.is_voided && (
+            <Alert
+              message="This invoice has been voided."
+              description="The invoice is no longer active and won’t be processed."
+              type="error"
+              icon={<CloseCircleOutlined />}
+              showIcon
+            />
+          )}
 
           <Tabs
             defaultActiveKey="details"
@@ -209,7 +231,7 @@ export default function PiDetailsPage() {
             onClose={handleModalClose}
             onSave={() => handleOnClickVoid(true)}
           />
-        </>
+        </div>
       )}
     </section>
   );

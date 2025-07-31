@@ -9,6 +9,7 @@ export interface PurchaseInvoiceInterface {
   usd_exchange_rate: number;
   status: string;
   note?: string;
+  is_voided: boolean;
   invoice_items?: PurchaseInvoiceItemInterface[];
   purchase_order_id?: string;
   purchase_order_no: string;
