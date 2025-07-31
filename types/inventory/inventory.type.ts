@@ -26,6 +26,15 @@ export interface InventoryListInterface {
   total_value: number;
 }
 
+export interface InventoryResponse {
+  items: InventoryResponseInterface[];
+  total_item_count: number;
+  total_inventory_value: number;
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export type InventoryListFilterParams = {
   // q = search
   q?: string;
