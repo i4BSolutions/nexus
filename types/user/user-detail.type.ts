@@ -7,21 +7,21 @@ export interface UserDetailResponse {
     name: string;
   };
   permissions: {
-    view_purchase_orders: boolean;
-    manage_purchase_orders: boolean;
-    view_invoices: boolean;
-    manage_invoices: boolean;
-    view_products_suppliers: boolean;
-    manage_products_suppliers: boolean;
-    view_stock: boolean;
-    manage_stock_in: boolean;
-    manage_stock_out: boolean;
-    view_warehouses: boolean;
-    manage_warehouses: boolean;
-    view_budgets_allocations: boolean;
-    manage_budgets_allocations: boolean;
-    view_dashboard: boolean;
-    manage_users: boolean;
+    can_read_purchase_orders: boolean;
+    can_manage_purchase_orders: boolean;
+    can_read_invoices: boolean;
+    can_manage_invoices: boolean;
+    can_read_products_suppliers: boolean;
+    can_manage_products_suppliers: boolean;
+    can_read_stock: boolean;
+    can_stock_in: boolean;
+    can_stock_out: boolean;
+    can_read_warehouses: boolean;
+    can_manage_warehouses: boolean;
+    can_read_budget_allocations: boolean;
+    can_manage_budget_allocations: boolean;
+    can_read_dashboard: boolean;
+    can_manage_users: boolean;
   };
   login_audit_log?: {
     id: number;
