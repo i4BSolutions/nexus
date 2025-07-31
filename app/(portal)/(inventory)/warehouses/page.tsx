@@ -86,7 +86,11 @@ export default function WarehousePage() {
       setIsModalOpen(false);
       setEditingWarehouse(null);
     } catch (error: any) {
-      message.error(error?.message || "Operation failed");
+      message.error(
+        error?.message.includes("warehouse_name_key")
+          ? "Warehouse name cannot be duplicated"
+          : "Operation failed"
+      );
     }
   };
 
@@ -239,12 +243,8 @@ export default function WarehousePage() {
           setSearchText(text);
           setPagination((prev) => ({ ...prev, page: 1 }));
         }}
-        onFilterChange={(key, value) => {
-          console.log("filter");
-        }}
-        onClearFilters={() => {
-          console.log("clear filter");
-        }}
+        onFilterChange={(key, value) => {}}
+        onClearFilters={() => {}}
       />
 
       {/* Table */}

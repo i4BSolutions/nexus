@@ -52,6 +52,7 @@ export interface PurchaseOrderDetailDto {
     name: string;
   } | null;
   note?: string;
+  purchase_order_smart_status: string;
 }
 
 export interface PoBudgetAllocationInterface {
