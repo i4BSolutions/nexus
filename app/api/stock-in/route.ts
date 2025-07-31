@@ -235,11 +235,21 @@ export async function POST(
     }
   }
 
-  const smartStatus = allFullyReceived
-    ? "Closed"
-    : anyStocked
-    ? "Partially Received"
-    : "Not Started";
+  const { data: latestStatus } = await supabase
+    .from("purchase_order_smart_status")
+    .select("status")
+    .eq("purchase_order_id", purchase_order_id)
+    .single();
+
+  let smartStatus;
+
+  if (latestStatus && latestStatus.status !== "Awaiting Delivery") {
+    smartStatus = allFullyReceived
+      ? "Closed"
+      : anyStocked
+      ? "Partially Received"
+      : "Not Started";
+  }
 
   const { error: updateStatusError } = await supabase
     .from("purchase_order_smart_status")
