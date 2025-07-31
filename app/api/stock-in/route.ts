@@ -149,6 +149,115 @@ export async function POST(
     });
   }
 
+  // Get purchase_order_id from any invoice_line_item
+  const { data: anyLineItem } = await supabase
+    .from("purchase_invoice_item")
+    .select("purchase_order_id")
+    .eq("id", invoice_items[0].invoice_line_item_id)
+    .single();
+
+  if (!anyLineItem) {
+    return NextResponse.json(error("Could not determine purchase order", 500), {
+      status: 500,
+    });
+  }
+
+  const purchase_order_id = anyLineItem.purchase_order_id;
+
+  // Step 1: Fetch PO line items
+  const { data: poItems, error: poError } = await supabase
+    .from("purchase_order_items")
+    .select("product_id, quantity")
+    .eq("purchase_order_id", purchase_order_id);
+
+  if (poError) {
+    return NextResponse.json(error("Failed to fetch PO items", 500), {
+      status: 500,
+    });
+  }
+
+  // Step 2: Fetch all invoice items for this PO
+  const { data: invoiceItems } = await supabase
+    .from("purchase_invoice_item")
+    .select("id, product_id, quantity")
+    .eq("purchase_order_id", purchase_order_id);
+
+  if (!invoiceItems) {
+    return NextResponse.json(error("Failed to fetch invoice items", 500), {
+      status: 500,
+    });
+  }
+
+  // Step 3: Fetch all stock transactions for this PO
+  const invoiceItemIds = invoiceItems.map((i) => i.id);
+  const { data: stockIns } = await supabase
+    .from("stock_transaction")
+    .select("invoice_line_item_id, quantity")
+    .in("invoice_line_item_id", invoiceItemIds);
+
+  // Step 4: Map total PO, Invoice, and Stock-in quantities
+  const poMap: Record<number, number> = {};
+  poItems.forEach((item) => {
+    poMap[item.product_id] = item.quantity;
+  });
+
+  const invoiceMap: Record<number, number> = {};
+  invoiceItems.forEach((item) => {
+    invoiceMap[item.product_id] =
+      (invoiceMap[item.product_id] || 0) + item.quantity;
+  });
+
+  const stockInMap: Record<number, number> = {};
+  if (stockIns) {
+    stockIns.forEach((tx) => {
+      const line = invoiceItems.find((i) => i.id === tx.invoice_line_item_id);
+      if (line) {
+        stockInMap[line.product_id] =
+          (stockInMap[line.product_id] || 0) + tx.quantity;
+      }
+    });
+  }
+
+  // Step 5: Determine status
+  let allFullyReceived = true;
+  let anyStocked = false;
+
+  for (const [productIdStr, poQty] of Object.entries(poMap)) {
+    const productId = Number(productIdStr);
+    const invoiceQty = invoiceMap[productId] || 0;
+    const stockedQty = stockInMap[productId] || 0;
+
+    if (stockedQty > 0) anyStocked = true;
+
+    // All PO quantities must be invoiced AND received
+    if (invoiceQty < poQty || stockedQty < invoiceQty) {
+      allFullyReceived = false;
+    }
+  }
+
+  const smartStatus = allFullyReceived
+    ? "Closed"
+    : anyStocked
+    ? "Partially Received"
+    : "Not Started";
+
+  const { error: updateStatusError } = await supabase
+    .from("purchase_order_smart_status")
+    .upsert(
+      {
+        purchase_order_id,
+        status: smartStatus,
+      },
+      { onConflict: "purchase_order_id" }
+    );
+
+  if (updateStatusError) {
+    return NextResponse.json(
+      error(updateStatusError.message || "Failed to update PO status"),
+      { status: 500 }
+    );
+  }
+
   return NextResponse.json(success(results, "Stock-in complete"), {
     status: 201,
   });

@@ -16,6 +16,7 @@ async function fetchPurchaseOrderWithJoins(supabase: any, idStr: string) {
     "sign_person:sign_person_id(id, name)",
     "authorized_signer:authorized_signer_id(id, name)",
     "budget:budget_id(id, budget_name, project_name, description, status)",
+    "purchase_order_smart_status (status)",
   ];
 
   return await supabase
@@ -137,6 +138,9 @@ function buildPurchaseOrderDetailDto(
         }
       : null,
     note: purchaseOrder.note,
+    purchase_order_smart_status: purchaseOrder.purchase_order_smart_status
+      ? purchaseOrder.purchase_order_smart_status.status
+      : "Unknown Status",
   };
 }
 

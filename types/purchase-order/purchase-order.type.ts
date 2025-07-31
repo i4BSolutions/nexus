@@ -32,6 +32,7 @@ export interface PurchaseOrderDto {
   expected_delivery_date: string;
   invoiced_amount?: number;
   allocated_amount?: number;
+  purchase_order_smart_status: string;
 }
 
 export interface PurchaseOrderResponse {

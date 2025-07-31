@@ -80,6 +80,17 @@ export async function POST(
     }
   }
 
+  const { error: smartStatusError } = await supabase
+    .from("purchase_order_smart_status")
+    .insert({
+      purchase_order_id: order.id,
+      status: "Not Started",
+    });
+
+  if (smartStatusError) {
+    return NextResponse.json(error(smartStatusError.message), { status: 500 });
+  }
+
   return NextResponse.json(
     success(order, "Purchase order and items created successfully"),
     { status: 200 }
@@ -135,7 +146,12 @@ export async function GET(
         quantity,
         unit_price_local
       ),
-      supplier:supplier_id(name)
+      supplier:supplier_id(name),
+      purchase_order_smart_status (
+        status,
+        created_at,
+        updated_at
+      )
     `,
     { count: "exact" }
   );
@@ -195,6 +211,8 @@ export async function GET(
     supplier: order.supplier.name,
     invoiced_amount: 0,
     allocated_amount: 0,
+    purchase_order_smart_status:
+      order.purchase_order_smart_status?.status ?? "Error",
   }));
 
   const GetPurchaseOrderResponse: PurchaseOrderResponse = {
