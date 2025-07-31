@@ -91,12 +91,8 @@ export default function WarehouseStockMovementsTable({
           onSearch(text);
           onPageChange({ ...pagination, page: 1 });
         }}
-        onFilterChange={(key, value) => {
-          console.log("filter change", key, value);
-        }}
-        onClearFilters={() => {
-          console.log("clear filters");
-        }}
+        onFilterChange={(key, value) => {}}
+        onClearFilters={() => {}}
       />
 
       <Table

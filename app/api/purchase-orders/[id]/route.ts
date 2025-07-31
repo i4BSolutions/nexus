@@ -226,7 +226,7 @@ export async function GET(
     totalAmountLocal,
     totalAmountUSD
   );
-  console.log("Purchase Order Detail:", result);
+
   return NextResponse.json(success(result), { status: 200 });
 }
 
