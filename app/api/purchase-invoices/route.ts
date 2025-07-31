@@ -165,6 +165,75 @@ export async function POST(
     }
   }
 
+  // Step 4: Determine smart status
+  const { data: allPOItems, error: allPOItemsError } = await supabase
+    .from("purchase_order_items")
+    .select("product_id, quantity")
+    .eq("purchase_order_id", purchase_order_id);
+
+  if (allPOItemsError) {
+    return NextResponse.json(error(allPOItemsError.message), { status: 500 });
+  }
+
+  // Sum all previously invoiced quantities (including this invoice)
+  const { data: allInvoiceItems, error: allInvoiceItemsError } = await supabase
+    .from("purchase_invoice_item")
+    .select("product_id, quantity")
+    .eq("purchase_order_id", purchase_order_id);
+
+  if (allInvoiceItemsError) {
+    return NextResponse.json(error(allInvoiceItemsError.message), {
+      status: 500,
+    });
+  }
+
+  // Build maps
+  const poQuantities: Record<number, number> = {};
+  const invoicedQuantities: Record<number, number> = {};
+
+  for (const item of allPOItems) {
+    poQuantities[item.product_id] = item.quantity;
+  }
+  for (const item of allInvoiceItems) {
+    invoicedQuantities[item.product_id] =
+      (invoicedQuantities[item.product_id] || 0) + item.quantity;
+  }
+
+  // Determine if all items are fully invoiced
+  let allFullyInvoiced = true;
+  let anyInvoiced = false;
+
+  for (const [productIdStr, poQty] of Object.entries(poQuantities)) {
+    const productId = Number(productIdStr);
+    const invoicedQty = invoicedQuantities[productId] || 0;
+
+    if (invoicedQty > 0) anyInvoiced = true;
+    if (invoicedQty < poQty) allFullyInvoiced = false;
+  }
+
+  // Choose status
+  let smartStatus;
+  if (allFullyInvoiced) {
+    smartStatus = "Awaiting Delivery";
+  } else if (anyInvoiced) {
+    smartStatus = "Partially Invoiced";
+  }
+
+  // Upsert or insert status
+  const { error: smartStatusError } = await supabase
+    .from("purchase_order_smart_status")
+    .upsert(
+      {
+        purchase_order_id: purchase_order_id,
+        status: smartStatus,
+      },
+      { onConflict: "purchase_order_id" }
+    );
+
+  if (smartStatusError) {
+    return NextResponse.json(error(smartStatusError.message), { status: 500 });
+  }
+
   return NextResponse.json(
     success(invoice, "Purchase invoice created successfully"),
     { status: 200 }

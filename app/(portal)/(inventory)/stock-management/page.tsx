@@ -61,6 +61,7 @@ const StockManagementPage = () => {
           warehouses={warehousesData?.items}
           warehouseLoading={warehouseLoading}
           stockOutHistories={stockOutHistoryData}
+          stockOutHistoryLoading={stockOutHistoryLoading}
           onSubmit={(payload: any) => {
             mutateStockOut.mutateAsync(payload);
           }}

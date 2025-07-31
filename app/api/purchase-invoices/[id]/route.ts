@@ -220,6 +220,7 @@ export async function GET(
     usd_exchange_rate: invoice.exchange_rate_to_usd,
     status: invoice.status,
     note: invoice.note || "",
+    is_voided: invoice.is_voided,
     invoice_items: formattedItems,
     purchase_order_id: purchaseOrder.id,
     purchase_order_no: purchaseOrder.purchase_order_no,
