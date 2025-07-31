@@ -22,49 +22,6 @@ import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const dummyUsers = [
-  {
-    id: "1",
-    fullName: "John Doe",
-    username: "@johndoe",
-    email: "johndoe@example.com",
-    department: "Finance",
-    created_at: "2023-01-01T00:00:00Z",
-  },
-  {
-    id: "2",
-    fullName: "Jane Smith",
-    username: "@janesmith",
-    email: "janesmith@example.com",
-    department: "Procurement",
-    created_at: "2023-01-02T00:00:00Z",
-  },
-  {
-    id: "3",
-    fullName: "Alice Johnson",
-    username: "@alicejohnson",
-    email: "alicejohnson@example.com",
-    department: "Administration",
-    created_at: "2023-01-03T00:00:00Z",
-  },
-  {
-    id: "4",
-    fullName: "Bob Brown",
-    username: "@bobbrown",
-    email: "bobbrown@example.com",
-    department: "Finance",
-    created_at: "2023-01-04T00:00:00Z",
-  },
-  {
-    id: "5",
-    fullName: "Charlie Davis",
-    username: "@charliedavis",
-    email: "charliedavis@example.com",
-    department: "Procurement",
-    created_at: "2023-01-05T00:00:00Z",
-  },
-];
-
 export default function UsersPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState("");

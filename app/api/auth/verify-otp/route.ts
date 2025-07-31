@@ -2,8 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  let email: string | undefined;
+
   try {
-    const { email, code, isAdmin } = await req.json();
+    const { email: reqEmail, code, isAdmin } = await req.json();
+    email = reqEmail;
 
     if (!email || !code) {
       return NextResponse.json(
