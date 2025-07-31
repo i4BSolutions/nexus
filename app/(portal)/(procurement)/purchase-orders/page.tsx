@@ -66,6 +66,7 @@ export default function PurchaseOrdersPage() {
         expected_delivery_date: item.expected_delivery_date,
         total_invoice_amount: item.invoiced_amount || 0,
         total_allocated_amount: item.allocated_amount || 0,
+        purchase_order_smart_status: item.purchase_order_smart_status,
       }));
       setData(data);
       setTotal(poData.total);
