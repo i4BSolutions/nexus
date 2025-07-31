@@ -111,7 +111,7 @@ export async function GET(
         items: paged,
         total_item_count: inventory.length,
         total_inventory_value: totalInventoryValue,
-        total: totalItemCount,
+        total: inventory.length,
         page,
         pageSize,
       },
