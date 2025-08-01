@@ -99,8 +99,6 @@ export async function GET(
       error: Error | null;
     };
 
-    console.log("invoices", invoices);
-
     if (dbError) {
       return NextResponse.json(error(dbError.message), { status: 500 });
     }
