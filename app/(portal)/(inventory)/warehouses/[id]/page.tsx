@@ -1,8 +1,8 @@
 "use client";
 
 // React & Next
-import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // Components
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -20,16 +20,17 @@ import StatisticsCards from "@/components/shared/StatisticsCards";
 import { StatItem } from "@/types/shared/stat-item.type";
 import { App, Flex, Progress, Spin, Tabs } from "antd";
 
-import { useWarehouseDetails } from "@/hooks/warehouse/warehouseDetails";
 import WarehouseInventoryTable from "@/components/warehouses/WarehouseInventoryTable";
-import WarehouseStockMovementsTable from "@/components/warehouses/WarehouseStockMovementsTable";
 import WarehouseModal from "@/components/warehouses/WarehouseModal";
-import { WarehouseInterface } from "@/types/warehouse/warehouse.type";
+import WarehouseStockMovementsTable from "@/components/warehouses/WarehouseStockMovementsTable";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { usePermission } from "@/hooks/shared/usePermission";
+import { useWarehouseDetails } from "@/hooks/warehouse/warehouseDetails";
+import { WarehouseInterface } from "@/types/warehouse/warehouse.type";
 
 export default function WarehouseDetailsPage() {
+  const hasPermission = usePermission("can_manage_warehouses");
   const { message } = App.useApp();
-
   const params = useParams();
 
   const id = params?.id as string;
@@ -158,6 +159,7 @@ export default function WarehouseDetailsPage() {
             onAddNew={() => {
               handleEdit();
             }}
+            hasPermission={hasPermission}
             buttonText="Edit Warehouse"
             buttonIcon={<EditOutlined />}
           />
