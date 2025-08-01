@@ -1,9 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import { PDFDownloadLink } from "@react-pdf/renderer";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
+import {
+  ArrowLeftOutlined,
+  CloseCircleOutlined,
+  DownloadOutlined,
+  EditOutlined,
+  EllipsisOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
 import {
   Alert,
   App,
@@ -17,21 +25,13 @@ import {
   Tag,
   Typography,
 } from "antd";
-import {
-  ArrowLeftOutlined,
-  CloseCircleOutlined,
-  DownloadOutlined,
-  EditOutlined,
-  EllipsisOutlined,
-  StopOutlined,
-} from "@ant-design/icons";
 
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 
 import DetailsCard from "@/components/purchase-invoices/DetailsCard";
-import LinkedPO from "@/components/purchase-invoices/LinkedPO";
-import EditHistory from "@/components/purchase-invoices/EditHistory";
 import PiDetailPDF from "@/components/purchase-invoices/DetailsPDF";
+import EditHistory from "@/components/purchase-invoices/EditHistory";
+import LinkedPO from "@/components/purchase-invoices/LinkedPO";
 
 import {
   PurchaseInvoiceHistory,
@@ -39,19 +39,29 @@ import {
 } from "@/types/purchase-invoice/purchase-invoice.type";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 
+import VoidModal from "@/components/purchase-invoices/VoidModal";
+import { getAuthenticatedUser } from "@/helper/getUser";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
-import VoidModal from "@/components/purchase-invoices/VoidModal";
+import { createClient } from "@/lib/supabase/client";
 
 export default function PiDetailsPage() {
   const { message } = App.useApp();
-
   const params = useParams();
   const router = useRouter();
-
   const id = params?.id as string;
-
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const authenticatedUser = await getAuthenticatedUser(createClient());
+      setHasPermission(
+        authenticatedUser.user_metadata.permissions.can_manage_purchase_orders
+      );
+    };
+    fetchUser();
+  }, []);
 
   const {
     data: invoiceDataRaw,
@@ -177,20 +187,24 @@ export default function PiDetailsPage() {
                     Download PDF
                   </PDFDownloadLink>
                 </Button>
-                <Button
-                  type="primary"
-                  icon={<EditOutlined />}
-                  onClick={() => router.push(`/invoices/${params.id}/edit`)}
-                >
-                  Edit Invoice
-                </Button>
-                <Dropdown
-                  menu={{ items: dropDownItems }}
-                  trigger={["click"]}
-                  placement="bottomRight"
-                >
-                  <Button icon={<EllipsisOutlined />} />
-                </Dropdown>
+                {hasPermission && (
+                  <>
+                    <Button
+                      type="primary"
+                      icon={<EditOutlined />}
+                      onClick={() => router.push(`/invoices/${params.id}/edit`)}
+                    >
+                      Edit Invoice
+                    </Button>
+                    <Dropdown
+                      menu={{ items: dropDownItems }}
+                      trigger={["click"]}
+                      placement="bottomRight"
+                    >
+                      <Button icon={<EllipsisOutlined />} />
+                    </Dropdown>
+                  </>
+                )}
               </Flex>
             )}
           </Flex>
