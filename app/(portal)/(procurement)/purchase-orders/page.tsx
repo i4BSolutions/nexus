@@ -13,18 +13,20 @@ import {
   UpCircleOutlined,
 } from "@ant-design/icons";
 
-import { useRouter } from "next/navigation";
-import { StatItem } from "@/types/shared/stat-item.type";
+import StatisticsCards from "@/components/shared/StatisticsCards";
+import { getAuthenticatedUser } from "@/helper/getUser";
+import { useList } from "@/hooks/react-query/useList";
+import { createClient } from "@/lib/supabase/client";
 import {
   PurchaseOrderDto,
   PurchaseOrderResponse,
 } from "@/types/purchase-order/purchase-order.type";
-import { SortOrder } from "antd/es/table/interface";
-import { useEffect, useState } from "react";
-import { useList } from "@/hooks/react-query/useList";
+import { StatItem } from "@/types/shared/stat-item.type";
 import { Button, Flex, Segmented, Select, Spin, Typography } from "antd";
 import Input, { SearchProps } from "antd/es/input";
-import StatisticsCards from "@/components/shared/StatisticsCards";
+import { SortOrder } from "antd/es/table/interface";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PurchaseOrdersPage() {
   const router = useRouter();
@@ -37,6 +39,17 @@ export default function PurchaseOrdersPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const authenticatedUser = await getAuthenticatedUser(createClient());
+      setHasPermission(
+        authenticatedUser.user_metadata.permissions.can_manage_purchase_orders
+      );
+    };
+    fetchUser();
+  }, []);
 
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
     "purchase-orders",
@@ -187,6 +200,7 @@ export default function PurchaseOrdersPage() {
           icon={
             <ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />
           }
+          hasPermission={hasPermission}
           onAddNew={() => setShowCreateModal(true)}
           buttonText="New Purchase Order"
           buttonIcon={<PlusOutlined />}
@@ -265,12 +279,14 @@ export default function PurchaseOrdersPage() {
         <PoCardView
           data={data}
           pagination={pagination}
+          hasPermission={hasPermission}
           paginationChangeHandler={paginationChangeHandler}
           total={total}
         />
       ) : (
         <PoTableView
           data={data}
+          hasPermission={hasPermission}
           pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
           total={total}

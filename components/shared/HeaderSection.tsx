@@ -1,5 +1,5 @@
+import { Button, Space, Typography } from "antd";
 import React from "react";
-import { Typography, Button, Space } from "antd";
 
 const HeaderSection = ({
   title,
@@ -10,6 +10,7 @@ const HeaderSection = ({
   onAddNew,
   buttonText,
   buttonIcon,
+  hasPermission = false,
 }: {
   title: string;
   description?: string;
@@ -19,6 +20,7 @@ const HeaderSection = ({
   onAddNew: () => void;
   buttonText?: string;
   buttonIcon?: React.ReactNode;
+  hasPermission?: boolean;
 }) => (
   <Space
     size="small"
@@ -56,7 +58,7 @@ const HeaderSection = ({
         )}
       </Space>
     </Space>
-    {buttonText && (
+    {buttonText && hasPermission && (
       <Button type="primary" onClick={onAddNew} icon={buttonIcon}>
         {buttonText || `New ${title}`}
       </Button>

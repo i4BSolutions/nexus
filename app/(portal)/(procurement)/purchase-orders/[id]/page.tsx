@@ -6,8 +6,10 @@ import PoDetailView from "@/components/purchase-orders/detail/PoDetailView";
 import PoUsageHistory from "@/components/purchase-orders/detail/PoUsageHistory";
 import StatusBadge from "@/components/purchase-orders/StatusBadge";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import { getAuthenticatedUser } from "@/helper/getUser";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { createClient } from "@/lib/supabase/client";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 import {
   ArrowLeftOutlined,
@@ -31,7 +33,7 @@ import {
   Typography,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function PurchaseOrderDetailPage() {
   const params = useParams();
@@ -39,6 +41,17 @@ export default function PurchaseOrderDetailPage() {
   const { message } = App.useApp();
 
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const authenticatedUser = await getAuthenticatedUser(createClient());
+      setHasPermission(
+        authenticatedUser.user_metadata.permissions.can_manage_purchase_orders
+      );
+    };
+    fetchUser();
+  }, []);
 
   const { data: detailData, isLoading } = useGetById<PurchaseOrderDetailDto>(
     "purchase-orders",
@@ -159,22 +172,26 @@ export default function PurchaseOrderDetailPage() {
                   Download PDF
                 </PDFDownloadLink>
               </Button>
-              <Button
-                type="primary"
-                icon={<EditOutlined />}
-                onClick={() =>
-                  router.push(`/purchase-orders/${params.id}/edit`)
-                }
-              >
-                Edit PO
-              </Button>
-              <Dropdown
-                menu={{ items: dropDownItems }}
-                trigger={["click"]}
-                placement="bottomRight"
-              >
-                <Button icon={<EllipsisOutlined />} />
-              </Dropdown>
+              {hasPermission && (
+                <>
+                  <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    onClick={() =>
+                      router.push(`/purchase-orders/${params.id}/edit`)
+                    }
+                  >
+                    Edit PO
+                  </Button>
+                  <Dropdown
+                    menu={{ items: dropDownItems }}
+                    trigger={["click"]}
+                    placement="bottomRight"
+                  >
+                    <Button icon={<EllipsisOutlined />} />
+                  </Dropdown>
+                </>
+              )}
             </Flex>
           </Flex>
         </div>

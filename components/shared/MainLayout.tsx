@@ -31,10 +31,6 @@ export default function MainLayout({
     const fetchUser = async () => {
       const authenticatedUser = await getAuthenticatedUser(createClient());
       setUserPermissions(authenticatedUser.user_metadata.permissions || {});
-      console.log(
-        "Authenticated User:",
-        authenticatedUser.user_metadata.permissions
-      );
     };
     fetchUser();
   }, []);
