@@ -14,9 +14,8 @@ import {
 } from "@ant-design/icons";
 
 import StatisticsCards from "@/components/shared/StatisticsCards";
-import { getAuthenticatedUser } from "@/helper/getUser";
 import { useList } from "@/hooks/react-query/useList";
-import { createClient } from "@/lib/supabase/client";
+import { usePermission } from "@/hooks/shared/usePermission";
 import {
   PurchaseOrderDto,
   PurchaseOrderResponse,
@@ -39,17 +38,7 @@ export default function PurchaseOrdersPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const authenticatedUser = await getAuthenticatedUser(createClient());
-      setHasPermission(
-        authenticatedUser.user_metadata.permissions.can_manage_purchase_orders
-      );
-    };
-    fetchUser();
-  }, []);
+  const hasPermission = usePermission("can_manage_purchase_orders");
 
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
     "purchase-orders",

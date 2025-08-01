@@ -2,7 +2,7 @@
 
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   ArrowLeftOutlined,
@@ -40,10 +40,9 @@ import {
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 
 import VoidModal from "@/components/purchase-invoices/VoidModal";
-import { getAuthenticatedUser } from "@/helper/getUser";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
-import { createClient } from "@/lib/supabase/client";
+import { usePermission } from "@/hooks/shared/usePermission";
 
 export default function PiDetailsPage() {
   const { message } = App.useApp();
@@ -51,17 +50,7 @@ export default function PiDetailsPage() {
   const router = useRouter();
   const id = params?.id as string;
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const authenticatedUser = await getAuthenticatedUser(createClient());
-      setHasPermission(
-        authenticatedUser.user_metadata.permissions.can_manage_invoices
-      );
-    };
-    fetchUser();
-  }, []);
+  const hasPermission = usePermission("can_manage_invoices");
 
   const {
     data: invoiceDataRaw,

@@ -6,10 +6,9 @@ import PoDetailView from "@/components/purchase-orders/detail/PoDetailView";
 import PoUsageHistory from "@/components/purchase-orders/detail/PoUsageHistory";
 import StatusBadge from "@/components/purchase-orders/StatusBadge";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import { getAuthenticatedUser } from "@/helper/getUser";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
-import { createClient } from "@/lib/supabase/client";
+import { usePermission } from "@/hooks/shared/usePermission";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 import {
   ArrowLeftOutlined,
@@ -33,7 +32,7 @@ import {
   Typography,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function PurchaseOrderDetailPage() {
   const params = useParams();
@@ -41,17 +40,7 @@ export default function PurchaseOrderDetailPage() {
   const { message } = App.useApp();
 
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const authenticatedUser = await getAuthenticatedUser(createClient());
-      setHasPermission(
-        authenticatedUser.user_metadata.permissions.can_manage_purchase_orders
-      );
-    };
-    fetchUser();
-  }, []);
+  const hasPermission = usePermission("can_manage_purchase_orders");
 
   const { data: detailData, isLoading } = useGetById<PurchaseOrderDetailDto>(
     "purchase-orders",

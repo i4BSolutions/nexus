@@ -33,9 +33,8 @@ import StatisticsCards from "@/components/shared/StatisticsCards";
 // Hooks
 import CardView from "@/components/purchase-invoices/CardView";
 import TableView from "@/components/purchase-invoices/TableView";
-import { getAuthenticatedUser } from "@/helper/getUser";
 import { useList } from "@/hooks/react-query/useList";
-import { createClient } from "@/lib/supabase/client";
+import { usePermission } from "@/hooks/shared/usePermission";
 import {
   PurchaseInvoiceDto,
   PurchaseInvoiceResponse,
@@ -59,17 +58,7 @@ export default function InvoicesPage() {
   const [status, setStatus] = useState<string | undefined>(undefined);
 
   const [data, setData] = useState<PurchaseInvoiceDto[]>();
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const authenticatedUser = await getAuthenticatedUser(createClient());
-      setHasPermission(
-        authenticatedUser.user_metadata.permissions.can_manage_invoices
-      );
-    };
-    fetchUser();
-  }, []);
+  const hasPermission = usePermission("can_manage_invoices");
 
   const router = useRouter();
 
