@@ -57,7 +57,7 @@ export default function PiDetailsPage() {
     const fetchUser = async () => {
       const authenticatedUser = await getAuthenticatedUser(createClient());
       setHasPermission(
-        authenticatedUser.user_metadata.permissions.can_manage_purchase_orders
+        authenticatedUser.user_metadata.permissions.can_manage_invoices
       );
     };
     fetchUser();
