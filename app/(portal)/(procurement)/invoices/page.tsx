@@ -82,6 +82,17 @@ export default function InvoicesPage() {
   });
 
   useEffect(() => {
+    refetch();
+  }, [
+    status,
+    searchText,
+    dateSort,
+    amountSort,
+    pagination.page,
+    pagination.pageSize,
+  ]);
+
+  useEffect(() => {
     if (piData) {
       const data = piData.items.map((item) => ({
         id: item.id,
@@ -187,8 +198,6 @@ export default function InvoicesPage() {
         setDateSort(undefined);
         setAmountSort(undefined);
     }
-
-    refetch();
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
