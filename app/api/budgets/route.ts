@@ -83,60 +83,115 @@ export async function GET(
     const budgetIds = paginated.map((b) => b.id);
 
     const { data: allocations } = await supabase
-      .from("budget_allocations")
-      .select("budget_id, amount_usd")
+      .from("budget_allocation")
+      .select("budget_id, equivalent_usd")
       .in("budget_id", budgetIds);
 
     const { data: invoices } = await supabase
-      .from("budget_invoices")
-      .select("budget_id, amount_usd")
-      .in("budget_id", budgetIds);
+      .from("purchase_invoice")
+      .select("purchase_order_id, exchange_rate_to_usd");
+
+    const { data: pos, error: poError } = await supabase
+      .from("purchase_order")
+      .select("*");
+
+    if (poError) throw poError;
 
     // Enrich budgets
     const enrichedItems = paginated.map((budget) => {
+      const planned_usd = Number(budget.planned_amount_usd || 0);
+
       const allocs =
         allocations?.filter((a) => a.budget_id === budget.id) || [];
-      const invs = invoices?.filter((i) => i.budget_id === budget.id) || [];
-
-      const allocated_amount_usd = allocs.reduce(
-        (sum, a) => sum + (a.amount_usd || 0),
-        0
-      );
-      const invoiced_amount_usd = invs.reduce(
-        (sum, i) => sum + (i.amount_usd || 0),
+      const allocated = allocs.reduce(
+        (sum, a) => sum + (a.equivalent_usd || 0),
         0
       );
 
-      const planned_amount_usd = Number(budget.planned_amount_usd || 0);
-      const allocated_variance_usd = planned_amount_usd - allocated_amount_usd;
-      const allocation_percentage =
-        planned_amount_usd > 0
-          ? (allocated_amount_usd / planned_amount_usd) * 100
-          : 0;
-      const unutilized_amount_usd = allocated_amount_usd - invoiced_amount_usd;
-      const utilization_percentage =
-        allocated_amount_usd > 0
-          ? (invoiced_amount_usd / allocated_amount_usd) * 100
-          : 0;
+      const invs =
+        invoices?.filter((i) => {
+          const relatedPO = pos.find((po) => po.id === i.purchase_order_id);
+          return relatedPO?.budget_id === budget.id;
+        }) || [];
+      const invoiced = invs.reduce(
+        (sum, i) => sum + (i.exchange_rate_to_usd || 0),
+        0
+      );
+
+      const budgetPOs = pos.filter((po) => po.budget_id === budget.id);
+      const po_count = budgetPOs.length;
+      const total_po_value = budgetPOs.reduce(
+        (sum, po) => sum + Number(po.planned_amount_usd || 0),
+        0
+      );
+
+      const allocated_variance = planned_usd - allocated;
+      const allocation_pct =
+        planned_usd > 0 ? (allocated / planned_usd) * 100 : 0;
+      const utilization_pct = allocated > 0 ? (invoiced / allocated) * 100 : 0;
+      const unutilized_usd = allocated - invoiced;
 
       return {
         ...budget,
-        planned_amount_usd,
-        allocated_amount_usd: Number(allocated_amount_usd.toFixed(2)),
-        invoiced_amount_usd: Number(invoiced_amount_usd.toFixed(2)),
-        allocated_variance_usd: Number(allocated_variance_usd.toFixed(2)),
-        allocation_percentage: Number(allocation_percentage.toFixed(2)),
-        unutilized_amount_usd: Number(unutilized_amount_usd.toFixed(2)),
-        utilization_percentage: Number(utilization_percentage.toFixed(2)),
+        planned_amount_usd: planned_usd,
+        allocated_amount_usd: Number(allocated.toFixed(2)),
+        invoiced_amount_usd: Number(invoiced.toFixed(2)),
+        allocated_variance_usd: Number(allocated_variance.toFixed(2)),
+        allocation_percentage: Number(allocation_pct.toFixed(2)),
+        utilization_percentage: Number(utilization_pct.toFixed(2)),
+        unutilized_amount_usd: Number(unutilized_usd.toFixed(2)),
+        is_over_allocated: allocation_pct > 100,
+        is_over_invoiced: invoiced > planned_usd,
+        po_count,
+        total_po_value: Number(total_po_value.toFixed(2)),
       };
     });
 
     // Stats summary
-    const statistics = {
-      total: allBudgets.length,
-      active: allBudgets.filter((b) => b.status === true).length,
-      inactive: allBudgets.filter((b) => b.status === false).length,
-    };
+    const activeBudgets = enrichedItems.filter((b) => b.status === true);
+
+    const totalPlanned = activeBudgets.reduce(
+      (sum, b) => sum + b.planned_amount_usd,
+      0
+    );
+    const totalAllocated = enrichedItems.reduce(
+      (sum, b) => sum + b.allocated_amount_usd,
+      0
+    );
+    const totalInvoiced = enrichedItems.reduce(
+      (sum, b) => sum + b.invoiced_amount_usd,
+      0
+    );
+
+    const allocatedVsPlannedPercentage =
+      totalPlanned > 0 ? (totalAllocated / totalPlanned) * 100 : 0;
+
+    const invoicedVsAllocatedPercentage =
+      totalAllocated > 0 ? (totalInvoiced / totalAllocated) * 100 : 0;
+
+    const validUtilizations = enrichedItems
+      .filter(
+        (b) =>
+          b.status === true &&
+          b.allocated_amount_usd > 0 &&
+          b.invoiced_amount_usd > 0 &&
+          typeof b.utilization_percentage === "number" &&
+          !isNaN(b.utilization_percentage)
+      )
+      .map((b) => b.utilization_percentage);
+
+    const averageUtilization =
+      validUtilizations.length > 0
+        ? validUtilizations.reduce((sum, val) => sum + val, 0) /
+          validUtilizations.length
+        : 0;
+
+    const budgetsOverUtilized = enrichedItems.filter(
+      (b) => b.utilization_percentage > 100
+    ).length;
+    const budgetsUnderUtilized = enrichedItems.filter(
+      (b) => b.utilization_percentage < 50
+    ).length;
 
     return NextResponse.json(
       success(
@@ -145,7 +200,23 @@ export async function GET(
           total: allBudgets.length,
           page,
           pageSize: pageSize === "all" ? allBudgets.length : pageSize,
-          statistics,
+          statistics: {
+            total: allBudgets.length,
+            active: allBudgets.filter((b) => b.status).length,
+            inactive: allBudgets.filter((b) => !b.status).length,
+            totalPlanned: Number(totalPlanned.toFixed(2)),
+            totalAllocated: Number(totalAllocated.toFixed(2)),
+            totalInvoiced: Number(totalInvoiced.toFixed(2)),
+            averageUtilization: Number(averageUtilization.toFixed(2)),
+            budgetsOverUtilized,
+            budgetsUnderUtilized,
+            invoicedVsAllocatedPercentage: Number(
+              invoicedVsAllocatedPercentage.toFixed(2)
+            ),
+            allocatedVsPlannedPercentage: Number(
+              allocatedVsPlannedPercentage.toFixed(2)
+            ),
+          },
         },
         "Budgets retrieved successfully"
       ),
@@ -169,8 +240,10 @@ export async function POST(
     !body.project_name ||
     !body.start_date ||
     !body.end_date ||
+    !body.currency_code ||
+    !body.exchange_rate_usd ||
     !body.planned_amount ||
-    !body.exchange_rate_usd
+    !body.status
   ) {
     return NextResponse.json(error("Invalid data", 400), { status: 400 });
   }

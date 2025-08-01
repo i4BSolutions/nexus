@@ -10,7 +10,6 @@ import {
   Tag,
   Typography,
 } from "antd";
-import dayjs from "dayjs";
 import React from "react";
 
 export default function TableView({ data }: { data: Budget[] }) {
@@ -19,7 +18,7 @@ export default function TableView({ data }: { data: Budget[] }) {
       title: "BUDGET NAME",
       dataIndex: "budget_name",
       key: "budget_name",
-      render: (text) => <a>{text}</a>,
+      render: (text) => <span>{text}</span>,
     },
     {
       title: "PROJECT NAME",
@@ -27,42 +26,52 @@ export default function TableView({ data }: { data: Budget[] }) {
       key: "project_name",
     },
     {
-      title: "START DATE",
-      dataIndex: "start_date",
-      key: "start_date",
-      render: (start_date) => (
-        <div>
-          <CalendarOutlined style={{ marginRight: 6 }} />
-          <span>{dayjs(start_date).format("MMM D, YYYY")}</span>
-        </div>
-      ),
-    },
-    {
-      title: "END DATE",
-      dataIndex: "end_date",
-      key: "end_date",
-      render: (end_date) => (
-        <div>
-          <CalendarOutlined style={{ marginRight: 6 }} />
-          <span>{dayjs(end_date).format("MMM D, YYYY")}</span>
-        </div>
-      ),
-    },
-    {
-      title: "PLANNED AMOUNT USD",
+      title: "PLANNED AMOUNT",
       dataIndex: "planned_amount_usd",
       key: "planned_amount_usd",
+      sorter: (a, b) => a.planned_amount_usd - b.planned_amount_usd,
       render: (planned_amount_usd) => (
         <div>
-          <div>
-            <Typography.Text>${planned_amount_usd}</Typography.Text>
-          </div>
-          <div>
-            <Typography.Text type="secondary">
-              (${planned_amount_usd.toLocaleString("en-US")})
-            </Typography.Text>
-          </div>
+          <span>
+            {new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+              maximumFractionDigits: 2,
+            }).format(planned_amount_usd)}
+          </span>
         </div>
+      ),
+    },
+    {
+      title: "ALLOCATED",
+      dataIndex: "allocated_amount_usd",
+      key: "allocated_amount_usd",
+      sorter: (a, b) =>
+        (a.allocated_amount_usd ?? 0) - (b?.allocated_amount_usd ?? 0),
+      render: (allocated_amount_usd) => (
+        <Typography.Text type="secondary">
+          {new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 2,
+          }).format(allocated_amount_usd)}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: "INVOICED",
+      dataIndex: "invoiced_amount_usd",
+      key: "invoiced_amount_usd",
+      sorter: (a, b) =>
+        (a.invoiced_amount_usd ?? 0) - (b.invoiced_amount_usd ?? 0),
+      render: (invoiced_amount_usd) => (
+        <Typography.Text type="secondary">
+          {new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 2,
+          }).format(invoiced_amount_usd)}
+        </Typography.Text>
       ),
     },
     {

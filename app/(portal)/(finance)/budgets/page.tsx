@@ -8,30 +8,29 @@ import TableView from "@/components/budgets/TableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import { useList } from "@/hooks/react-query/useList";
-import { apiGet } from "@/lib/react-query/apiClient";
+import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
 import {
-  Budget,
-  BudgetResponse,
-  BudgetStatistics,
-} from "@/types/budgets/budgets.type";
-import { mapBudgetStatsToItems } from "@/utils/mapStatistics";
-import { DollarCircleOutlined, PlusOutlined } from "@ant-design/icons";
-import { useQuery } from "@tanstack/react-query";
+  DollarCircleOutlined,
+  DownCircleOutlined,
+  PlusOutlined,
+  UpCircleOutlined,
+} from "@ant-design/icons";
 import { Empty, Flex, Spin, Input, Select, Button, Segmented } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { useSoftDeleteBudget } from "@/hooks/budget-statistics/useSoftDeleteBudget";
 
 export default function BudgetsPage() {
   const router = useRouter();
-  const [openPopConfirm, setOpenPopConfirm] = useState<boolean>(false);
+
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
   const [statusFilter, setStatusFilter] = useState<string | undefined>("");
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [statItems, setStatItems] = useState<StatItem[]>([]);
   const [sortField, setSortField] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>("descend");
 
@@ -49,14 +48,70 @@ export default function BudgetsPage() {
   });
   const budgets = budgetsData as BudgetResponse;
 
-  const { data: statsData, isLoading: loadingStatistics } = useQuery({
-    queryKey: ["statistics"],
-    queryFn: () => apiGet("api/budgets/statistics"),
-  });
-
-  const stats = statsData
-    ? mapBudgetStatsToItems(statsData as BudgetStatistics)
-    : [];
+  useEffect(() => {
+    if (budgets) {
+      setStatItems([
+        {
+          title: "Total Planned",
+          value: new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 2,
+          }).format(budgets.statistics.totalPlanned),
+          icon: <DollarCircleOutlined />,
+          bgColor: "#36CFC9",
+          gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFFFFF 100%)",
+          borderColor: "#87E8DE",
+          tooltip: "Total number of budgets",
+          bottomText: `Across ${budgets.statistics.active} active budget projects`,
+        },
+        {
+          title: "Total Allocated",
+          value: new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 2,
+          }).format(budgets.statistics.totalAllocated),
+          icon: <DownCircleOutlined />,
+          bgColor: "#40A9FF",
+          gradient: "linear-gradient(90deg, #E6F7FF 0%, #FFFFFF 100%)",
+          borderColor: "#91D5FF",
+          tooltip: "Total number of budgets",
+          showProgress: true,
+          progressPercent: budgets.statistics.allocatedVsPlannedPercentage,
+        },
+        {
+          title: "Total Invoiced",
+          value: new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            maximumFractionDigits: 2,
+          }).format(budgets.statistics.totalInvoiced),
+          icon: <UpCircleOutlined />,
+          bgColor: "#9254DE",
+          gradient: "linear-gradient(90deg, #F9F0FF 0%, #FFFFFF 100%)",
+          borderColor: "#D3ADF7",
+          tooltip: "Total number of budgets",
+          showProgress: true,
+          progressPercent: budgets.statistics.invoicedVsAllocatedPercentage,
+        },
+        {
+          title: "Avg. Utilization",
+          value: new Intl.NumberFormat("en-US", {
+            style: "percent",
+            maximumFractionDigits: 2,
+          }).format(budgets.statistics.averageUtilization),
+          icon: <DollarCircleOutlined />,
+          bgColor: "#FFC53D",
+          gradient: "linear-gradient(90deg, #FFFBE6 0%, #FFF 100%)",
+          borderColor: "#FFE58F",
+          tooltip: "Total number of budgets",
+          showProgress: true,
+          progressPercent: budgets.statistics.averageUtilization,
+        },
+      ]);
+    }
+  }, [budgets]);
 
   const softDeleteBudget = useSoftDeleteBudget();
 
@@ -99,7 +154,7 @@ export default function BudgetsPage() {
     router.push("/budgets/create");
   }, [router]);
 
-  if (loadingStatistics || loadingBudgets)
+  if (loadingBudgets)
     return (
       <div
         style={{
@@ -128,11 +183,7 @@ export default function BudgetsPage() {
         buttonIcon={<PlusOutlined />}
       />
 
-      {stats.length === 0 || !stats ? (
-        <Empty />
-      ) : (
-        <BudgetStatsCard stats={stats} />
-      )}
+      <BudgetStatsCard stats={statItems} />
 
       {budgets.items.length === 0 || !budgets ? (
         <Empty />
@@ -197,6 +248,7 @@ export default function BudgetsPage() {
             <Segmented<"Card" | "Table">
               options={["Card", "Table"]}
               style={{ borderRadius: 9, border: "1px solid #D9D9D9" }}
+              value={viewMode}
               onChange={viewChangeHandler}
             />
           </Flex>

@@ -2,19 +2,22 @@ export interface Budget {
   id: number;
   budget_name: string;
   project_name: string;
+  description?: string;
   start_date: string;
   end_date: string;
   currency_code: string;
   exchange_rate_usd: number;
   planned_amount: number;
   planned_amount_usd: number;
-  status: "Active" | "Inactive";
+  status: boolean;
   allocated_variance_usd?: number;
   allocated_amount_usd?: number;
   invoiced_amount_usd?: number;
   allocation_percentage?: number;
   unutilized_amount_usd?: number;
   utilization_percentage?: number;
+  po_count?: number;
+  total_po_value?: number;
   created_by?: string;
   created_at?: string;
   updated_at?: string;
@@ -39,6 +42,14 @@ export interface BudgetResponse {
     total: number;
     active: number;
     inactive: number;
+    totalPlanned: number;
+    totalAllocated: number;
+    totalInvoiced: number;
+    averageUtilization: number;
+    budgetsOverUtilized: number;
+    budgetsUnderUtilized: number;
+    invoicedVsAllocatedPercentage: number;
+    allocatedVsPlannedPercentage: number;
   };
 }
 

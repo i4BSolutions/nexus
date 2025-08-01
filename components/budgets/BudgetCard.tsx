@@ -11,6 +11,7 @@ import {
   Empty,
   Typography,
   Popover,
+  Flex,
 } from "antd";
 import {
   InfoCircleOutlined,
@@ -19,6 +20,7 @@ import {
   StopOutlined,
   DeleteOutlined,
   CheckCircleOutlined,
+  ShoppingCartOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -373,6 +375,33 @@ const BudgetCard = ({ data, onStatusChange }: BudgetsSectionProps) => {
                   />
                 </div>
               </div>
+              <Flex
+                justify="space-between"
+                align="center"
+                style={{
+                  borderTop: "1px solid #f0f0f0",
+                  backgroundColor: "#FAFAFA",
+                  padding: 14,
+                  fontSize: 13,
+                  color: "#595959",
+                }}
+              >
+                <Typography.Text
+                  style={{ fontSize: 12, fontWeight: 400, color: "#00000073" }}
+                >
+                  <ShoppingCartOutlined
+                    style={{
+                      marginRight: 4,
+                    }}
+                  />
+                  {budget.po_count} POs
+                </Typography.Text>
+                <Typography.Text
+                  style={{ fontSize: 12, fontWeight: 400, color: "#00000073" }}
+                >
+                  Total PO Value: $ {budget.total_po_value}
+                </Typography.Text>
+              </Flex>
             </Card>
           </Col>
         ))}
