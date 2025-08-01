@@ -27,7 +27,7 @@ export interface InventoryListInterface {
 }
 
 export interface InventoryResponse {
-  items: InventoryResponseInterface[];
+  items: InventoryInterface[];
   total_item_count: number;
   total_inventory_value: number;
   total: number;

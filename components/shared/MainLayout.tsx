@@ -1,5 +1,6 @@
 "use client";
 
+import { getAuthenticatedUser } from "@/helper/getUser";
 import { createClient } from "@/lib/supabase/client";
 import {
   AuditOutlined,
@@ -10,7 +11,7 @@ import {
 } from "@ant-design/icons";
 import { Button, Image, Layout, Menu, MenuProps, theme } from "antd";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 
 const { Header, Content, Sider } = Layout;
 
@@ -24,12 +25,63 @@ export default function MainLayout({
   } = theme.useToken();
 
   const router = useRouter();
+  const [userPermissions, setUserPermissions] = React.useState<any>({});
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const authenticatedUser = await getAuthenticatedUser(createClient());
+      setUserPermissions(authenticatedUser.user_metadata.permissions || {});
+      console.log(
+        "Authenticated User:",
+        authenticatedUser.user_metadata.permissions
+      );
+    };
+    fetchUser();
+  }, []);
 
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
   };
+
+  const PERMISSION_MAP: Record<string, string> = {
+    "purchase-orders": "can_view_purchase_orders",
+    invoices: "can_view_invoices",
+    products: "can_view_products_suppliers",
+    suppliers: "can_view_products_suppliers",
+    "stock-management": "can_view_stock",
+    warehouses: "can_view_warehouses",
+    budgets: "can_view_budget_allocations",
+    "budget-allocations": "can_view_budget_allocations",
+    users: "can_manage_users",
+  };
+
+  function filterMenu(
+    items: MenuProps["items"],
+    permissions: Record<string, boolean>
+  ) {
+    return items
+      ?.map((item) => {
+        if (!item) return null;
+
+        // If the item has children, just filter the children
+        if ("children" in item && item.children) {
+          const children = item.children.filter((child) => {
+            const key = child?.key as string;
+            const perm = PERMISSION_MAP[key];
+            return !perm || permissions[perm];
+          });
+
+          return children.length ? { ...item, children } : null;
+        }
+
+        // Leaf item: check permission
+        const perm = PERMISSION_MAP[item.key as string];
+        return !perm || permissions[perm] ? item : null;
+      })
+      .filter(Boolean) as MenuProps["items"];
+  }
 
   const MENU_ITEMS: MenuProps["items"] = [
     {
@@ -112,6 +164,9 @@ export default function MainLayout({
       ],
     },
   ];
+
+  const filteredMenu = filterMenu(MENU_ITEMS, userPermissions);
+
   return (
     <Layout
       style={{ display: "flex", flexDirection: "column", height: "100vh" }}
@@ -159,7 +214,7 @@ export default function MainLayout({
             mode="inline"
             defaultSelectedKeys={["main-menu"]}
             style={{ height: "100%", borderRadius: 16 }}
-            items={MENU_ITEMS}
+            items={filteredMenu}
           />
         </Sider>
         <Content style={{ padding: "0 24px", height: "100%" }}>
