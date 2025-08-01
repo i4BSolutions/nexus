@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, Table, Space, Typography } from "antd";
 import {
-  ShoppingCartOutlined,
-  FileTextOutlined,
   EyeOutlined,
+  FileTextOutlined,
+  ShoppingCartOutlined,
 } from "@ant-design/icons";
+import { Card, Space, Table, Typography } from "antd";
 
 const HistoryCard = () => {
   const columns = [
@@ -81,10 +81,12 @@ const HistoryCard = () => {
   return (
     <Space size="middle" direction="vertical" style={{ width: "100%" }}>
       <Card
-        headStyle={{
-          background:
-            "linear-gradient(90deg, rgba(230, 247, 255, 1) 0%, rgba(255, 255, 255, 0) 100%)",
-          borderBottom: "1px solid #91D5FF",
+        styles={{
+          header: {
+            background:
+              "linear-gradient(90deg, rgba(230, 247, 255, 1) 0%, rgba(255, 255, 255, 0) 100%)",
+            borderBottom: "1px solid #91D5FF",
+          },
         }}
         title={
           <Space
@@ -139,24 +141,47 @@ const HistoryCard = () => {
       >
         <Table
           size="middle"
+          rowKey={"orderId"}
           pagination={false}
           columns={columns}
           dataSource={[
-            { orderId: "PO12345", date: "2023-10-01", amount: "$500.00" },
-            { orderId: "PO12346", date: "2023-10-05", amount: "$300.00" },
-            { orderId: "PO12346", date: "2023-10-05", amount: "$300.00" },
-            { orderId: "PO12346", date: "2023-10-05", amount: "$300.00" },
-            { orderId: "PO12346", date: "2023-10-05", amount: "$300.00" },
+            {
+              orderId: "PO12345",
+              date: "2023-10-01",
+              amount: "$500.00",
+            },
+            {
+              orderId: "PO12346",
+              date: "2023-10-05",
+              amount: "$300.00",
+            },
+            {
+              orderId: "PO12347",
+              date: "2023-10-05",
+              amount: "$300.00",
+            },
+            {
+              orderId: "PO12348",
+              date: "2023-10-05",
+              amount: "$300.00",
+            },
+            {
+              orderId: "PO12349",
+              date: "2023-10-05",
+              amount: "$300.00",
+            },
           ]}
           bordered
         />
       </Card>
 
       <Card
-        headStyle={{
-          background:
-            "linear-gradient(90deg, rgba(255, 251, 230, 1) 0%, rgba(255, 255, 255, 0) 100%)",
-          borderBottom: "1px solid #FFE58F",
+        styles={{
+          header: {
+            background:
+              "linear-gradient(90deg, rgba(255, 251, 230, 1) 0%, rgba(255, 255, 255, 0) 100%)",
+            borderBottom: "1px solid #FFE58F",
+          },
         }}
         title={
           <Space
@@ -209,14 +234,15 @@ const HistoryCard = () => {
       >
         <Table
           size="middle"
+          rowKey={"orderId"}
           pagination={false}
           columns={columns}
           dataSource={[
-            { orderId: "PO12345", date: "2023-10-01", amount: "$500.00" },
-            { orderId: "PO12346", date: "2023-10-05", amount: "$300.00" },
-            { orderId: "PO12346", date: "2023-10-05", amount: "$300.00" },
-            { orderId: "PO12346", date: "2023-10-05", amount: "$300.00" },
-            { orderId: "PO12346", date: "2023-10-05", amount: "$300.00" },
+            { orderId: "PO12341", date: "2023-10-01", amount: "$500.00" },
+            { orderId: "PO12342", date: "2023-10-05", amount: "$300.00" },
+            { orderId: "PO12343", date: "2023-10-05", amount: "$300.00" },
+            { orderId: "PO12344", date: "2023-10-05", amount: "$300.00" },
+            { orderId: "PO12355", date: "2023-10-05", amount: "$300.00" },
           ]}
           bordered
         />
