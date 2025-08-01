@@ -7,6 +7,7 @@ import {
   InventoryListFilterParams,
   InventoryListInterface,
   InventoryListResponse,
+  InventoryResponse,
 } from "@/types/inventory/inventory.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
 import { DollarCircleOutlined } from "@ant-design/icons";
@@ -36,7 +37,7 @@ const Inventory = () => {
     data: inventoryListData,
     isLoading: inventoryListLoading,
     error: inventoryListError,
-  } = useGetWithParams<InventoryListResponse, InventoryListFilterParams>(
+  } = useGetWithParams<InventoryResponse, InventoryListFilterParams>(
     "inventory",
     {
       q: searchText,
@@ -200,12 +201,12 @@ const Inventory = () => {
         footer={() => (
           <Flex justify="space-between" align="center" gap={4}>
             <Typography.Text>
-              Total {inventoryListData?.total_item_count} items
+              Total {inventoryListData?.total} items
             </Typography.Text>
             <Pagination
               current={pagination.page}
               pageSize={pagination.pageSize}
-              total={inventoryListData?.total_item_count}
+              total={inventoryListData?.total}
               onChange={paginationChangeHandler}
             />
           </Flex>

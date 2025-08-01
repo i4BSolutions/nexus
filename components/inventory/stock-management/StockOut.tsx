@@ -374,12 +374,7 @@ const StockOut = ({
                                 rules={[
                                   {
                                     required: true,
-                                    message: "Quantity is required",
-                                  },
-                                  {
-                                    type: "number",
-                                    min: 1,
-                                    message: "Minimum quantity is 1",
+                                    message: "Quantity is required.",
                                   },
                                   {
                                     validator: (_, value) => {
@@ -391,6 +386,13 @@ const StockOut = ({
                                       const inv = inventoryItems.find(
                                         (i) => i.product.id === pid
                                       );
+                                      if (value <= 0) {
+                                        return Promise.reject(
+                                          new Error(
+                                            "Quantity must be greater than 0."
+                                          )
+                                        );
+                                      }
                                       if (
                                         typeof value === "number" &&
                                         inv &&
@@ -409,7 +411,6 @@ const StockOut = ({
                                 style={{ marginBottom: 0 }}
                               >
                                 <InputNumber
-                                  min={1}
                                   max={(() => {
                                     const pid = form.getFieldValue([
                                       "items",
