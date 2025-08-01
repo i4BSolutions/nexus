@@ -9,7 +9,7 @@ import {
   SettingOutlined,
   ShoppingOutlined,
 } from "@ant-design/icons";
-import { Button, Image, Layout, Menu, MenuProps, theme } from "antd";
+import { Button, Image, Layout, Menu, MenuProps, Spin, theme } from "antd";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
@@ -161,7 +161,17 @@ export default function MainLayout({
     },
   ];
 
-  const filteredMenu = filterMenu(MENU_ITEMS, userPermissions);
+  const filteredMenu = filterMenu(MENU_ITEMS, userPermissions) || [];
+
+  if (!userPermissions || Object.keys(userPermissions).length === 0) {
+    return (
+      <Layout style={{ padding: "20px", background: colorBgContainer }}>
+        <div className="h-screen grid place-items-center">
+          <Spin />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout
