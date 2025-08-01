@@ -189,7 +189,10 @@ export default function CardView({
                       Delivery Progress
                     </Typography.Text>
                   </Col>
-                  <Progress percent={19} strokeColor="#52C41A" />
+                  <Progress
+                    percent={item.delivered_percentage}
+                    strokeColor="#52C41A"
+                  />
                   <Space
                     style={{
                       width: "100%",
@@ -210,7 +213,7 @@ export default function CardView({
                           maxWidth: "fit-content",
                         }}
                       >
-                        10% Delivered
+                        {item.delivered_percentage}% Delivered
                       </div>
                     </Space>
                     <Space>
@@ -226,7 +229,7 @@ export default function CardView({
                           maxWidth: "fit-content",
                         }}
                       >
-                        90% Pending
+                        {item.pending_delivery_percentage}% Pending
                       </div>
                     </Space>
                   </Space>
