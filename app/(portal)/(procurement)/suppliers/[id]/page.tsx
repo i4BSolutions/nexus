@@ -42,7 +42,7 @@ const SupplierPage = () => {
   const update = useUpdate("suppliers");
   const remove = useDelete("suppliers");
 
-  const supplier = supplierRaw as SupplierInterface | undefined;
+  const supplier = supplierRaw as SupplierInterface;
 
   const handleDelete = async () => {
     try {
@@ -153,7 +153,7 @@ const SupplierPage = () => {
           {
             key: "history",
             label: "History",
-            children: <HistoryCard />,
+            children: <HistoryCard id={id} />,
           },
         ]}
       />
