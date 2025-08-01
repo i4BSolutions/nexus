@@ -29,6 +29,7 @@ export interface PurchaseInvoiceDto {
   total_amount_usd: number;
   status: string;
   note?: string;
+  supplier_name?: string;
 }
 
 export interface PurchaseInvoiceResponse {

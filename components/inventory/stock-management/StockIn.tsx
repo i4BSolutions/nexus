@@ -72,10 +72,17 @@ const StockInForm = ({
 
   const invoiceData = invoiceDataRaw as PurchaseInvoiceInterface;
 
+  const validInvoiceItems =
+    invoiceData?.invoice_items?.filter(
+      (item) =>
+        typeof item?.remaining_to_stock_in === "number" &&
+        item.remaining_to_stock_in > 0
+    ) || [];
+
   useEffect(() => {
-    if (invoiceData?.invoice_items?.length) {
+    if (validInvoiceItems.length) {
       form.setFieldsValue({
-        invoice_items: invoiceData.invoice_items.map((item) => ({
+        invoice_items: validInvoiceItems.map((item) => ({
           checked: false,
           stock_in_quantity: 1,
           ...item,
@@ -234,181 +241,145 @@ const StockInForm = ({
             style={{ marginTop: 12 }}
           >
             {selectedInvoice ? (
-              <Form.List name="invoice_items">
-                {(fields) => {
-                  return (
-                    <>
-                      <div
+              invoiceDetailLoading ? (
+                <div className="grid place-items-center h-[200px]">
+                  <Spin />
+                </div>
+              ) : validInvoiceItems.length > 0 ? (
+                <Form.List name="invoice_items">
+                  {(fields) => (
+                    <div
+                      style={{ border: "1px solid #e0e0e0", borderRadius: 8 }}
+                    >
+                      <Row
+                        gutter={16}
                         style={{
-                          border: "1px solid #e0e0e0",
-                          borderRadius: 8,
-                          overflow: "hidden",
+                          fontWeight: 600,
+                          padding: "12px",
+                          background: "#fafafa",
+                          borderBottom: "1px solid #e0e0e0",
                         }}
+                        align="middle"
                       >
-                        {invoiceDetailLoading ? (
-                          <div className="grid place-items-center h-[200px]">
-                            <Spin />
-                          </div>
-                        ) : (
-                          <>
-                            {/* Header Row */}
+                        <Col span={2}>SELECT</Col>
+                        <Col span={4}>PRODUCT NAME</Col>
+                        <Col span={4}>PRODUCT SKU</Col>
+                        <Col span={4}>INVOICED QTY</Col>
+                        <Col span={4}>REMAINING QTY</Col>
+                        <Col span={6}>QUANTITY TO STOCK IN</Col>
+                      </Row>
+
+                      {fields
+                        .filter((_, index) => {
+                          const item = invoiceData?.invoice_items?.[index];
+                          return (
+                            typeof item?.remaining_to_stock_in === "number" &&
+                            item.remaining_to_stock_in > 0
+                          );
+                        })
+                        .map(({ key, name, ...restField }, index) => {
+                          const item = invoiceData?.invoice_items?.[name];
+                          if (!item) return null;
+
+                          return (
                             <Row
+                              key={key}
                               gutter={16}
-                              style={{
-                                fontWeight: 600,
-                                padding: "12px",
-                                background: "#fafafa",
-                                borderBottom: "1px solid #e0e0e0",
-                              }}
                               align="middle"
+                              style={{
+                                padding: "12px 20px",
+                                borderBottom: "1px solid #f0f0f0",
+                              }}
                             >
-                              <Col span={2}>SELECT</Col>
-                              <Col span={4}>PRODUCT NAME</Col>
-                              <Col span={4}>PRODUCT SKU</Col>
-                              <Col span={4}>INVOICED QTY</Col>
-                              <Col span={4}>REMAINING QTY</Col>
-                              <Col span={6}>QUANTITY TO STOCK IN</Col>
+                              <Col span={2}>
+                                <Form.Item
+                                  {...restField}
+                                  name={[name, "checked"]}
+                                  valuePropName="checked"
+                                  initialValue={false}
+                                  style={{ marginBottom: 0 }}
+                                >
+                                  <Checkbox />
+                                </Form.Item>
+                              </Col>
+                              <Col span={4}>
+                                <Typography.Text>
+                                  {item.product_name}
+                                </Typography.Text>
+                              </Col>
+                              <Col span={4}>
+                                <Typography.Text>
+                                  {item.product_sku}
+                                </Typography.Text>
+                              </Col>
+                              <Col span={4}>
+                                <Typography.Text>
+                                  {item.total_ordered}
+                                </Typography.Text>
+                              </Col>
+                              <Col span={4}>
+                                <Typography.Text>
+                                  {item.remaining_to_stock_in}
+                                </Typography.Text>
+                              </Col>
+                              <Col span={6}>
+                                <Form.Item
+                                  {...restField}
+                                  name={[name, "stock_in_quantity"]}
+                                  initialValue={1}
+                                  style={{ marginBottom: 0 }}
+                                  rules={[
+                                    {
+                                      required: true,
+                                      message: "Quantity is required.",
+                                    },
+                                    {
+                                      validator: (_, value) => {
+                                        const remaining =
+                                          item.remaining_to_stock_in ?? 1;
+                                        if (typeof value !== "number")
+                                          return Promise.resolve();
+                                        if (value <= 0) {
+                                          return Promise.reject(
+                                            new Error(
+                                              "Quantity must be greater than 0."
+                                            )
+                                          );
+                                        }
+                                        if (value > remaining) {
+                                          return Promise.reject(
+                                            new Error(
+                                              `Cannot exceed remaining quantity (${remaining})`
+                                            )
+                                          );
+                                        }
+                                        return Promise.resolve();
+                                      },
+                                    },
+                                  ]}
+                                >
+                                  <InputNumber style={{ width: "100%" }} />
+                                </Form.Item>
+                              </Col>
                             </Row>
-                            {/* Dynamic Rows */}
-                            {fields.map(
-                              ({ key, name, ...restField }, index) => {
-                                const item = invoiceData?.invoice_items?.[name];
-                                if (!item) return null;
-
-                                return (
-                                  <Row
-                                    key={key}
-                                    gutter={16}
-                                    align="middle"
-                                    style={{
-                                      padding: "12px 20px",
-                                      borderBottom:
-                                        index !== fields.length - 1
-                                          ? "1px solid #f0f0f0"
-                                          : undefined,
-                                    }}
-                                  >
-                                    {/* Select Checkbox */}
-                                    <Col span={2}>
-                                      <Form.Item
-                                        {...restField}
-                                        name={[name, "checked"]}
-                                        valuePropName="checked"
-                                        initialValue={false}
-                                        style={{ marginBottom: 0 }}
-                                      >
-                                        <Checkbox />
-                                      </Form.Item>
-                                    </Col>
-
-                                    {/* Product Name */}
-                                    <Col span={4}>
-                                      <Typography.Text
-                                        style={{
-                                          color: "#000000D9",
-                                          fontSize: 14,
-                                          fontWeight: 400,
-                                        }}
-                                      >
-                                        {item.product_name}
-                                      </Typography.Text>
-                                    </Col>
-
-                                    {/* Product SKU */}
-                                    <Col span={6}>
-                                      <Flex style={{ gap: 4 }}>
-                                        <TagOutlined />
-                                        <Typography.Text
-                                          style={{
-                                            color: "#000000D9",
-                                            fontSize: 14,
-                                            fontWeight: 400,
-                                          }}
-                                        >
-                                          {item.product_sku}
-                                        </Typography.Text>
-                                      </Flex>
-                                    </Col>
-
-                                    {/* Invoiced Qty */}
-                                    <Col span={4}>
-                                      <Typography.Text
-                                        style={{
-                                          color: "#000000D9",
-                                          fontSize: 14,
-                                          fontWeight: 400,
-                                        }}
-                                      >
-                                        {item.total_ordered}
-                                      </Typography.Text>
-                                    </Col>
-
-                                    {/* Remaining Qty */}
-                                    <Col span={4}>
-                                      <Typography.Text
-                                        style={{
-                                          color: "#000000D9",
-                                          fontSize: 14,
-                                          fontWeight: 400,
-                                        }}
-                                      >
-                                        {item.remaining_to_stock_in}
-                                      </Typography.Text>
-                                    </Col>
-
-                                    {/* Quantity to Stock In */}
-                                    <Col span={4}>
-                                      <Form.Item
-                                        {...restField}
-                                        name={[name, "stock_in_quantity"]}
-                                        initialValue={1}
-                                        style={{ marginBottom: 0 }}
-                                        rules={[
-                                          {
-                                            required: true,
-                                            message: "Enter quantity",
-                                          },
-                                          {
-                                            type: "number",
-                                            min: 0,
-                                            message:
-                                              "Quantity must be at least 0",
-                                          },
-                                          {
-                                            validator: (_, value) => {
-                                              const remaining =
-                                                item.remaining_to_stock_in ?? 1;
-                                              if (typeof value !== "number")
-                                                return Promise.resolve();
-                                              if (value > remaining) {
-                                                return Promise.reject(
-                                                  new Error(
-                                                    `Cannot exceed remaining quantity (${remaining})`
-                                                  )
-                                                );
-                                              }
-                                              return Promise.resolve();
-                                            },
-                                          },
-                                        ]}
-                                      >
-                                        <InputNumber
-                                          min={0}
-                                          style={{ width: "100%" }}
-                                        />
-                                      </Form.Item>
-                                    </Col>
-                                  </Row>
-                                );
-                              }
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </>
-                  );
-                }}
-              </Form.List>
+                          );
+                        })}
+                    </div>
+                  )}
+                </Form.List>
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 200,
+                  }}
+                >
+                  <Empty description="There are no items to stock in." />
+                </div>
+              )
             ) : (
               <div
                 style={{
