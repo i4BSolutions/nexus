@@ -82,6 +82,17 @@ export default function InvoicesPage() {
   });
 
   useEffect(() => {
+    refetch();
+  }, [
+    status,
+    searchText,
+    dateSort,
+    amountSort,
+    pagination.page,
+    pagination.pageSize,
+  ]);
+
+  useEffect(() => {
     if (piData) {
       const data = piData.items.map((item) => ({
         id: item.id,
@@ -95,6 +106,8 @@ export default function InvoicesPage() {
         total_amount_usd: item.total_amount_usd,
         status: item.status,
         note: item.note,
+        delivered_percentage: item.delivered_percentage,
+        pending_delivery_percentage: item.pending_delivery_percentage,
       }));
       setData(data);
       setTotal(piData.total);
@@ -128,16 +141,20 @@ export default function InvoicesPage() {
         },
         {
           title: "% Delivered",
-          value: piData.statistics.total_usd,
+          value: piData.statistics.delivered,
+          suffix: "%",
           icon: <CarryOutOutlined />,
           bgColor: "#9254DE",
           gradient: "linear-gradient(90deg, #F9F0FF 0%, #FFF 100%)",
           borderColor: "#D3ADF7",
           tooltip: "Delivered invoices rate",
           footerContent: (
-            <Progress percent={19} showInfo={false} strokeColor="#9254DE" />
+            <Progress
+              percent={piData.statistics.delivered}
+              showInfo={false}
+              strokeColor="#9254DE"
+            />
           ),
-          // TODO: Calculate actual delivered percentage
         },
       ]);
     }
@@ -181,8 +198,6 @@ export default function InvoicesPage() {
         setDateSort(undefined);
         setAmountSort(undefined);
     }
-
-    refetch();
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
