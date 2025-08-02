@@ -245,19 +245,30 @@ export async function POST(
  * It calculates the total number of invoices and the total USD value.
  * @returns Promise<{ total_invoices: number, total_usd: number, delivered: number }>
  */
-async function getStatistics() {
+async function getStatistics({
+  status,
+}: {
+  status?: string;
+}): Promise<{ total_invoices: number; total_usd: number; delivered: number }> {
   const supabase = await createClient();
 
-  const { data: allInvoicesForStats, error: statsError } = await supabase.from(
-    "purchase_invoice"
-  ).select(`
+  let query = supabase.from("purchase_invoice").select(
+    `
+      id,
       exchange_rate_to_usd,
       invoice_items:purchase_invoice_item (
         id,
         quantity,
         unit_price_local
       )
-    `);
+    `
+  );
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  const { data: allInvoicesForStats, error: statsError } = await query;
 
   let totalAmountUsd = 0;
   let totalInvoices = 0;
@@ -280,11 +291,14 @@ async function getStatistics() {
     });
   }
 
+  const invoiceItemIds = Array.from(itemIdToQuantityMap.keys());
+
   // Get delivered quantities per invoice item
   const { data: deliveredStats, error: deliveredError } = await supabase
     .from("stock_transaction")
     .select("invoice_line_item_id, quantity")
-    .eq("type", "IN");
+    .eq("type", "IN")
+    .in("invoice_line_item_id", invoiceItemIds);
 
   let totalDeliveredQty = 0;
 
@@ -482,7 +496,7 @@ export async function GET(
     formatDto = formatDto.slice(from, to + 1);
   }
 
-  const statisticsData = await getStatistics();
+  const statisticsData = await getStatistics({ status: status ?? undefined });
 
   const data = {
     items: formatDto,
