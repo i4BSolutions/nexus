@@ -225,7 +225,7 @@ const BudgetAllocationForm = ({
     {
       title: "SUPPLIER",
       dataIndex: "supplier_name",
-      render: (text: string) => <span style={{ fontWeight: 500 }}>John</span>,
+      render: (text: string) => <span style={{ fontWeight: 500 }}>{text}</span>,
     },
     {
       title: "ORDER DATE",
