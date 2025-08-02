@@ -1,6 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const routePermissions: Record<string, string> = {
+  "/purchase-orders": "can_view_purchase_orders",
+  "/invoices": "can_view_invoices",
+  "/budgets": "can_view_budget_allocations",
+  "/budget-allocations": "can_view_budget_allocations",
+  "/stock-management": "can_view_stock",
+  "/warehouses": "can_view_warehouses",
+  "/users": "can_manage_users",
+};
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -51,6 +61,20 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
+  }
+
+  if (user) {
+    const pathname = request.nextUrl.pathname;
+
+    const permissions = user.user_metadata?.permissions || {};
+
+    for (const [route, permission] of Object.entries(routePermissions)) {
+      if (pathname.startsWith(route) && !permissions[permission]) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/unauthorized";
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
