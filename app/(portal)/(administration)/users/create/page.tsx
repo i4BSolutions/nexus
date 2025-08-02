@@ -138,7 +138,7 @@ export default function UserCreationPage() {
         </Space>
       </Space>
 
-      <Form
+      <Form<UserFieldType>
         name="user-creation-form"
         form={form}
         layout="vertical"
@@ -505,7 +505,7 @@ export default function UserCreationPage() {
             <Col span={8} className="!space-y-2">
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="manage_stock_in"
+                  name="stock_in"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -523,7 +523,7 @@ export default function UserCreationPage() {
 
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="manage_stock_out"
+                  name="stock_out"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
