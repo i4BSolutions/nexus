@@ -126,9 +126,10 @@ const ProductDetailPage = () => {
   }
 
   const statusTag = () => {
-    const { stock, min_stock } = productDetail;
-    if (stock === 0) return <Tag color="red">Out of Stock</Tag>;
-    if (stock <= min_stock) return <Tag color="orange">Low Stock</Tag>;
+    const { current_stock, min_stock } = productDetail;
+    if (current_stock === 0) return <Tag color="red">Out of Stock</Tag>;
+    if (current_stock ?? 0 <= min_stock)
+      return <Tag color="orange">Low Stock</Tag>;
     return <Tag color="green">In Stock</Tag>;
   };
 

@@ -267,13 +267,13 @@ export default function ProductsPage() {
     },
     {
       title: "STATUS",
-      dataIndex: "stock",
-      render: (stock: number, record: ProductInterface) => {
-        if (record.min_stock === 0)
-          return <Tag color="#F5222D">Out of Stock</Tag>;
-        if (stock <= record.min_stock)
-          return <Tag color="#FA8C16">Low Stock</Tag>;
-        return <Tag color="#52C41A">In Stock</Tag>;
+      render: (_: any, record: ProductInterface) => {
+        const current = record.current_stock ?? 0;
+        const min = record.min_stock ?? 0;
+
+        if (current === 0) return <Tag color="red">Out of Stock</Tag>;
+        if (current <= min) return <Tag color="orange">Low Stock</Tag>;
+        return <Tag color="green">In Stock</Tag>;
       },
     },
     {

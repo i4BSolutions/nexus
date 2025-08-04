@@ -19,7 +19,7 @@ export async function GET(
     });
   }
 
-  const { data, error: dbError } = await supabase
+  const { data: product, error: dbError } = await supabase
     .from("product")
     .select("*")
     .eq("id", id)
@@ -31,13 +31,33 @@ export async function GET(
     });
   }
 
-  if (!data) {
+  if (!product) {
     return NextResponse.json(error("Product not found", 404), {
       status: 404,
     });
   }
 
-  return NextResponse.json(success(data, "Product retrieved successfully"), {
+  const { data: stockInventory, error: inventoryError } = await supabase
+    .from("inventory")
+    .select("quantity")
+    .eq("product_id", id);
+
+  if (inventoryError) {
+    return NextResponse.json(
+      error(inventoryError.message || "Failed to fetch inventory", 500),
+      { status: 500 }
+    );
+  }
+
+  const current_stock =
+    stockInventory?.reduce((sum, row) => sum + Number(row.quantity), 0) ?? 0;
+
+  const result: ProductInterface = {
+    ...product,
+    current_stock,
+  };
+
+  return NextResponse.json(success(result, "Product retrieved successfully"), {
     status: 200,
   });
 }

@@ -10,6 +10,7 @@ export interface ProductInterface {
   description: string;
   created_at: string;
   updated_at: string;
+  current_stock?: number;
 }
 
 export interface ProductCurrencyInterface {
