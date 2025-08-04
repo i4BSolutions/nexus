@@ -57,3 +57,9 @@
   display: block;
   width: 100%;
 }
+
+.slick-prev::before,
+.slick-next::before {
+  color: #000 !important; /* Change to black or any visible color */
+  font-size: 24px;
+}
