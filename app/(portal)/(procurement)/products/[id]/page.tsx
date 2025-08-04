@@ -21,6 +21,7 @@ import {
   ProductCurrencyInterface,
   ProductInterface,
   ProductPriceHistoryInterface,
+  ProductUsageHistory,
 } from "@/types/product/product.type";
 import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
 import { Button, message, Space, Spin, Tabs, Tag, Typography } from "antd";
@@ -70,6 +71,9 @@ const ProductDetailPage = () => {
     refetch: refetchProductPriceHistory,
   } = useGetProductById("get-product-price-history", id);
   const priceHistory = priceHistoryData as ProductPriceHistoryInterface[];
+
+  const { data: usageHistoryData } = useGetProductById("get-usage-history", id);
+  const usageHistory = usageHistoryData as ProductUsageHistory;
 
   useEffect(() => {
     if (categoriesStatus === "success" && categories.data) {
@@ -123,9 +127,9 @@ const ProductDetailPage = () => {
 
   const statusTag = () => {
     const { stock, min_stock } = productDetail;
-    if (stock === 0) return <Tag color="#F5222D">Out of Stock</Tag>;
-    if (stock <= min_stock) return <Tag color="#FA8C16">Low Stock</Tag>;
-    return <Tag color="#52C41A">In Stock</Tag>;
+    if (stock === 0) return <Tag color="red">Out of Stock</Tag>;
+    if (stock <= min_stock) return <Tag color="orange">Low Stock</Tag>;
+    return <Tag color="green">In Stock</Tag>;
   };
 
   return (
@@ -205,7 +209,7 @@ const ProductDetailPage = () => {
           {
             key: "usage_history",
             label: "Usage History",
-            children: <UsageHistory />,
+            children: <UsageHistory data={usageHistory} />,
           },
           {
             key: "price_history",

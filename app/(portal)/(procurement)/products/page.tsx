@@ -17,7 +17,18 @@ import {
   TagOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
-import { Button, Divider, message, Space, Spin, Table, Tag } from "antd";
+import {
+  Button,
+  Divider,
+  Flex,
+  message,
+  Pagination,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
 import { SortOrder } from "antd/es/table/interface";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -281,6 +292,10 @@ export default function ProductsPage() {
     },
   ];
 
+  const paginationChangeHandler = (page: number, pageSize?: number) => {
+    setPagination({ page, pageSize: pageSize || 10 });
+  };
+
   if (loadingProduct || loadingSKU)
     return (
       <div className="text-center py-20">
@@ -347,25 +362,18 @@ export default function ProductsPage() {
         dataSource={products}
         rowKey="id"
         loading={loadingProduct || loadingSKU}
-        pagination={{
-          current: pagination.page,
-          pageSize: pagination.pageSize,
-          total: total,
-        }}
-        onChange={(pagination, filters, sorter) => {
-          setPagination({
-            page: pagination.current ?? 1,
-            pageSize: pagination.pageSize ?? 10,
-          });
-          if (Array.isArray(sorter)) {
-            const sortInfo = sorter[0];
-            setSortField(sortInfo?.field as string);
-            setSortOrder(sortInfo?.order);
-          } else {
-            setSortField(sorter?.field as string);
-            setSortOrder(sorter?.order);
-          }
-        }}
+        footer={() => (
+          <Flex justify="space-between" align="center" gap={4}>
+            <Typography.Text>Total {total} items</Typography.Text>
+            <Pagination
+              current={pagination.page}
+              pageSize={pagination.pageSize}
+              total={total}
+              onChange={paginationChangeHandler}
+            />
+          </Flex>
+        )}
+        pagination={false}
         bordered
       />
 
