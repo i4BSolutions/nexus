@@ -1,5 +1,6 @@
 "use client";
 
+import EditHistory from "@/components/purchase-orders/detail/EditHistory";
 import PoCancelModal from "@/components/purchase-orders/detail/PoCancelModal";
 import PoDetailPDF from "@/components/purchase-orders/detail/PoDetailPdf";
 import PoDetailView from "@/components/purchase-orders/detail/PoDetailView";
@@ -10,6 +11,7 @@ import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { usePermission } from "@/hooks/shared/usePermission";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
+import { PurchaseOrderHistory } from "@/types/purchase-order/purchase-order.type";
 import {
   ArrowLeftOutlined,
   CheckCircleOutlined,
@@ -53,6 +55,18 @@ export default function PurchaseOrderDetailPage() {
     params.id as string,
   ]);
 
+  const {
+    data: historyDataRaw,
+    isLoading: historyLoading,
+    error: historyError,
+  } = useGetById(
+    "purchase-orders/edit-history",
+    params.id as string,
+    !!params.id
+  );
+
+  const historyData = historyDataRaw as PurchaseOrderHistory[];
+
   const updatePUrchaseOrderStatus = useUpdate(
     "purchase-orders/cancel-purchase-order",
     ["purchase-orders/cancel-purchase-order", params.id as string]
@@ -92,7 +106,12 @@ export default function PurchaseOrderDetailPage() {
     {
       key: "usage-history",
       label: "Usage History",
-      children: <PoUsageHistory />,
+      children: <PoUsageHistory id={params.id as string} />,
+    },
+    {
+      key: "edit-history",
+      label: "Edit History",
+      children: <EditHistory data={historyData} />,
     },
   ];
 
