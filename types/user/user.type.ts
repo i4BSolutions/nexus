@@ -11,8 +11,8 @@ export type UserFieldType = {
   view_products_suppliers: boolean;
   manage_products_suppliers: boolean;
   view_stock: boolean;
-  manage_stock_in: boolean;
-  manage_stock_out: boolean;
+  stock_in: boolean;
+  stock_out: boolean;
   view_warehouses: boolean;
   manage_warehouses: boolean;
   view_budgets_allocations: boolean;

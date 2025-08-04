@@ -8,6 +8,7 @@ import StatusBadge from "@/components/purchase-orders/StatusBadge";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { usePermission } from "@/hooks/shared/usePermission";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 import {
   ArrowLeftOutlined,
@@ -39,6 +40,7 @@ export default function PurchaseOrderDetailPage() {
   const { message } = App.useApp();
 
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const hasPermission = usePermission("can_manage_purchase_orders");
 
   const { data: detailData, isLoading } = useGetById<PurchaseOrderDetailDto>(
     "purchase-orders",
@@ -159,22 +161,26 @@ export default function PurchaseOrderDetailPage() {
                   Download PDF
                 </PDFDownloadLink>
               </Button>
-              <Button
-                type="primary"
-                icon={<EditOutlined />}
-                onClick={() =>
-                  router.push(`/purchase-orders/${params.id}/edit`)
-                }
-              >
-                Edit PO
-              </Button>
-              <Dropdown
-                menu={{ items: dropDownItems }}
-                trigger={["click"]}
-                placement="bottomRight"
-              >
-                <Button icon={<EllipsisOutlined />} />
-              </Dropdown>
+              {hasPermission && (
+                <>
+                  <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    onClick={() =>
+                      router.push(`/purchase-orders/${params.id}/edit`)
+                    }
+                  >
+                    Edit PO
+                  </Button>
+                  <Dropdown
+                    menu={{ items: dropDownItems }}
+                    trigger={["click"]}
+                    placement="bottomRight"
+                  >
+                    <Button icon={<EllipsisOutlined />} />
+                  </Dropdown>
+                </>
+              )}
             </Flex>
           </Flex>
         </div>

@@ -1,14 +1,14 @@
 "use client";
 
 import { usePaginatedById } from "@/hooks/react-query/usePaginatedById";
-import { useEffect, useState } from "react";
-import { Space } from "antd";
-import PurchaseOrderHistoryTable from "./PurchaseOrderHistoryTable";
-import InvoiceHistoryTable from "./InvoiceHistoryTable";
 import {
   SupplierInvoiceHistoryResponse,
   SupplierPurchaseOrderHistoryResponse,
 } from "@/types/supplier/supplier.type";
+import { Space } from "antd";
+import { useEffect, useState } from "react";
+import InvoiceHistoryTable from "./InvoiceHistoryTable";
+import PurchaseOrderHistoryTable from "./PurchaseOrderHistoryTable";
 
 const HistoryCard = ({ id }: { id: string }) => {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 3 });

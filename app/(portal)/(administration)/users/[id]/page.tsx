@@ -19,8 +19,6 @@ export default function UserDetailPage() {
     params.id as string
   );
 
-  console.log("User Detail Data:", userDetailData);
-
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-screen">

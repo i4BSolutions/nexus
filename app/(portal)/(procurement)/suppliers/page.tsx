@@ -27,11 +27,13 @@ import {
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useList } from "@/hooks/react-query/useList";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { usePermission } from "@/hooks/shared/usePermission";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function SuppliersPage() {
+  const hasPermission = usePermission("can_manage_products_suppliers");
   const { message } = App.useApp();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -197,14 +199,18 @@ export default function SuppliersPage() {
           >
             View
           </Button>
-          <Divider type="vertical" />
-          <Button
-            type="link"
-            onClick={() => handleEdit(record)}
-            style={{ padding: 0 }}
-          >
-            Edit
-          </Button>
+          {hasPermission && (
+            <>
+              <Divider type="vertical" />
+              <Button
+                type="link"
+                onClick={() => handleEdit(record)}
+                style={{ padding: 0 }}
+              >
+                Edit
+              </Button>
+            </>
+          )}
         </Space>
       ),
     },
@@ -226,6 +232,7 @@ export default function SuppliersPage() {
           setEditingSupplier(null);
           setIsModalOpen(true);
         }}
+        hasPermission={hasPermission}
         buttonText="New Supplier"
         buttonIcon={<PlusOutlined />}
       />

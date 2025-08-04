@@ -34,6 +34,7 @@ import StatisticsCards from "@/components/shared/StatisticsCards";
 import CardView from "@/components/purchase-invoices/CardView";
 import TableView from "@/components/purchase-invoices/TableView";
 import { useList } from "@/hooks/react-query/useList";
+import { usePermission } from "@/hooks/shared/usePermission";
 import {
   PurchaseInvoiceDto,
   PurchaseInvoiceResponse,
@@ -57,6 +58,7 @@ export default function InvoicesPage() {
   const [status, setStatus] = useState<string | undefined>(undefined);
 
   const [data, setData] = useState<PurchaseInvoiceDto[]>();
+  const hasPermission = usePermission("can_manage_invoices");
 
   const router = useRouter();
 
@@ -243,6 +245,7 @@ export default function InvoicesPage() {
         icon={<FileTextOutlined style={{ fontSize: 20, color: "white" }} />}
         onAddNew={() => router.push("/invoices/create")}
         buttonText="New Invoice"
+        hasPermission={hasPermission}
         buttonIcon={<PlusOutlined />}
       />
 
@@ -338,6 +341,7 @@ export default function InvoicesPage() {
         <CardView
           data={data}
           pagination={pagination}
+          hasPermission={hasPermission}
           paginationChangeHandler={paginationChangeHandler}
           total={total}
         />
@@ -347,6 +351,7 @@ export default function InvoicesPage() {
           pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
           total={total}
+          hasPermission={hasPermission}
         />
       )}
     </section>

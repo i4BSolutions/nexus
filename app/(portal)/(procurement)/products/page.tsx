@@ -1,12 +1,21 @@
 "use client";
 
+import CreateCategoryModal from "@/components/products/CreateCategoryModal";
 import ProductFormModal from "@/components/products/ProductFormModal";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import SearchAndFilters from "@/components/shared/SearchAndFilters";
 import StatisticsCards from "@/components/shared/StatisticsCards";
-import CreateCategoryModal from "@/components/products/CreateCategoryModal";
+import { useCategories } from "@/hooks/products/useCategories";
+import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
+import { useProducts } from "@/hooks/products/useProducts";
+import { useProductSKU } from "@/hooks/products/useProductSKU";
+import { useCreate } from "@/hooks/react-query/useCreate";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { usePermission } from "@/hooks/shared/usePermission";
+import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
 import { ProductFormInput } from "@/schemas/products/products.schemas";
+import { CategoryInterface } from "@/types/category/category.type";
 import {
   ProductCurrencyInterface,
   ProductInterface,
@@ -19,16 +28,8 @@ import {
 } from "@ant-design/icons";
 import { Button, Divider, message, Space, Spin, Table, Tag } from "antd";
 import { SortOrder } from "antd/es/table/interface";
-import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
-import { useProducts } from "@/hooks/products/useProducts";
-import { useCreate } from "@/hooks/react-query/useCreate";
-import { useUpdate } from "@/hooks/react-query/useUpdate";
-import { useCategories } from "@/hooks/products/useCategories";
-import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
-import { useProductSKU } from "@/hooks/products/useProductSKU";
-import { CategoryInterface } from "@/types/category/category.type";
+import { useCallback, useEffect, useState } from "react";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
@@ -61,6 +62,8 @@ export default function ProductsPage() {
     sortField && sortOrder
       ? `${sortField}_${sortOrder === "descend" ? "desc" : "asc"}`
       : undefined;
+
+  const hasPermission = usePermission("can_manage_products_suppliers");
 
   const {
     data: productData,
@@ -272,10 +275,14 @@ export default function ProductsPage() {
           <Button type="link" onClick={() => handleView(product)}>
             View
           </Button>
-          <Divider type="vertical" />
-          <Button type="link" onClick={() => handleEdit(product)}>
-            Edit
-          </Button>
+          {hasPermission && (
+            <>
+              <Divider type="vertical" />
+              <Button type="link" onClick={() => handleEdit(product)}>
+                Edit
+              </Button>
+            </>
+          )}
         </Space>
       ),
     },
@@ -299,6 +306,7 @@ export default function ProductsPage() {
         icon={<TagsOutlined />}
         onAddNew={handleAddNewProduct}
         buttonText="New Product"
+        hasPermission={hasPermission}
         buttonIcon={<PlusOutlined />}
       />
       <StatisticsCards

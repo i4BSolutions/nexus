@@ -14,6 +14,7 @@ import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { usePermission } from "@/hooks/shared/usePermission";
 import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
 import { ProductFormInput } from "@/schemas/products/products.schemas";
 import { CategoryInterface } from "@/types/category/category.type";
@@ -28,6 +29,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const ProductDetailPage = () => {
+  const hasPermission = usePermission("can_manage_products_suppliers");
   const { id } = useParams() as { id: string };
   const router = useRouter();
 
@@ -162,27 +164,29 @@ const ProductDetailPage = () => {
           </Space>
         </Space>
 
-        <Space>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => setOpenProductFormModal(true)}
-          >
-            Edit Product
-          </Button>
-          <PopConfirm
-            open={openPopConfirm}
-            setOpen={setOpenPopConfirm}
-            onDeactivate={() => {
-              setConfirmType("deactivate");
-              setOpenConfirmModal(true);
-            }}
-            onDelete={() => {
-              setConfirmType("delete");
-              setOpenConfirmModal(true);
-            }}
-          />
-        </Space>
+        {hasPermission && (
+          <Space>
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => setOpenProductFormModal(true)}
+            >
+              Edit Product
+            </Button>
+            <PopConfirm
+              open={openPopConfirm}
+              setOpen={setOpenPopConfirm}
+              onDeactivate={() => {
+                setConfirmType("deactivate");
+                setOpenConfirmModal(true);
+              }}
+              onDelete={() => {
+                setConfirmType("delete");
+                setOpenConfirmModal(true);
+              }}
+            />
+          </Space>
+        )}
       </Space>
 
       {/* Tabs */}

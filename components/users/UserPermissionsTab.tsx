@@ -64,7 +64,7 @@ export default function UserPermissionsTab({
               }}
             >
               <div className="flex items-center gap-4">
-                {data.permissions.can_read_purchase_orders ? (
+                {data.permissions.can_view_purchase_orders ? (
                   <CheckCircleOutlined
                     style={{ color: "#722ED1", fontSize: 20 }}
                   />
@@ -137,7 +137,7 @@ export default function UserPermissionsTab({
               }}
             >
               <div className="flex items-center gap-4">
-                {data.permissions.can_read_invoices ? (
+                {data.permissions.can_view_invoices ? (
                   <CheckCircleOutlined
                     style={{ color: "#722ED1", fontSize: 20 }}
                   />
@@ -209,7 +209,7 @@ export default function UserPermissionsTab({
               }}
             >
               <div className="flex items-center gap-4">
-                {data.permissions.can_read_products_suppliers ? (
+                {data.permissions.can_view_products_suppliers ? (
                   <CheckCircleOutlined
                     style={{ color: "#722ED1", fontSize: 20 }}
                   />
@@ -283,7 +283,7 @@ export default function UserPermissionsTab({
               }}
             >
               <div className="flex items-center gap-4">
-                {data.permissions.can_read_stock ? (
+                {data.permissions.can_view_stock ? (
                   <CheckCircleOutlined
                     style={{ color: "#722ED1", fontSize: 20 }}
                   />
@@ -379,7 +379,7 @@ export default function UserPermissionsTab({
               }}
             >
               <div className="flex items-center gap-4">
-                {data.permissions.can_read_warehouses ? (
+                {data.permissions.can_view_warehouses ? (
                   <CheckCircleOutlined
                     style={{ color: "#722ED1", fontSize: 20 }}
                   />
@@ -451,7 +451,7 @@ export default function UserPermissionsTab({
               }}
             >
               <div className="flex items-center gap-4">
-                {data.permissions.can_read_budget_allocations ? (
+                {data.permissions.can_view_budget_allocations ? (
                   <CheckCircleOutlined
                     style={{ color: "#722ED1", fontSize: 20 }}
                   />
@@ -524,7 +524,7 @@ export default function UserPermissionsTab({
               }}
             >
               <div className="flex items-center gap-4">
-                {data.permissions.can_read_dashboard ? (
+                {data.permissions.can_view_dashboard ? (
                   <CheckCircleOutlined
                     style={{ color: "#722ED1", fontSize: 20 }}
                   />

@@ -4,6 +4,7 @@ import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import StatisticsCards from "@/components/shared/StatisticsCards";
 import { useBudgetAllocations } from "@/hooks/budget-allocations/useBudgetAllocation";
+import { usePermission } from "@/hooks/shared/usePermission";
 
 import { BudgetAllocationsInterface } from "@/types/budget-allocations/budget-allocations.type";
 import { StatItem } from "@/types/shared/stat-item.type";
@@ -15,6 +16,7 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  DatePicker,
   Divider,
   Flex,
   Pagination,
@@ -22,7 +24,6 @@ import {
   Table,
   Tag,
   Typography,
-  DatePicker,
 } from "antd";
 import Input, { SearchProps } from "antd/es/input";
 import { ColumnsType, SortOrder } from "antd/es/table/interface";
@@ -33,6 +34,7 @@ import { useCallback, useEffect, useState } from "react";
 const { RangePicker } = DatePicker;
 
 export default function BudgetAllocationsPage() {
+  const hasPermission = usePermission("can_manage_budget_allocations");
   const router = useRouter();
   const [statItems, setStatItems] = useState<StatItem[]>([]);
   const [status, setStatus] = useState<string | undefined>(undefined);
@@ -234,6 +236,7 @@ export default function BudgetAllocationsPage() {
         icon={<DollarCircleOutlined />}
         onAddNew={handleAddNewBudgetAllocations}
         buttonText="Add New Budget Allocation"
+        hasPermission={hasPermission}
         buttonIcon={<PlusOutlined />}
       />
 
