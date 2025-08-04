@@ -243,13 +243,20 @@ export async function POST(
 
   let smartStatus;
 
-  if (latestStatus && latestStatus.status !== "Awaiting Delivery") {
+  console.log("Determining smart status...");
+  console.log("All fully received:", allFullyReceived);
+  console.log("Any stocked in:", anyStocked);
+  console.log("Latest status:", latestStatus?.status);
+
+  if (latestStatus && latestStatus.status === "Awaiting Delivery") {
     smartStatus = allFullyReceived
       ? "Closed"
       : anyStocked
       ? "Partially Received"
       : "Not Started";
   }
+
+  console.log("Smart status determined:", smartStatus);
 
   const { error: updateStatusError } = await supabase
     .from("purchase_order_smart_status")
