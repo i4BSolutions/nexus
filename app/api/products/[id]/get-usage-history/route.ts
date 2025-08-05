@@ -373,7 +373,6 @@ export async function GET(
       };
     })
     .filter(Boolean) as ProductPurchaseOrder[];
-  console.log(allPurchaseOrders);
 
   const paginated = allPurchaseOrders.slice(from, to + 1);
 
