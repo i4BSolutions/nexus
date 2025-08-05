@@ -10,7 +10,8 @@ export interface ProductInterface {
   description: string;
   created_at: string;
   updated_at: string;
-  current_stock?: number;
+  is_active?: boolean;
+  current_stock: number;
 }
 
 export interface ProductCurrencyInterface {

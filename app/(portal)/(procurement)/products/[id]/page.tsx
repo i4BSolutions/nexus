@@ -9,9 +9,11 @@ import ProductFormModal from "@/components/products/ProductFormModal";
 import UsageHistory from "@/components/products/UsageHistory";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useCategories } from "@/hooks/products/useCategories";
+import { useDeactivateProduct } from "@/hooks/products/useDeactivateProduct";
 import { useGetProductById } from "@/hooks/products/useGetProductById";
 import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
 import { useCreate } from "@/hooks/react-query/useCreate";
+import { useDelete } from "@/hooks/react-query/useDelete";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { usePermission } from "@/hooks/shared/usePermission";
@@ -25,7 +27,7 @@ import {
   ProductUsageHistory,
 } from "@/types/product/product.type";
 import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
-import { Button, message, Space, Spin, Tabs, Tag, Typography } from "antd";
+import { App, Button, Space, Spin, Tabs, Tag, Typography } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -33,6 +35,7 @@ const ProductDetailPage = () => {
   const hasPermission = usePermission("can_manage_products_suppliers");
   const { id } = useParams() as { id: string };
   const router = useRouter();
+  const { message } = App.useApp();
 
   const [openPopConfirm, setOpenPopConfirm] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<CategoryInterface[]>(
@@ -56,6 +59,8 @@ const ProductDetailPage = () => {
   } = useGetById("products", id);
   const productDetail = data as ProductInterface;
   const updateProduct = useUpdate("products");
+  const deleteProduct = useDelete("products");
+  const deactivateProduct = useDeactivateProduct();
 
   const {
     data: categories,
@@ -130,8 +135,7 @@ const ProductDetailPage = () => {
   const statusTag = () => {
     const { current_stock, min_stock } = productDetail;
     if (current_stock === 0) return <Tag color="red">Out of Stock</Tag>;
-    if (current_stock ?? 0 <= min_stock)
-      return <Tag color="orange">Low Stock</Tag>;
+    if (current_stock <= min_stock) return <Tag color="orange">Low Stock</Tag>;
     return <Tag color="green">In Stock</Tag>;
   };
 
@@ -208,6 +212,7 @@ const ProductDetailPage = () => {
                 unit_price={productDetail.unit_price}
                 min_stock={productDetail.min_stock}
                 updated_at={productDetail.updated_at}
+                current_stock={productDetail.current_stock}
               />
             ),
           },
@@ -268,7 +273,32 @@ const ProductDetailPage = () => {
           open={openConfirmModal}
           type={confirmType}
           onCancel={() => setOpenConfirmModal(false)}
-          onConfirm={() => message.success("Confirmed")}
+          onConfirm={async () => {
+            if (confirmType === "delete") {
+              try {
+                await deleteProduct.mutateAsync(id);
+                setOpenConfirmModal(false);
+                refetchProductPriceHistory();
+                message.success("Product deleted successfully");
+                router.push("/products");
+              } catch (error: any) {
+                message.error(error.message);
+              }
+            } else {
+              try {
+                await deactivateProduct.mutateAsync({
+                  id,
+                  is_active: !productDetail.is_active,
+                });
+                setOpenConfirmModal(false);
+                refetchProductPriceHistory();
+                message.success("Product deactivated successfully");
+                router.push("/products");
+              } catch (error: any) {
+                message.error(error.message);
+              }
+            }
+          }}
         />
       )}
     </section>
