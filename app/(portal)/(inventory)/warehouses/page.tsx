@@ -1,8 +1,8 @@
 "use client";
 
 // React & Next
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 // Components
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -17,6 +17,7 @@ import {
 } from "@/types/warehouse/warehouse.type";
 
 // Ant Design
+import { PlusOutlined } from "@ant-design/icons";
 import {
   App,
   Button,
@@ -28,16 +29,16 @@ import {
   TableProps,
   Typography,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
 
 // Hooks
 import { useCreate } from "@/hooks/react-query/useCreate";
-import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { useList } from "@/hooks/react-query/useList";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { usePermission } from "@/hooks/shared/usePermission";
 
 export default function WarehousePage() {
+  const hasPermission = usePermission("can_manage_warehouses");
   const { message } = App.useApp();
-
   const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -232,6 +233,7 @@ export default function WarehousePage() {
           setEditingWarehouse(null);
           setIsModalOpen(true);
         }}
+        hasPermission={hasPermission}
         buttonText="New Warehouse"
         buttonIcon={<PlusOutlined />}
       />

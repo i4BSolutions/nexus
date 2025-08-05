@@ -1,4 +1,4 @@
-import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
+import { Budget } from "@/types/budgets/budgets.type";
 import { CalendarOutlined } from "@ant-design/icons";
 import {
   Button,
@@ -11,9 +11,14 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
-import React from "react";
 
-export default function TableView({ data }: { data: Budget[] }) {
+export default function TableView({
+  data,
+  hasPermission,
+}: {
+  data: Budget[];
+  hasPermission?: boolean;
+}) {
   const columns: TableProps<Budget>["columns"] = [
     {
       title: "BUDGET NAME",
@@ -81,8 +86,12 @@ export default function TableView({ data }: { data: Budget[] }) {
       render: (_, record) => (
         <Space size="middle">
           <Button type="link">View</Button>
-          <Divider type="vertical" />
-          <Button type="link">Edit</Button>
+          {hasPermission && (
+            <>
+              <Divider type="vertical" />
+              <Button type="link">Edit</Button>
+            </>
+          )}
         </Space>
       ),
     },

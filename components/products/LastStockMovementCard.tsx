@@ -2,30 +2,22 @@
 
 import { Card, Space, Typography, Tag } from "antd";
 import { SwapOutlined, EyeOutlined } from "@ant-design/icons";
+import { LastStockMovement } from "@/types/product/product.type";
+import dayjs from "dayjs";
 
 const { Text, Title, Link } = Typography;
 
 interface LastStockMovementCardProps {
-  datetime: string; // ISO or formatted
-  status: "in" | "out";
-  quantity: number;
-  invoiceNumber: string;
-  warehouse: string;
-  processedBy: string;
+  data: LastStockMovement | null;
   onViewAll?: () => void;
 }
 
 export default function LastStockMovementCard({
-  datetime,
-  status,
-  quantity,
-  invoiceNumber,
-  warehouse,
-  processedBy,
+  data,
   onViewAll,
 }: LastStockMovementCardProps) {
-  const isIn = status === "in";
-  const quantityDisplay = `${isIn ? "+" : "-"}${quantity} Units`;
+  const isIn = data?.type === "IN";
+  const quantityDisplay = `${isIn ? "+" : "-"}${data?.quantity} Units`;
 
   return (
     <Card
@@ -99,10 +91,7 @@ export default function LastStockMovementCard({
             }}
           >
             <Text strong style={{ fontSize: 16 }}>
-              {new Date(datetime).toLocaleString("en-US", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })}
+              {dayjs(data?.date).format("MMM D, YYYY h:mm A")}
             </Text>
             <Tag
               color={isIn ? "cyan" : "volcano"}
@@ -131,7 +120,7 @@ export default function LastStockMovementCard({
         >
           <Text type="secondary">Invoice</Text>
           <br />
-          <Link style={{ fontSize: 16 }}>{invoiceNumber}</Link>
+          <Link style={{ fontSize: 16 }}>{data?.invoice_id}</Link>
         </div>
 
         <div
@@ -144,7 +133,7 @@ export default function LastStockMovementCard({
         >
           <Text type="secondary">Warehouse</Text>
           <br />
-          <Text strong>{warehouse}</Text>
+          <Text strong>{data?.warehouse_name}</Text>
         </div>
 
         <div
@@ -157,7 +146,7 @@ export default function LastStockMovementCard({
         >
           <Text type="secondary">Processed by</Text>
           <br />
-          <Text strong>{processedBy}</Text>
+          <Text strong>{data?.processed_by}</Text>
         </div>
       </div>
     </Card>

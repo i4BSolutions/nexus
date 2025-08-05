@@ -5,6 +5,7 @@ import HeaderSection from "@/components/shared/HeaderSection";
 import UserCard from "@/components/users/UserCard";
 import { useGetAll } from "@/hooks/react-query/useGetAll";
 import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
+import { usePermission } from "@/hooks/shared/usePermission";
 import { DepartmentInterface } from "@/types/departments/department.type";
 import { UserFilterParams, UsersResponse } from "@/types/user/user.type";
 import { PlusOutlined, TeamOutlined } from "@ant-design/icons";
@@ -23,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function UsersPage() {
+  const hasPermission = usePermission("can_manage_users");
   const router = useRouter();
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
@@ -89,6 +91,7 @@ export default function UsersPage() {
           description="Manage user accounts, permission templates and access rights"
           icon={<TeamOutlined style={{ fontSize: 20, color: "white" }} />}
           onAddNew={() => router.push("/users/create")}
+          hasPermission={hasPermission}
           buttonText="New User"
           buttonIcon={<PlusOutlined />}
         />

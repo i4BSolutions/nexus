@@ -1,9 +1,12 @@
 "use client";
 
+import BudgetAllocationConfirmModal from "@/components/budget-allocations/BudgetAllocationConfirmModal";
 import BudgetAllocationDetails from "@/components/budget-allocations/BudgetAllocationDetails";
 import BudgetAllocationLinkedPOView from "@/components/budget-allocations/BudgetAllocationLinkedPOView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import { useDelete } from "@/hooks/react-query/useDelete";
 import { useGetById } from "@/hooks/react-query/useGetById";
+import { usePermission } from "@/hooks/shared/usePermission";
 import { BudgetAllocationsInterface } from "@/types/budget-allocations/budget-allocations.type";
 import {
   ArrowLeftOutlined,
@@ -13,6 +16,7 @@ import {
   PauseCircleOutlined,
   StopOutlined,
 } from "@ant-design/icons";
+import { useMutation } from "@tanstack/react-query";
 import {
   App,
   Button,
@@ -26,10 +30,7 @@ import {
   Typography,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import React, { useState } from "react";
-import BudgetAllocationConfirmModal from "@/components/budget-allocations/BudgetAllocationConfirmModal";
-import { useMutation } from "@tanstack/react-query";
-import { useDelete } from "@/hooks/react-query/useDelete";
+import { useState } from "react";
 
 const updateStatus = async ({ id, status }: { id: string; status: string }) => {
   const res = await fetch(`/api/budget-allocations/${id}`, {
@@ -44,6 +45,7 @@ const updateStatus = async ({ id, status }: { id: string; status: string }) => {
 };
 
 const BudgetAllocationDetailPage = () => {
+  const hasPermission = usePermission("can_manage_budget_allocations");
   const params = useParams();
   const router = useRouter();
   const { message } = App.useApp();
@@ -195,24 +197,26 @@ const BudgetAllocationDetailPage = () => {
           </Flex>
 
           {/* Right Header */}
-          <Flex align="center" gap={8}>
-            <Button
-              type="primary"
-              icon={<EditOutlined />}
-              onClick={() =>
-                router.push(`/budget-allocations/${params.id}/edit`)
-              }
-            >
-              Edit Budget Allocation
-            </Button>
-            <Dropdown
-              menu={{ items: dropDownItems }}
-              trigger={["click"]}
-              placement="bottomRight"
-            >
-              <Button icon={<EllipsisOutlined />} />
-            </Dropdown>
-          </Flex>
+          {hasPermission && (
+            <Flex align="center" gap={8}>
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={() =>
+                  router.push(`/budget-allocations/${params.id}/edit`)
+                }
+              >
+                Edit Budget Allocation
+              </Button>
+              <Dropdown
+                menu={{ items: dropDownItems }}
+                trigger={["click"]}
+                placement="bottomRight"
+              >
+                <Button icon={<EllipsisOutlined />} />
+              </Dropdown>
+            </Flex>
+          )}
         </Flex>
       </div>
       <Tabs

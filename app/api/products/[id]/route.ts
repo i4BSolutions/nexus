@@ -19,7 +19,7 @@ export async function GET(
     });
   }
 
-  const { data, error: dbError } = await supabase
+  const { data: product, error: dbError } = await supabase
     .from("product")
     .select("*")
     .eq("id", id)
@@ -31,13 +31,33 @@ export async function GET(
     });
   }
 
-  if (!data) {
+  if (!product) {
     return NextResponse.json(error("Product not found", 404), {
       status: 404,
     });
   }
 
-  return NextResponse.json(success(data, "Product retrieved successfully"), {
+  const { data: stockInventory, error: inventoryError } = await supabase
+    .from("inventory")
+    .select("quantity")
+    .eq("product_id", id);
+
+  if (inventoryError) {
+    return NextResponse.json(
+      error(inventoryError.message || "Failed to fetch inventory", 500),
+      { status: 500 }
+    );
+  }
+
+  const current_stock =
+    stockInventory?.reduce((sum, row) => sum + Number(row.quantity), 0) ?? 0;
+
+  const result: ProductInterface = {
+    ...product,
+    current_stock,
+  };
+
+  return NextResponse.json(success(result, "Product retrieved successfully"), {
     status: 200,
   });
 }
@@ -74,28 +94,61 @@ export async function PUT(
       });
     }
 
+    if (
+      typeof body.is_active === "boolean" &&
+      body.is_active !== existing.is_active
+    ) {
+      const { data: auth } = await supabase.auth.getUser();
+      const changed_by = auth?.user?.email || "system";
+
+      const { error: toggleError } = await supabase
+        .from("product")
+        .update({
+          is_active: body.is_active,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      if (toggleError) {
+        return NextResponse.json(error("Failed to update active status", 500), {
+          status: 500,
+        });
+      }
+
+      return NextResponse.json(
+        success(
+          null,
+          `Product ${
+            body.is_active ? "reactivated" : "deactivated"
+          } successfully`
+        ),
+        { status: 200 }
+      );
+    }
+
+    // Regular update logic
     const { reason, ...rest } = body;
 
     const updateData = {
       ...rest,
-      sku: existing.sku, // Ensure SKU remains unchanged
+      sku: existing.sku,
       updated_at: new Date().toISOString(),
     };
 
-    const { data: updated, error: dbError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("product")
       .update(updateData)
       .eq("id", id)
       .select()
       .single();
 
-    if (dbError) {
+    if (updateError) {
       return NextResponse.json(error("Failed to update product", 500), {
         status: 500,
       });
     }
 
-    // Track price change history if applicable
+    // Log price history
     const priceChanged =
       rest.unit_price != null && rest.unit_price !== existing.unit_price;
 
@@ -108,7 +161,7 @@ export async function PUT(
           product_id: id,
           old_price: existing.unit_price,
           new_price: rest.unit_price,
-          reason: reason || null, // use extracted reason
+          reason: reason || null,
           updated_by,
         },
       ]);
@@ -138,28 +191,30 @@ export async function DELETE(
     return NextResponse.json(error("Invalid product ID", 400), { status: 400 });
   }
 
-  // Prevent deletion if referenced in PO, invoice, or stock movement
-  const { data: po } = await supabase
-    .from("po_items")
-    .select("id")
-    .eq("product_id", id)
-    .limit(1);
-
-  const { data: invoice } = await supabase
-    .from("invoice_items")
-    .select("id")
-    .eq("product_id", id)
-    .limit(1);
-
-  const { data: stock } = await supabase
-    .from("stock_movements")
-    .select("id")
-    .eq("product_id", id)
-    .limit(1);
+  const [{ data: po }, { data: invoice }, { data: stock }] = await Promise.all([
+    supabase
+      .from("purchase_order_items")
+      .select("id")
+      .eq("product_id", id)
+      .limit(1),
+    supabase
+      .from("purchase_invoice_item")
+      .select("id")
+      .eq("product_id", id)
+      .limit(1),
+    supabase
+      .from("stock_transaction")
+      .select("id")
+      .eq("product_id", id)
+      .limit(1),
+  ]);
 
   if (po?.length || invoice?.length || stock?.length) {
     return NextResponse.json(
-      error("Cannot delete a product that is referenced.", 400),
+      error(
+        "Cannot delete a product that is referenced in PO, invoice, or stock.",
+        400
+      ),
       { status: 400 }
     );
   }

@@ -4,9 +4,11 @@ import Inventory from "@/components/inventory/stock-management/Inventory";
 import StockIn from "@/components/inventory/stock-management/StockIn";
 import StockOut from "@/components/inventory/stock-management/StockOut";
 import Transactions from "@/components/inventory/stock-management/Transactions";
+import AccessDenied from "@/components/shared/AccessDenied";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useList } from "@/hooks/react-query/useList";
+import { usePermission } from "@/hooks/shared/usePermission";
 import { PurchaseInvoiceResponse } from "@/types/purchase-invoice/purchase-invoice.type";
 import { StockTransactionHistory } from "@/types/stock/stock.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
@@ -15,6 +17,8 @@ import { App, Space, Tabs, TabsProps, Typography } from "antd";
 
 const StockManagementPage = () => {
   const { message } = App.useApp();
+  const canStockIn = usePermission("can_stock_in");
+  const canStockOut = usePermission("can_stock_out");
 
   const { data: piData, isLoading: piLoading } =
     useList<PurchaseInvoiceResponse>("purchase-invoices");
@@ -40,7 +44,7 @@ const StockManagementPage = () => {
     {
       key: "stock-in",
       label: "Stock In",
-      children: (
+      children: canStockIn ? (
         <StockIn
           invoices={piData}
           invoiceLoading={piLoading}
@@ -64,12 +68,14 @@ const StockManagementPage = () => {
           }}
           mutateStockInLoading={mutateStockIn.isPending}
         />
+      ) : (
+        <AccessDenied />
       ),
     },
     {
       key: "stock-out",
       label: "Stock Out",
-      children: (
+      children: canStockOut ? (
         <StockOut
           warehouses={warehousesData?.items}
           warehouseLoading={warehouseLoading}
@@ -79,6 +85,8 @@ const StockManagementPage = () => {
             mutateStockOut.mutateAsync(payload);
           }}
         />
+      ) : (
+        <AccessDenied />
       ),
     },
     {

@@ -29,11 +29,13 @@ export default function PoCardView({
   pagination,
   total,
   paginationChangeHandler,
+  hasPermission = false,
 }: {
   data: PurchaseOrderDto[];
   pagination: { page: number; pageSize: number };
   total: number;
   paginationChangeHandler: (page: number, pageSize?: number) => void;
+  hasPermission?: boolean;
 }) {
   const router = useRouter();
   return (
@@ -53,6 +55,7 @@ export default function PoCardView({
               label: <span className="text-sm !w-32">Edit</span>,
               key: "edit",
               icon: <EditOutlined />,
+              disabled: !hasPermission,
               onClick: () => {
                 router.push(`/purchase-orders/${item.id}/edit`);
               },

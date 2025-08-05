@@ -19,11 +19,13 @@ export default function TableView({
   total,
   pagination,
   paginationChangeHandler,
+  hasPermission = false,
 }: {
   data: PurchaseInvoiceDto[];
   total: number;
   pagination: { page: number; pageSize: number };
   paginationChangeHandler: (page: number, pageSize?: number) => void;
+  hasPermission?: boolean;
 }) {
   const router = useRouter();
 
@@ -108,14 +110,18 @@ export default function TableView({
           >
             View
           </Button>
-          <Divider type="vertical" />
-          <Button
-            style={{ padding: 0 }}
-            type="link"
-            onClick={() => router.push(`/invoices/${record.id}/edit`)}
-          >
-            Edit
-          </Button>
+          {hasPermission && (
+            <>
+              <Divider type="vertical" />
+              <Button
+                style={{ padding: 0 }}
+                type="link"
+                onClick={() => router.push(`/invoices/${record.id}/edit`)}
+              >
+                Edit
+              </Button>
+            </>
+          )}
         </Flex>
       ),
     },
