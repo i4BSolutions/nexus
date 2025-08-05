@@ -164,6 +164,27 @@ export async function POST(
 
   const purchase_order_id = anyLineItem.purchase_order_id;
 
+  // Check if the related purchase order is cancelled
+  const { data: currentSmartStatus, error: smartStatusError } = await supabase
+    .from("purchase_order_smart_status")
+    .select("status")
+    .eq("purchase_order_id", purchase_order_id)
+    .single();
+
+  if (smartStatusError) {
+    return NextResponse.json(
+      error("Failed to check purchase order status", 500),
+      { status: 500 }
+    );
+  }
+
+  if (currentSmartStatus?.status === "Cancel") {
+    return NextResponse.json(
+      error("Cannot stock in items for a cancelled purchase order", 400),
+      { status: 400 }
+    );
+  }
+
   // Step 1: Fetch PO line items
   const { data: poItems, error: poError } = await supabase
     .from("purchase_order_items")
@@ -248,12 +269,12 @@ export async function POST(
   console.log("Any stocked in:", anyStocked);
   console.log("Latest status:", latestStatus?.status);
 
-  if (latestStatus && latestStatus.status === "Awaiting Delivery") {
+  if (latestStatus) {
     smartStatus = allFullyReceived
       ? "Closed"
-      : anyStocked
+      : anyStocked && latestStatus.status === "Awaiting Delivery"
       ? "Partially Received"
-      : "Not Started";
+      : "Partially Invoiced";
   }
 
   console.log("Smart status determined:", smartStatus);

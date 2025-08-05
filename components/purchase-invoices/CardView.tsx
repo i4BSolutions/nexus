@@ -94,7 +94,9 @@ export default function CardView({
                       {item.purchase_invoice_number}
                     </Typography.Text>
                     <div className="flex items-center gap-1.5">
-                      <StatusBadge status={item.status} />
+                      <StatusBadge
+                        status={item.is_voided ? "Voided" : item.status}
+                      />
                     </div>
                   </Col>
                   <Col span={2} className="!grid !place-items-center">

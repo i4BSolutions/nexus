@@ -106,6 +106,7 @@ export default function InvoicesPage() {
         total_amount_usd: item.total_amount_usd,
         status: item.status,
         note: item.note,
+        is_voided: item.is_voided,
         delivered_percentage: item.delivered_percentage,
         pending_delivery_percentage: item.pending_delivery_percentage,
       }));

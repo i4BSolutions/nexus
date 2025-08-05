@@ -328,6 +328,45 @@ export async function PUT(
     }
   }
 
+  // Prevent voiding if any item has been stocked in
+  if (body.is_voided === true) {
+    // Get invoice item IDs
+    const { data: invoiceItems, error: itemError } = await supabase
+      .from("purchase_invoice_item")
+      .select("id")
+      .eq("purchase_invoice_id", id);
+
+    if (itemError) {
+      return NextResponse.json(error(itemError.message), {
+        status: 500,
+      });
+    }
+
+    const invoiceItemIds = invoiceItems.map((item) => item.id);
+
+    if (invoiceItemIds.length > 0) {
+      const { data: stockEntries, error: stockError } = await supabase
+        .from("stock_transaction")
+        .select("id")
+        .in("invoice_line_item_id", invoiceItemIds);
+
+      if (stockError) {
+        return NextResponse.json(error(stockError.message), {
+          status: 500,
+        });
+      }
+
+      if (stockEntries.length > 0) {
+        return NextResponse.json(
+          error(
+            "Cannot void invoice because one or more items have already been stocked in."
+          ),
+          { status: 400 }
+        );
+      }
+    }
+  }
+
   if (Object.keys(updateData).length === 0) {
     return NextResponse.json(error("No valid fields provided for update"), {
       status: 400,

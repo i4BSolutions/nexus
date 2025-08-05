@@ -11,9 +11,11 @@ import { PurchaseInvoiceResponse } from "@/types/purchase-invoice/purchase-invoi
 import { StockTransactionHistory } from "@/types/stock/stock.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
 import { SwapOutlined } from "@ant-design/icons";
-import { Space, Tabs, TabsProps, Typography } from "antd";
+import { App, Space, Tabs, TabsProps, Typography } from "antd";
 
 const StockManagementPage = () => {
+  const { message } = App.useApp();
+
   const { data: piData, isLoading: piLoading } =
     useList<PurchaseInvoiceResponse>("purchase-invoices");
 
@@ -46,8 +48,19 @@ const StockManagementPage = () => {
           stockInHistories={stockInHistoryData}
           warehouseLoading={warehouseLoading}
           stockInHistoryLoading={stockInHistoryLoading}
-          onSubmit={(payload: any) => {
-            mutateStockIn.mutateAsync(payload);
+          onSubmit={async (payload: any) => {
+            try {
+              const response: any = await mutateStockIn.mutateAsync(payload);
+
+              message.success(response[0].message);
+            } catch (err: any) {
+              // Handle network or unexpected error (not from API response)
+              const apiMessage =
+                err?.response?.data?.message ||
+                err?.message ||
+                "Stock In failed.";
+              message.error(apiMessage);
+            }
           }}
           mutateStockInLoading={mutateStockIn.isPending}
         />

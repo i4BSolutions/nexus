@@ -369,6 +369,7 @@ export async function GET(
       exchange_rate_to_usd,
       status,
       note,
+      is_voided,
       invoice_items:purchase_invoice_item (
         id,
         product_id,
@@ -475,6 +476,7 @@ export async function GET(
       ),
       status: invoice.status,
       note: invoice.note || "",
+      is_voided: invoice.is_voided,
       delivered_percentage: Math.min(
         100,
         parseFloat(deliveredPercentage.toFixed(2))

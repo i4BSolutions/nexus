@@ -48,7 +48,7 @@ export async function POST(
     sign_person_id: sign_person,
     authorized_signer_id: authorized_sign_person,
     expected_delivery_date,
-    note: note ?? null,
+    note: note,
     status: status ?? "Draft",
   };
 
