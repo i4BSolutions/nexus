@@ -37,9 +37,7 @@ const UsageHistory = ({ data }: { data: ProductUsageHistory }) => {
           borderRight: "none",
         },
       }),
-      render: (purchase_order_no) => (
-        <Typography.Text>{purchase_order_no}</Typography.Text>
-      ),
+      render: (purchase_order_no) => <a>{purchase_order_no}</a>,
     },
     {
       title: "SUPPLIER",
@@ -107,23 +105,6 @@ const UsageHistory = ({ data }: { data: ProductUsageHistory }) => {
         <Tag color={status === "Approved" ? "green" : "#FAFAFA"}>
           <Typography.Text style={{ color: "#000" }}>{status}</Typography.Text>
         </Tag>
-      ),
-    },
-    {
-      title: "ACTIONS",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
-      render: (_: any) => (
-        <Button
-          type="link"
-          // onClick={() => handleView(product)}
-          style={{ padding: 0 }}
-        >
-          View
-        </Button>
       ),
     },
   ];

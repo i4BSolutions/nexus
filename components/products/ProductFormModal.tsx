@@ -4,12 +4,13 @@ import {
   App,
   Button,
   Divider,
+  Flex,
   Form,
   Input,
   InputNumber,
   Select,
   Space,
-  message,
+  Typography,
 } from "antd";
 import {
   EditOutlined,
@@ -175,7 +176,18 @@ export default function ProductFormModal({
         </Form.Item>
 
         <Form.Item
-          label="Category"
+          label={
+            <Flex flex={1} justify="space-between" align="center">
+              <Typography.Text>Category</Typography.Text>
+              <Button
+                style={{ fontSize: 12, fontWeight: 400 }}
+                onClick={onCreateCategory}
+                type="link"
+              >
+                Create New
+              </Button>
+            </Flex>
+          }
           validateStatus={errors.category ? "error" : ""}
           help={errors.category?.message}
           required

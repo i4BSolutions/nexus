@@ -18,10 +18,10 @@ import {
   TagsOutlined,
 } from "@ant-design/icons";
 import {
+  App,
   Button,
   Divider,
   Flex,
-  message,
   Pagination,
   Space,
   Spin,
@@ -45,6 +45,7 @@ const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function ProductsPage() {
+  const { message } = App.useApp();
   const router = useRouter();
   const [pagination, setPagination] = useState({
     page: 1,
