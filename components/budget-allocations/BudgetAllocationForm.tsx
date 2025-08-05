@@ -5,6 +5,8 @@ import { ProductCurrencyInterface } from "@/types/product/product.type";
 import {
   CalendarOutlined,
   CheckCircleFilled,
+  LeftOutlined,
+  RightOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
@@ -224,8 +226,10 @@ const BudgetAllocationForm = ({
     },
     {
       title: "SUPPLIER",
-      dataIndex: "supplier_name",
-      render: (text: string) => <span style={{ fontWeight: 500 }}>John</span>,
+      dataIndex: "supplier",
+      render: (supplier_name: string) => (
+        <span style={{ fontWeight: 500 }}>{supplier_name}</span>
+      ),
     },
     {
       title: "ORDER DATE",
@@ -680,11 +684,18 @@ const BudgetAllocationForm = ({
         open={isPreviewVisible}
         footer={null}
         onCancel={() => setIsPreviewVisible(false)}
-        width="80%"
+        width="100%"
         centered
         style={{ maxWidth: "900px" }}
+        className="preview-modal"
       >
-        <Carousel initialSlide={previewIndex} dots infinite>
+        <Carousel
+          initialSlide={previewIndex}
+          dots
+          infinite
+          arrows
+          className="preview-carousel"
+        >
           {fileList.map((file) => {
             const src =
               file.url ||
@@ -719,6 +730,30 @@ const BudgetAllocationForm = ({
           })}
         </Carousel>
       </Modal>
+      <style jsx global>{`
+        .preview-modal .slick-prev,
+        .preview-modal .slick-next {
+          background-color: rgba(0, 0, 0, 0.25);
+          border-radius: 50%;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+        }
+
+        .preview-modal .slick-prev:hover,
+        .preview-modal .slick-next:hover {
+          background-color: rgba(0, 0, 0, 0.45);
+        }
+
+        .preview-modal .slick-prev::before,
+        .preview-modal .slick-next::before {
+          color: white;
+          font-size: 18px;
+        }
+      `}</style>
     </>
   );
 };
