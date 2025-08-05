@@ -21,7 +21,7 @@ import {
   PurchaseOrderResponse,
 } from "@/types/purchase-order/purchase-order.type";
 import { StatItem } from "@/types/shared/stat-item.type";
-import { Button, Flex, Segmented, Select, Spin, Typography } from "antd";
+import { Badge, Button, Flex, Segmented, Select, Spin, Typography } from "antd";
 import Input, { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
@@ -86,6 +86,16 @@ export default function PurchaseOrdersPage() {
           borderColor: "#91d5ff",
           tooltip: "Total number of purchase orders",
           total_approved: poData.statistics.total_approved,
+          footerContent: (
+            <>
+              <Badge
+                count={poData.statistics.total_approved}
+                status="success"
+                text="Approved POs"
+                // style={{ backgroundColor: "#52c41a" }}
+              />
+            </>
+          ),
         },
         {
           title: "Total USD Value",
@@ -114,7 +124,7 @@ export default function PurchaseOrdersPage() {
           suffix: "%",
           footerContent: (
             <Typography.Text type="secondary">
-              Across {poData.statistics.invoiced_percentage || 0} approved POs
+              Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
           ),
         },
@@ -129,7 +139,7 @@ export default function PurchaseOrdersPage() {
           suffix: "%",
           footerContent: (
             <Typography.Text type="secondary">
-              Across {poData.statistics.allocated_percentage || 0} approved POs
+              Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
           ),
         },

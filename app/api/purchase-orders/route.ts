@@ -214,10 +214,6 @@ export async function GET(
     return NextResponse.json(error(invoiceError.message), { status: 500 });
   }
 
-  const approvedBudgetAllocations = budgetAllocationData?.filter(
-    (allocation) => allocation.status === "Approved"
-  );
-
   const orders = data?.map((order) => {
     const amount_local = order.purchase_order_items.reduce(
       (total: number, item: { quantity: number; unit_price_local: number }) =>
@@ -248,17 +244,19 @@ export async function GET(
 
     const amount_usd = amount_local / (order.usd_exchange_rate || 1);
 
-    const order_budget_allocation = approvedBudgetAllocations
-      ? approvedBudgetAllocations.filter(
+    const order_budget_allocation = budgetAllocationData
+      ? budgetAllocationData.filter(
           (allocation) => allocation.po_id === order.id
         )
       : [];
 
     const allocated_amount =
-      (
-        order_budget_allocation[0]?.allocation_amount /
-        order_budget_allocation[0]?.exchange_rate_usd
-      ).toFixed(2) || 0;
+      order_budget_allocation.length > 0
+        ? (
+            order_budget_allocation[0]?.allocation_amount /
+            order_budget_allocation[0]?.exchange_rate_usd
+          ).toFixed(2)
+        : 0;
 
     const remaining_allocation = amount_usd - Number(allocated_amount);
 
