@@ -85,11 +85,13 @@ export async function GET(
     }
 
     if (stockStatus === "low_stock") {
-      filtered = filtered.filter((p) => p.stock <= p.min_stock && p.stock > 0);
+      filtered = filtered.filter(
+        (p) => p.current_stock <= p.min_stock && p.current_stock > 0
+      );
     } else if (stockStatus === "in_stock") {
-      filtered = filtered.filter((p) => p.stock > p.min_stock);
+      filtered = filtered.filter((p) => p.current_stock > p.min_stock);
     } else if (stockStatus === "out_of_stock") {
-      filtered = filtered.filter((p) => p.stock === 0);
+      filtered = filtered.filter((p) => p.current_stock === 0);
     }
 
     if (isActiveParam === "true") {
