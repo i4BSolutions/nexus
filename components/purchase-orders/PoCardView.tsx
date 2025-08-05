@@ -1,12 +1,14 @@
 import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
 import {
   CheckCircleOutlined,
+  CheckOutlined,
   DollarOutlined,
   EditOutlined,
   EllipsisOutlined,
   EyeOutlined,
   HourglassOutlined,
   InfoCircleOutlined,
+  RollbackOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import {
@@ -37,6 +39,7 @@ export default function PoCardView({
   paginationChangeHandler: (page: number, pageSize?: number) => void;
   hasPermission?: boolean;
 }) {
+  console.log("PoCardView data:", data);
   const router = useRouter();
   return (
     <section className="py-6 w-full max-w-[1140px]">
@@ -51,16 +54,54 @@ export default function PoCardView({
                 router.push(`/purchase-orders/${item.id}`);
               },
             },
-            {
-              label: <span className="text-sm !w-32">Edit</span>,
-              key: "edit",
-              icon: <EditOutlined />,
-              disabled: !hasPermission,
-              onClick: () => {
-                router.push(`/purchase-orders/${item.id}/edit`);
-              },
-            },
           ];
+
+          if (item.status === "Draft" && hasPermission) {
+            items.push(
+              {
+                label: <span className="text-sm !w-32">Edit</span>,
+                key: "edit",
+                icon: <EditOutlined />,
+                onClick: () => {
+                  router.push(`/purchase-orders/${item.id}/edit`);
+                },
+              },
+              {
+                label: (
+                  <span className="text-sm !w-32 text-[#52C41A]">Approve</span>
+                ),
+                key: "approve",
+                icon: <CheckOutlined style={{ color: "#52C41A" }} />,
+                onClick: () => {
+                  // Handle approve action here
+                },
+              }
+            );
+          } else if (item.status === "Approved" && hasPermission) {
+            items.push(
+              {
+                label: <span className="text-sm !w-32">Edit</span>,
+                key: "edit",
+                icon: <EditOutlined />,
+                onClick: () => {
+                  router.push(`/purchase-orders/${item.id}/edit`);
+                },
+              },
+              {
+                label: (
+                  <span className="text-sm !w-32 text-[#FAAD14]">
+                    Cancel Approval
+                  </span>
+                ),
+                key: "cancel approval",
+                icon: <RollbackOutlined style={{ color: "#FAAD14" }} />,
+                onClick: () => {
+                  // Handle cancel approval action here
+                },
+              }
+            );
+          }
+
           return (
             <div
               key={item.id}
@@ -192,14 +233,14 @@ export default function PoCardView({
                     </Typography.Text>
                     <p className="m-0 font-medium text-base">
                       $
-                      {item.invoiced_amount
-                        ? item.invoiced_amount.toLocaleString()
+                      {item.remaining_invoiced_amount
+                        ? item.remaining_invoiced_amount.toLocaleString()
                         : 0}
                     </p>
                   </Col>
                 </Row>
                 <Row>
-                  <Progress percent={item.invoiced_amount} />
+                  <Progress percent={item.invoiced_percentage} />
                 </Row>
                 <Row>
                   <Col span={12}>
@@ -226,14 +267,14 @@ export default function PoCardView({
                     </Typography.Text>
                     <p className="m-0 font-medium text-base">
                       $
-                      {item.allocated_amount
-                        ? item.allocated_amount.toLocaleString()
+                      {item.remaining_allocation
+                        ? item.remaining_allocation.toLocaleString()
                         : 0}
                     </p>
                   </Col>
                 </Row>
                 <Row>
-                  <Progress percent={item.allocated_amount} />
+                  <Progress percent={item.allocation_percentage} />
                 </Row>
               </div>
             </div>

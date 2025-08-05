@@ -66,8 +66,12 @@ export default function PurchaseOrdersPage() {
         usd_exchange_rate: item.usd_exchange_rate,
         contact_person: item.contact_person,
         expected_delivery_date: item.expected_delivery_date,
-        total_invoice_amount: item.invoiced_amount || 0,
-        total_allocated_amount: item.allocated_amount || 0,
+        invoiced_amount: item.invoiced_amount || 0,
+        remaining_invoiced_amount: item.remaining_invoiced_amount || 0,
+        invoiced_percentage: item.invoiced_percentage || 0,
+        allocated_amount: item.allocated_amount || 0,
+        remaining_allocation: item.remaining_allocation || 0,
+        allocation_percentage: item.allocation_percentage || 0.0,
         purchase_order_smart_status: item.purchase_order_smart_status,
       }));
       setData(data);
@@ -95,8 +99,7 @@ export default function PurchaseOrdersPage() {
           approved_text: "approved POs",
           footerContent: (
             <Typography.Text type="secondary">
-              Across {poData.statistics.total || 0}
-              approved POs
+              Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
           ),
         },
@@ -111,7 +114,7 @@ export default function PurchaseOrdersPage() {
           suffix: "%",
           footerContent: (
             <Typography.Text type="secondary">
-              Across {poData.statistics.total || 0} approved POs
+              Across {poData.statistics.invoiced_percentage || 0} approved POs
             </Typography.Text>
           ),
         },
@@ -126,7 +129,7 @@ export default function PurchaseOrdersPage() {
           suffix: "%",
           footerContent: (
             <Typography.Text type="secondary">
-              Across {poData.statistics.total || 0} approved POs
+              Across {poData.statistics.allocated_percentage || 0} approved POs
             </Typography.Text>
           ),
         },

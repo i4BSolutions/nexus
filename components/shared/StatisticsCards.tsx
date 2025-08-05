@@ -5,7 +5,6 @@ import {
   UpCircleOutlined,
 } from "@ant-design/icons";
 import { Card, Flex, Space, Statistic, Tooltip, Typography } from "antd";
-import { ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
 
 const StatisticsCards = ({ stats }: { stats: StatItem[] }) => (
   <Flex className="!mb-6" gap={12}>

@@ -186,34 +186,109 @@ export async function GET(
     return NextResponse.json(error(getError.message), { status: 500 });
   }
 
-  const orders = data?.map((order) => ({
-    id: order.id,
-    purchase_order_no: order.purchase_order_no,
-    order_date: dayjs(order.order_date).format("MMM D, YYYY"),
-    status: order.status,
-    expected_delivery_date: dayjs(order.expected_delivery_date).format(
-      "MMM D, YYYY"
-    ),
-    usd_exchange_rate: order.usd_exchange_rate,
-    currency_code: order.product_currency.currency_code,
-    contact_person: order.contact_person.name,
-    amount_local: order.purchase_order_items.reduce(
+  const { data: budgetAllocationData, error: budgetAllocationError } =
+    await supabase
+      .from("budget_allocation")
+      .select("id, po_id, allocation_amount, status, exchange_rate_usd");
+
+  if (budgetAllocationError) {
+    return NextResponse.json(error(budgetAllocationError.message), {
+      status: 500,
+    });
+  }
+
+  const { data: invoiceData, error: invoiceError } = await supabase.from(
+    "purchase_invoice"
+  ).select(`
+      id,
+      purchase_order_id,
+      status,
+      exchange_rate_to_usd,
+      purchase_invoice_item (
+        quantity,
+        unit_price_local
+      )
+    `);
+
+  if (invoiceError) {
+    return NextResponse.json(error(invoiceError.message), { status: 500 });
+  }
+
+  const approvedBudgetAllocations = budgetAllocationData?.filter(
+    (allocation) => allocation.status === "Approved"
+  );
+
+  const orders = data?.map((order) => {
+    const amount_local = order.purchase_order_items.reduce(
       (total: number, item: { quantity: number; unit_price_local: number }) =>
         total + item.quantity * item.unit_price_local,
       0
-    ),
-    amount_usd: order.purchase_order_items.reduce(
-      (total: number, item: { quantity: number; unit_price_local: number }) =>
-        total +
-        (item.quantity * item.unit_price_local) / order.usd_exchange_rate,
-      0
-    ),
-    supplier: order.supplier.name,
-    invoiced_amount: 0,
-    allocated_amount: 0,
-    purchase_order_smart_status:
-      order.purchase_order_smart_status?.status ?? "Error",
-  }));
+    );
+
+    const invoicedAmountUsd = invoiceData
+      ? invoiceData
+          .filter((invoice) => invoice.purchase_order_id === order.id)
+          .reduce(
+            (total: number, invoice) =>
+              total +
+              invoice.purchase_invoice_item.reduce(
+                (
+                  itemTotal: number,
+                  item: { quantity: number; unit_price_local: number }
+                ) => itemTotal + item.quantity * item.unit_price_local,
+                0
+              ) /
+                invoice.exchange_rate_to_usd,
+            0
+          )
+      : 0;
+
+    const remainingInvoicedAmount =
+      amount_local / (order.usd_exchange_rate || 1) - invoicedAmountUsd;
+
+    const amount_usd = amount_local / (order.usd_exchange_rate || 1);
+
+    const order_budget_allocation = approvedBudgetAllocations
+      ? approvedBudgetAllocations.filter(
+          (allocation) => allocation.po_id === order.id
+        )
+      : [];
+
+    const allocated_amount =
+      (
+        order_budget_allocation[0]?.allocation_amount /
+        order_budget_allocation[0]?.exchange_rate_usd
+      ).toFixed(2) || 0;
+
+    const remaining_allocation = amount_usd - Number(allocated_amount);
+
+    return {
+      id: order.id,
+      purchase_order_no: order.purchase_order_no,
+      order_date: dayjs(order.order_date).format("MMM D, YYYY"),
+      status: order.status,
+      expected_delivery_date: dayjs(order.expected_delivery_date).format(
+        "MMM D, YYYY"
+      ),
+      usd_exchange_rate: Number(order.usd_exchange_rate.toFixed(3)),
+      currency_code: order.product_currency.currency_code,
+      contact_person: order.contact_person.name,
+      amount_local: Number(amount_local.toFixed(3)),
+      amount_usd: Number(amount_usd.toFixed(3)),
+      supplier: order.supplier.name,
+      invoiced_amount: Number(invoicedAmountUsd.toFixed(3)),
+      remaining_invoiced_amount: Number(remainingInvoicedAmount.toFixed(3)),
+      invoiced_percentage:
+        Number(((invoicedAmountUsd / amount_usd) * 100).toFixed(2)) || 0,
+      allocated_amount: Number(Number(allocated_amount).toFixed(3)) || 0,
+      remaining_allocation: Number(remaining_allocation) || 0,
+      allocation_percentage:
+        Number(((Number(allocated_amount) / amount_usd) * 100).toFixed(2)) ||
+        0.0,
+      purchase_order_smart_status:
+        order.purchase_order_smart_status?.status ?? "Error",
+    };
+  });
 
   const GetPurchaseOrderResponse: PurchaseOrderResponse = {
     dto: orders || [],
@@ -226,13 +301,38 @@ export async function GET(
         ? orders.filter((order) => order.status === "Approved").length
         : 0,
       total_usd_value: orders
-        ? orders.reduce((total, order) => total + order.amount_usd, 0)
+        ? orders
+            .filter((order) => order.status === "Approved")
+            .reduce((total, order) => total + order.amount_usd, 0)
         : 0,
-      invoiced_percentage: 0,
-      allocated_percentage: 0,
+      invoiced_percentage: orders
+        ? Number(
+            (
+              (orders.reduce(
+                (total, order) => total + order.invoiced_amount,
+                0
+              ) /
+                orders.reduce((total, order) => total + order.amount_usd, 0)) *
+              100
+            ).toFixed(2) || 0.0
+          )
+        : 0.0,
+      allocated_percentage: orders
+        ? Number(
+            (
+              (orders.reduce(
+                (total, order) => total + order.allocated_amount,
+                0
+              ) /
+                orders.reduce((total, order) => total + order.amount_usd, 0)) *
+              100
+            ).toFixed(2) || 0.0
+          )
+        : 0.0,
     },
   };
 
+  console.log("Get Purchase Orders Response:", GetPurchaseOrderResponse);
   return NextResponse.json(
     success<PurchaseOrderResponse>(
       GetPurchaseOrderResponse,
