@@ -15,6 +15,11 @@ jobs:
         with:
           version: latest
 
+      - name: Disable SMTP for CI
+        run: |
+          echo "Removing SMTP section to avoid CLI parsing errors..."
+          sed -i '/\[auth.email.smtp\]/,/sender_name/d' supabase/config.toml
+
       - name: Start Supabase local development setup
         run: supabase db start
 
