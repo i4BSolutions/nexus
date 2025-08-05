@@ -109,7 +109,7 @@ export async function GET(
     success(
       {
         items: paged,
-        total_item_count: inventory.length,
+        total_item_count: totalItemCount,
         total_inventory_value: totalInventoryValue,
         total: inventory.length,
         page,

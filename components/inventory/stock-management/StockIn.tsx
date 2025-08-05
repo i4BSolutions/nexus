@@ -110,13 +110,9 @@ const StockInForm = ({
       })),
     };
 
-    try {
-      onSubmit?.(payload);
-      message.success("Stock In completed successfully!");
-      form.resetFields();
-    } catch (error) {
-      message.error("Stock In failed. Please try again.");
-    }
+    onSubmit?.(payload);
+    // message.success("Stock In completed successfully!");
+    form.resetFields();
   };
 
   return (

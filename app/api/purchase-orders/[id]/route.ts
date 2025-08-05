@@ -70,8 +70,9 @@ async function fetchPurchaseInvoiceItemsByPoId(
 ) {
   return await supabase
     .from("purchase_invoice_item")
-    .select("product_id, quantity")
-    .eq("purchase_order_id", purchaseOrderId);
+    .select("product_id, quantity, purchase_invoice!inner(is_voided)")
+    .eq("purchase_order_id", purchaseOrderId)
+    .eq("purchase_invoice.is_voided", false);
 }
 
 // Helper: Calculate totals
@@ -251,18 +252,60 @@ async function createPurchaseOrderAuditLogEntries(
     changed_at?: string;
   }> = [];
 
-  Object.keys(updatedOrder).forEach((key) => {
-    if (key !== "updated_at" && currentOrder[key] !== updatedOrder[key]) {
+  const foreignKeyMap: Record<
+    string,
+    { table: string; key: string; label: string }
+  > = {
+    supplier_id: { table: "supplier", key: "id", label: "name" },
+    region_id: { table: "purchase_order_region", key: "id", label: "name" },
+    currency_id: {
+      table: "product_currency",
+      key: "id",
+      label: "currency_code",
+    },
+    contact_person_id: { table: "person", key: "id", label: "name" },
+    sign_person_id: { table: "person", key: "id", label: "name" },
+    authorized_signer_id: { table: "person", key: "id", label: "name" },
+    budget_id: { table: "budgets", key: "id", label: "budget_name" },
+  };
+
+  for (const key of Object.keys(updatedOrder)) {
+    if (key === "updated_at") continue;
+
+    const oldVal = currentOrder[key];
+    const newVal = updatedOrder[key];
+
+    if (oldVal !== newVal) {
+      let oldDisplay = String(oldVal);
+      let newDisplay = String(newVal);
+
+      // If it's a foreign key, fetch real display values
+      if (foreignKeyMap[key]) {
+        const { table, key: pk, label } = foreignKeyMap[key];
+
+        const [{ data: oldRow }, { data: newRow }] = await Promise.all([
+          oldVal
+            ? supabase.from(table).select(label).eq(pk, oldVal).maybeSingle()
+            : { data: null },
+          newVal
+            ? supabase.from(table).select(label).eq(pk, newVal).maybeSingle()
+            : { data: null },
+        ]);
+
+        oldDisplay = oldRow?.[label] ?? oldDisplay;
+        newDisplay = newRow?.[label] ?? newDisplay;
+      }
+
       auditEntries.push({
         purchase_order_id: purchaseOrderId,
         changed_by: userId,
         changed_field: key,
-        old_values: String(currentOrder[key]),
-        new_values: String(updatedOrder[key]),
+        old_values: oldDisplay,
+        new_values: newDisplay,
         changed_at: new Date().toISOString(),
       });
     }
-  });
+  }
 
   if (auditEntries.length > 0) {
     const { error: auditError } = await supabase
