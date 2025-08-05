@@ -16,6 +16,7 @@ async function fetchPurchaseOrderWithJoins(supabase: any, idStr: string) {
     "sign_person:sign_person_id(id, name)",
     "authorized_signer:authorized_signer_id(id, name)",
     "budget:budget_id(id, budget_name, project_name, description, status)",
+    "purchase_order_smart_status (status)",
   ];
 
   return await supabase
@@ -34,19 +35,44 @@ async function fetchPurchaseOrderItems(supabase: any, idStr: string) {
 }
 
 // Helper: Format items for DTO
-function formatPurchaseOrderItems(items: any[], usdExchangeRate: number) {
+function formatPurchaseOrderItems(
+  items: any[],
+  usdExchangeRate: number,
+  invoiceQuantityMap?: Record<string, number>
+) {
   return (
-    items?.map((item) => ({
-      id: item.id,
-      product: item.product.id,
-      product_name: item.product?.name,
-      quantity: item.quantity,
-      unit_price_local: item.unit_price_local,
-      unit_price_usd: item.unit_price_local / usdExchangeRate,
-      sub_total_local: item.quantity * item.unit_price_local,
-      sub_total_usd: (item.quantity * item.unit_price_local) / usdExchangeRate,
-    })) || []
+    items?.map((item) => {
+      const orderedQty = item.quantity;
+      const invoicedQty = invoiceQuantityMap?.[item.product_id] ?? 0;
+      const availableQty = orderedQty - invoicedQty;
+
+      return {
+        id: item.id,
+        product: item.product.id,
+        product_name: item.product?.name,
+        quantity: orderedQty,
+        unit_price_local: item.unit_price_local,
+        unit_price_usd: item.unit_price_local / usdExchangeRate,
+        sub_total_local: item.quantity * item.unit_price_local,
+        sub_total_usd:
+          (item.quantity * item.unit_price_local) / usdExchangeRate,
+        ordered: orderedQty,
+        invoiced: invoicedQty,
+        available: availableQty,
+      };
+    }) || []
   );
+}
+
+async function fetchPurchaseInvoiceItemsByPoId(
+  supabase: any,
+  purchaseOrderId: string
+) {
+  return await supabase
+    .from("purchase_invoice_item")
+    .select("product_id, quantity, purchase_invoice!inner(is_voided)")
+    .eq("purchase_order_id", purchaseOrderId)
+    .eq("purchase_invoice.is_voided", false);
 }
 
 // Helper: Calculate totals
@@ -113,6 +139,9 @@ function buildPurchaseOrderDetailDto(
         }
       : null,
     note: purchaseOrder.note,
+    purchase_order_smart_status: purchaseOrder.purchase_order_smart_status
+      ? purchaseOrder.purchase_order_smart_status.status
+      : "Unknown Status",
   };
 }
 
@@ -153,6 +182,35 @@ export async function GET(
     return NextResponse.json(error(itemsError.message), { status: 500 });
   }
 
+  const { data: allPIItems, error: piItemsError } =
+    await fetchPurchaseInvoiceItemsByPoId(supabase, idStr);
+
+  const invoiceQuantityMap: Record<string, number> = {};
+
+  allPIItems?.forEach((item: any) => {
+    const pid = item.product_id;
+    invoiceQuantityMap[pid] = (invoiceQuantityMap[pid] || 0) + item.quantity;
+  });
+
+  if (piItemsError) {
+    return NextResponse.json(error(piItemsError.message), { status: 500 });
+  }
+
+  // Calculate totalOrdered from PO items
+  const totalOrdered =
+    items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) ||
+    0;
+
+  // Calculate totalInvoiced from PI items
+  const totalInvoiced =
+    allPIItems?.reduce(
+      (sum: number, item: any) => sum + (item.quantity || 0),
+      0
+    ) || 0;
+
+  // Available quantity = Ordered - Invoiced
+  const totalAvailable = totalOrdered - totalInvoiced;
+
   // Calculate totals
   const { totalAmountLocal, totalAmountUSD } = calculateTotals(
     items,
@@ -162,7 +220,8 @@ export async function GET(
   // Format items for the DTO
   const formattedItems = formatPurchaseOrderItems(
     items,
-    purchaseOrder.usd_exchange_rate
+    purchaseOrder.usd_exchange_rate,
+    invoiceQuantityMap
   );
 
   // Format the response according to GetPurchaseOrderDetailDto
@@ -172,7 +231,7 @@ export async function GET(
     totalAmountLocal,
     totalAmountUSD
   );
-  console.log("Purchase Order Detail:", result);
+
   return NextResponse.json(success(result), { status: 200 });
 }
 
@@ -193,18 +252,60 @@ async function createPurchaseOrderAuditLogEntries(
     changed_at?: string;
   }> = [];
 
-  Object.keys(updatedOrder).forEach((key) => {
-    if (key !== "updated_at" && currentOrder[key] !== updatedOrder[key]) {
+  const foreignKeyMap: Record<
+    string,
+    { table: string; key: string; label: string }
+  > = {
+    supplier_id: { table: "supplier", key: "id", label: "name" },
+    region_id: { table: "purchase_order_region", key: "id", label: "name" },
+    currency_id: {
+      table: "product_currency",
+      key: "id",
+      label: "currency_code",
+    },
+    contact_person_id: { table: "person", key: "id", label: "name" },
+    sign_person_id: { table: "person", key: "id", label: "name" },
+    authorized_signer_id: { table: "person", key: "id", label: "name" },
+    budget_id: { table: "budgets", key: "id", label: "budget_name" },
+  };
+
+  for (const key of Object.keys(updatedOrder)) {
+    if (key === "updated_at") continue;
+
+    const oldVal = currentOrder[key];
+    const newVal = updatedOrder[key];
+
+    if (oldVal !== newVal) {
+      let oldDisplay = String(oldVal);
+      let newDisplay = String(newVal);
+
+      // If it's a foreign key, fetch real display values
+      if (foreignKeyMap[key]) {
+        const { table, key: pk, label } = foreignKeyMap[key];
+
+        const [{ data: oldRow }, { data: newRow }] = await Promise.all([
+          oldVal
+            ? supabase.from(table).select(label).eq(pk, oldVal).maybeSingle()
+            : { data: null },
+          newVal
+            ? supabase.from(table).select(label).eq(pk, newVal).maybeSingle()
+            : { data: null },
+        ]);
+
+        oldDisplay = oldRow?.[label] ?? oldDisplay;
+        newDisplay = newRow?.[label] ?? newDisplay;
+      }
+
       auditEntries.push({
         purchase_order_id: purchaseOrderId,
         changed_by: userId,
         changed_field: key,
-        old_values: String(currentOrder[key]),
-        new_values: String(updatedOrder[key]),
+        old_values: oldDisplay,
+        new_values: newDisplay,
         changed_at: new Date().toISOString(),
       });
     }
-  });
+  }
 
   if (auditEntries.length > 0) {
     const { error: auditError } = await supabase

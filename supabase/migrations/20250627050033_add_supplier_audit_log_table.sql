@@ -13,7 +13,7 @@ CREATE UNIQUE INDEX supplier_audit_log_pkey ON public.supplier_audit_log USING b
 
 alter table "public"."supplier_audit_log" add constraint "supplier_audit_log_pkey" PRIMARY KEY using index "supplier_audit_log_pkey";
 
-alter table "public"."supplier_audit_log" add constraint "supplier_audit_log_changed_by_fkey" FOREIGN KEY (changed_by) REFERENCES profiles(id) ON DELETE CASCADE not valid;
+alter table "public"."supplier_audit_log" add constraint "supplier_audit_log_changed_by_fkey" FOREIGN KEY (changed_by) REFERENCES user_profiles(id) ON DELETE CASCADE not valid;
 
 alter table "public"."supplier_audit_log" validate constraint "supplier_audit_log_changed_by_fkey";
 

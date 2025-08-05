@@ -1,9 +1,11 @@
 import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
 import {
+  CheckCircleOutlined,
   DollarOutlined,
   EditOutlined,
   EllipsisOutlined,
   EyeOutlined,
+  HourglassOutlined,
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
@@ -27,11 +29,13 @@ export default function PoCardView({
   pagination,
   total,
   paginationChangeHandler,
+  hasPermission = false,
 }: {
   data: PurchaseOrderDto[];
   pagination: { page: number; pageSize: number };
   total: number;
   paginationChangeHandler: (page: number, pageSize?: number) => void;
+  hasPermission?: boolean;
 }) {
   const router = useRouter();
   return (
@@ -51,6 +55,7 @@ export default function PoCardView({
               label: <span className="text-sm !w-32">Edit</span>,
               key: "edit",
               icon: <EditOutlined />,
+              disabled: !hasPermission,
               onClick: () => {
                 router.push(`/purchase-orders/${item.id}/edit`);
               },
@@ -68,7 +73,7 @@ export default function PoCardView({
                 }}
               >
                 <Row>
-                  <Col span={6} className="!grid !place-items-center">
+                  <Col span={4} className="!grid !place-items-center">
                     <DollarOutlined
                       style={{
                         width: 32,
@@ -83,10 +88,20 @@ export default function PoCardView({
                       }}
                     />
                   </Col>
-                  <Col span={12}>
-                    <Typography.Text className="!text-xl !font-semibold">
-                      {item.purchase_order_no}
-                    </Typography.Text>
+                  <Col span={14}>
+                    <div className="flex items-center gap-1.5">
+                      <Typography.Text className="!text-xl !font-semibold">
+                        {item.purchase_order_no}
+                      </Typography.Text>
+                      {item.status == "Draft" ? (
+                        <HourglassOutlined />
+                      ) : item.status == "Approved" ? (
+                        <CheckCircleOutlined style={{ color: "#52C41A" }} />
+                      ) : (
+                        <></>
+                      )}
+                    </div>
+
                     <div className="flex items-center gap-1.5">
                       <Typography.Text
                         className="text-sm"
@@ -94,7 +109,7 @@ export default function PoCardView({
                       >
                         {dayjs(item.order_date).format("MMM D, YYYY")}
                       </Typography.Text>
-                      <StatusBadge status={item.status} />
+                      <StatusBadge status={item.purchase_order_smart_status} />
                     </div>
                   </Col>
                   <Col span={6} className="!grid !place-items-center">

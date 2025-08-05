@@ -4,7 +4,10 @@ import {
   ProductInterface,
   ProductResponse,
 } from "@/types/product/product.type";
-import { ApiResponse } from "@/types/shared/api-response-type";
+import {
+  ApiResponse,
+  PaginatedResponse,
+} from "@/types/shared/api-response-type";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -16,8 +19,8 @@ export async function GET(
   const search = searchParams.get("search")?.trim() || "";
   const category = searchParams.get("category") || "";
   const stockStatus = searchParams.get("stock_status");
-  const isActiveParam = searchParams.get("status");
   const sort = searchParams.get("sort") || "sku";
+  const isActiveParam = searchParams.get("is_active");
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSizeParam = searchParams.get("pageSize") || "10";
@@ -28,22 +31,43 @@ export async function GET(
 
   try {
     // Fetch all products for lowStock & outOfStock
-    const { data: allProducts, error: allError } = await supabase
+    const { data: allProductsData, error: allError } = await supabase
       .from("product")
       .select("*");
 
-    if (allError || !allProducts) {
+    if (allError || !allProductsData) {
       return NextResponse.json(error("Failed to fetch products", 500), {
         status: 500,
       });
     }
 
+    const { data: inventoryData, error: inventoryError } = await supabase
+      .from("inventory")
+      .select("product_id, quantity");
+
+    if (inventoryError || !inventoryData) {
+      return NextResponse.json(error("Failed to fetch inventory", 500), {
+        status: 500,
+      });
+    }
+
+    const stockMap = new Map<number, number>();
+    for (const row of inventoryData) {
+      const productId = row.product_id;
+      const quantity = Number(row.quantity);
+      stockMap.set(productId, (stockMap.get(productId) || 0) + quantity);
+    }
+
+    const allProducts = allProductsData.map((product) => ({
+      ...product,
+      current_stock: stockMap.get(product.id) ?? 0,
+    }));
+
     // Compute global counts (unfiltered)
     const lowStock = allProducts.filter(
-      (p) => p.stock <= p.min_stock && p.stock > 0
+      (p) => p.current_stock <= p.min_stock && p.current_stock > 0
     ).length;
-
-    const outOfStock = allProducts.filter((p) => p.stock === 0).length;
+    const outOfStock = allProducts.filter((p) => p.current_stock === 0).length;
 
     // Apply filters to compute `items` and `total`
     let filtered = [...allProducts];
@@ -61,11 +85,13 @@ export async function GET(
     }
 
     if (stockStatus === "low_stock") {
-      filtered = filtered.filter((p) => p.stock <= p.min_stock && p.stock > 0);
+      filtered = filtered.filter(
+        (p) => p.current_stock <= p.min_stock && p.current_stock > 0
+      );
     } else if (stockStatus === "in_stock") {
-      filtered = filtered.filter((p) => p.stock > p.min_stock);
+      filtered = filtered.filter((p) => p.current_stock > p.min_stock);
     } else if (stockStatus === "out_of_stock") {
-      filtered = filtered.filter((p) => p.stock === 0);
+      filtered = filtered.filter((p) => p.current_stock === 0);
     }
 
     if (isActiveParam === "true") {

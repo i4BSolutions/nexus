@@ -165,6 +165,75 @@ export async function POST(
     }
   }
 
+  // Step 4: Determine smart status
+  const { data: allPOItems, error: allPOItemsError } = await supabase
+    .from("purchase_order_items")
+    .select("product_id, quantity")
+    .eq("purchase_order_id", purchase_order_id);
+
+  if (allPOItemsError) {
+    return NextResponse.json(error(allPOItemsError.message), { status: 500 });
+  }
+
+  // Sum all previously invoiced quantities (including this invoice)
+  const { data: allInvoiceItems, error: allInvoiceItemsError } = await supabase
+    .from("purchase_invoice_item")
+    .select("product_id, quantity")
+    .eq("purchase_order_id", purchase_order_id);
+
+  if (allInvoiceItemsError) {
+    return NextResponse.json(error(allInvoiceItemsError.message), {
+      status: 500,
+    });
+  }
+
+  // Build maps
+  const poQuantities: Record<number, number> = {};
+  const invoicedQuantities: Record<number, number> = {};
+
+  for (const item of allPOItems) {
+    poQuantities[item.product_id] = item.quantity;
+  }
+  for (const item of allInvoiceItems) {
+    invoicedQuantities[item.product_id] =
+      (invoicedQuantities[item.product_id] || 0) + item.quantity;
+  }
+
+  // Determine if all items are fully invoiced
+  let allFullyInvoiced = true;
+  let anyInvoiced = false;
+
+  for (const [productIdStr, poQty] of Object.entries(poQuantities)) {
+    const productId = Number(productIdStr);
+    const invoicedQty = invoicedQuantities[productId] || 0;
+
+    if (invoicedQty > 0) anyInvoiced = true;
+    if (invoicedQty < poQty) allFullyInvoiced = false;
+  }
+
+  // Choose status
+  let smartStatus;
+  if (allFullyInvoiced) {
+    smartStatus = "Awaiting Delivery";
+  } else if (anyInvoiced) {
+    smartStatus = "Partially Invoiced";
+  }
+
+  // Upsert or insert status
+  const { error: smartStatusError } = await supabase
+    .from("purchase_order_smart_status")
+    .upsert(
+      {
+        purchase_order_id: purchase_order_id,
+        status: smartStatus,
+      },
+      { onConflict: "purchase_order_id" }
+    );
+
+  if (smartStatusError) {
+    return NextResponse.json(error(smartStatusError.message), { status: 500 });
+  }
+
   return NextResponse.json(
     success(invoice, "Purchase invoice created successfully"),
     { status: 200 }
@@ -176,41 +245,84 @@ export async function POST(
  * It calculates the total number of invoices and the total USD value.
  * @returns Promise<{ total_invoices: number, total_usd: number, delivered: number }>
  */
-async function getStatistics() {
+async function getStatistics({
+  status,
+}: {
+  status?: string;
+}): Promise<{ total_invoices: number; total_usd: number; delivered: number }> {
   const supabase = await createClient();
 
-  let statsQuery = supabase.from("purchase_invoice").select(
+  let query = supabase.from("purchase_invoice").select(
     `
+      id,
       exchange_rate_to_usd,
       invoice_items:purchase_invoice_item (
+        id,
         quantity,
         unit_price_local
       )
     `
   );
-  const { data: allInvoicesForStats, error: statsError } = await statsQuery;
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  const { data: allInvoicesForStats, error: statsError } = await query;
 
   let totalAmountUsd = 0;
   let totalInvoices = 0;
+  let totalOrderedQty = 0;
+
+  const itemIdToQuantityMap = new Map<number, number>();
 
   if (!statsError && allInvoicesForStats) {
     totalInvoices = allInvoicesForStats.length;
-    totalAmountUsd = allInvoicesForStats.reduce((total, invoice) => {
-      const invoiceTotal = invoice.invoice_items.reduce(
-        (sum: number, item: any) =>
-          sum +
+
+    allInvoicesForStats.forEach((invoice) => {
+      invoice.invoice_items.forEach((item: any) => {
+        totalAmountUsd +=
           (item.quantity * item.unit_price_local) /
-            invoice.exchange_rate_to_usd,
-        0
-      );
-      return total + invoiceTotal;
-    }, 0);
+          invoice.exchange_rate_to_usd;
+
+        totalOrderedQty += item.quantity;
+        itemIdToQuantityMap.set(item.id, item.quantity);
+      });
+    });
   }
+
+  const invoiceItemIds = Array.from(itemIdToQuantityMap.keys());
+
+  // Get delivered quantities per invoice item
+  const { data: deliveredStats, error: deliveredError } = await supabase
+    .from("stock_transaction")
+    .select("invoice_line_item_id, quantity")
+    .eq("type", "IN")
+    .in("invoice_line_item_id", invoiceItemIds);
+
+  let totalDeliveredQty = 0;
+
+  if (!deliveredError && deliveredStats) {
+    const deliveredMap = new Map<number, number>();
+
+    deliveredStats.forEach((row) => {
+      if (!row.invoice_line_item_id) return;
+      const existing = deliveredMap.get(row.invoice_line_item_id) || 0;
+      deliveredMap.set(row.invoice_line_item_id, existing + row.quantity);
+    });
+
+    deliveredMap.forEach((qty, itemId) => {
+      totalDeliveredQty += qty;
+    });
+  }
+
+  const overallDeliveryPercentage =
+    totalOrderedQty > 0 ? (totalDeliveredQty / totalOrderedQty) * 100 : 0;
 
   return {
     total_invoices: totalInvoices,
-    total_usd: totalAmountUsd,
-    delivered: 0, // Need to calculate actual delivered percentage
+    total_usd: parseFloat(totalAmountUsd.toFixed(2)),
+    delivered: parseFloat(overallDeliveryPercentage.toFixed(2)),
   };
 }
 
@@ -257,7 +369,9 @@ export async function GET(
       exchange_rate_to_usd,
       status,
       note,
+      is_voided,
       invoice_items:purchase_invoice_item (
+        id,
         product_id,
         quantity,
         unit_price_local
@@ -303,28 +417,76 @@ export async function GET(
     return NextResponse.json(error(dbError.message), { status: 500 });
   }
 
-  let formatDto: any = invoices?.map((invoice) => ({
-    id: invoice.id,
-    purchase_invoice_number: invoice.purchase_invoice_number,
-    purchase_order_no: invoice.purchase_order_no.purchase_order_no,
-    invoice_date: invoice.invoice_date,
-    due_date: invoice.due_date,
-    currency_code: invoice.product_currency.currency_code,
-    usd_exchange_rate: invoice.exchange_rate_to_usd,
-    total_amount_local: invoice.invoice_items.reduce(
-      (total: number, item: { quantity: number; unit_price_local: number }) =>
-        total + item.quantity * item.unit_price_local,
+  const { data: deliveredStats, error: deliveredError } = await supabase
+    .from("stock_transaction")
+    .select("invoice_line_item_id, quantity")
+    .eq("type", "IN");
+
+  const deliveredMap = new Map<number, number>();
+
+  deliveredStats?.forEach((row) => {
+    if (!row.invoice_line_item_id) return;
+    deliveredMap.set(
+      row.invoice_line_item_id,
+      (deliveredMap.get(row.invoice_line_item_id) || 0) + row.quantity
+    );
+  });
+
+  let formatDto: any = invoices?.map((invoice) => {
+    const totalOrderedQty = invoice.invoice_items.reduce(
+      (total: number, item: any) => total + item.quantity,
       0
-    ),
-    total_amount_usd: invoice.invoice_items.reduce(
-      (total: number, item: { quantity: number; unit_price_local: number }) =>
-        total +
-        (item.quantity * item.unit_price_local) / invoice.exchange_rate_to_usd,
+    );
+
+    const totalDeliveredQty = invoice.invoice_items.reduce(
+      (total: number, item: any) => {
+        const delivered = deliveredMap.get(item.id) || 0;
+        return total + delivered;
+      },
       0
-    ),
-    status: invoice.status,
-    note: invoice.note || "",
-  }));
+    );
+
+    const deliveredPercentage =
+      totalOrderedQty > 0 ? (totalDeliveredQty / totalOrderedQty) * 100 : 0;
+
+    const pendingDeliveryPercentage =
+      totalOrderedQty > 0
+        ? ((totalOrderedQty - totalDeliveredQty) / totalOrderedQty) * 100
+        : 0;
+
+    return {
+      id: invoice.id,
+      purchase_invoice_number: invoice.purchase_invoice_number,
+      purchase_order_no: invoice.purchase_order_no.purchase_order_no,
+      invoice_date: invoice.invoice_date,
+      due_date: invoice.due_date,
+      currency_code: invoice.product_currency.currency_code,
+      usd_exchange_rate: invoice.exchange_rate_to_usd,
+      total_amount_local: invoice.invoice_items.reduce(
+        (total: number, item: { quantity: number; unit_price_local: number }) =>
+          total + item.quantity * item.unit_price_local,
+        0
+      ),
+      total_amount_usd: invoice.invoice_items.reduce(
+        (total: number, item: { quantity: number; unit_price_local: number }) =>
+          total +
+          (item.quantity * item.unit_price_local) /
+            invoice.exchange_rate_to_usd,
+        0
+      ),
+      status: invoice.status,
+      note: invoice.note || "",
+      is_voided: invoice.is_voided,
+      delivered_percentage: Math.min(
+        100,
+        parseFloat(deliveredPercentage.toFixed(2))
+      ),
+      pending_delivery_percentage: Math.min(
+        100,
+        parseFloat(pendingDeliveryPercentage.toFixed(2))
+      ),
+    };
+  });
 
   if (amountSort === "amount_asc") {
     formatDto.sort((a: any, b: any) => a.total_amount_usd - b.total_amount_usd);
@@ -336,7 +498,7 @@ export async function GET(
     formatDto = formatDto.slice(from, to + 1);
   }
 
-  const statisticsData = await getStatistics();
+  const statisticsData = await getStatistics({ status: status ?? undefined });
 
   const data = {
     items: formatDto,

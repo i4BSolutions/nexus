@@ -1,25 +1,28 @@
 "use client";
 
 import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
+
 import PoCardView from "@/components/purchase-orders/PoCardView";
 import PoTableView from "@/components/purchase-orders/PoTableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
-import StatisticsCards from "@/components/shared/StatisticsCards";
-import { useList } from "@/hooks/react-query/useList";
-import {
-  PurchaseOrderDto,
-  PurchaseOrderResponse,
-} from "@/types/purchase-order/purchase-order.type";
-import { StatItem } from "@/types/shared/stat-item.type";
 import {
   DollarOutlined,
   PlusOutlined,
   ShoppingCartOutlined,
   UpCircleOutlined,
 } from "@ant-design/icons";
-import { Button, Flex, Input, Segmented, Select, Spin, Typography } from "antd";
-import { SearchProps } from "antd/es/input";
+
+import StatisticsCards from "@/components/shared/StatisticsCards";
+import { useList } from "@/hooks/react-query/useList";
+import { usePermission } from "@/hooks/shared/usePermission";
+import {
+  PurchaseOrderDto,
+  PurchaseOrderResponse,
+} from "@/types/purchase-order/purchase-order.type";
+import { StatItem } from "@/types/shared/stat-item.type";
+import { Button, Flex, Segmented, Select, Spin, Typography } from "antd";
+import Input, { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -34,8 +37,8 @@ export default function PurchaseOrdersPage() {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
-
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const hasPermission = usePermission("can_manage_purchase_orders");
 
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
     "purchase-orders",
@@ -65,6 +68,7 @@ export default function PurchaseOrdersPage() {
         expected_delivery_date: item.expected_delivery_date,
         total_invoice_amount: item.invoiced_amount || 0,
         total_allocated_amount: item.allocated_amount || 0,
+        purchase_order_smart_status: item.purchase_order_smart_status,
       }));
       setData(data);
       setTotal(poData.total);
@@ -185,6 +189,7 @@ export default function PurchaseOrdersPage() {
           icon={
             <ShoppingCartOutlined style={{ fontSize: 20, color: "white" }} />
           }
+          hasPermission={hasPermission}
           onAddNew={() => setShowCreateModal(true)}
           buttonText="New Purchase Order"
           buttonIcon={<PlusOutlined />}
@@ -263,12 +268,14 @@ export default function PurchaseOrdersPage() {
         <PoCardView
           data={data}
           pagination={pagination}
+          hasPermission={hasPermission}
           paginationChangeHandler={paginationChangeHandler}
           total={total}
         />
       ) : (
         <PoTableView
           data={data}
+          hasPermission={hasPermission}
           pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
           total={total}

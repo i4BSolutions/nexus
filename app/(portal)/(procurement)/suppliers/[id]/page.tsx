@@ -21,8 +21,10 @@ import { useUpdate } from "@/hooks/react-query/useUpdate";
 import DetailsCard from "@/components/suppliers/DetailsCard";
 import HistoryCard from "@/components/suppliers/HistoryCard";
 import SupplierModal from "@/components/suppliers/SupplierModal";
+import { usePermission } from "@/hooks/shared/usePermission";
 
 const SupplierPage = () => {
+  const hasPermission = usePermission("can_manage_products_suppliers");
   const { message } = App.useApp();
 
   const params = useParams();
@@ -42,7 +44,7 @@ const SupplierPage = () => {
   const update = useUpdate("suppliers");
   const remove = useDelete("suppliers");
 
-  const supplier = supplierRaw as SupplierInterface | undefined;
+  const supplier = supplierRaw as SupplierInterface;
 
   const handleDelete = async () => {
     try {
@@ -107,31 +109,33 @@ const SupplierPage = () => {
           </Space>
         </Space>
 
-        <Space>
-          <DeleteConfirmModal
-            open={isDeleteModalOpen}
-            title="Supplier"
-            onCancel={() => setIsDeleteModalOpen(false)}
-            onConfirm={async () => {
-              await handleDelete();
-              setIsDeleteModalOpen(false);
-            }}
-          />
+        {hasPermission && (
+          <Space>
+            <DeleteConfirmModal
+              open={isDeleteModalOpen}
+              title="Supplier"
+              onCancel={() => setIsDeleteModalOpen(false)}
+              onConfirm={async () => {
+                await handleDelete();
+                setIsDeleteModalOpen(false);
+              }}
+            />
 
-          <Button
-            icon={<DeleteOutlined />}
-            danger
-            onClick={() => setIsDeleteModalOpen(true)}
-          />
+            <Button
+              icon={<DeleteOutlined />}
+              danger
+              onClick={() => setIsDeleteModalOpen(true)}
+            />
 
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => setIsModalOpen(true)}
-          >
-            Edit Supplier
-          </Button>
-        </Space>
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => setIsModalOpen(true)}
+            >
+              Edit Supplier
+            </Button>
+          </Space>
+        )}
       </Space>
 
       {/* Tabs */}
@@ -153,7 +157,7 @@ const SupplierPage = () => {
           {
             key: "history",
             label: "History",
-            children: <HistoryCard />,
+            children: <HistoryCard id={id} />,
           },
         ]}
       />

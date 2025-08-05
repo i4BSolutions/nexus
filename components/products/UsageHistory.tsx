@@ -1,40 +1,74 @@
 import React from "react";
 import CurrentStockCard from "./CurrentStockCard";
 import LastStockMovementCard from "./LastStockMovementCard";
-import { Button, Card, Divider, Space, Table, Tag, Typography } from "antd";
-import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Card,
+  Divider,
+  Flex,
+  Space,
+  Table,
+  TableProps,
+  Tag,
+  Typography,
+} from "antd";
+import {
+  CalendarOutlined,
+  EyeOutlined,
+  ShoppingCartOutlined,
+} from "@ant-design/icons";
+import {
+  ProductPurchaseOrder,
+  ProductUsageHistory,
+} from "@/types/product/product.type";
+import dayjs from "dayjs";
 
-const UsageHistory = () => {
-  const columns = [
+const UsageHistory = ({ data }: { data: ProductUsageHistory }) => {
+  const { purchase_orders, last_stock_movement, minimum_stock, current_stock } =
+    data;
+  console.log(purchase_orders);
+  const columns: TableProps<ProductPurchaseOrder>["columns"] = [
     {
       title: "PURCHASE ORDER",
-      dataIndex: "orderId",
-      key: "orderId",
+      dataIndex: "purchase_order_no",
+      key: "purchase_order_no",
       onCell: () => ({
         style: {
           borderRight: "none",
         },
       }),
+      render: (purchase_order_no) => <a>{purchase_order_no}</a>,
     },
     {
       title: "SUPPLIER",
-      dataIndex: "supplier",
-      key: "supplier",
+      dataIndex: "supplier_name",
+      key: "supplier_name",
       onCell: () => ({
         style: {
           borderRight: "none",
         },
       }),
+      render: (supplier_name) => (
+        <Typography.Text>{supplier_name}</Typography.Text>
+      ),
     },
     {
       title: "ORDER DATE",
-      dataIndex: "date",
-      key: "date",
+      dataIndex: "order_date",
+      key: "order_date",
       onCell: () => ({
         style: {
           borderRight: "none",
         },
       }),
+      render: (order_date) => (
+        <Flex align="center" gap={3}>
+          <CalendarOutlined />
+          <Typography.Text>
+            {dayjs(order_date).format("MMM D, YYYY")}
+          </Typography.Text>
+        </Flex>
+      ),
     },
     {
       title: "UNIT PRICE",
@@ -45,6 +79,7 @@ const UsageHistory = () => {
           borderRight: "none",
         },
       }),
+      render: (unit_price) => <Typography.Text>{unit_price}</Typography.Text>,
     },
     {
       title: "AMOUNT",
@@ -55,36 +90,21 @@ const UsageHistory = () => {
           borderRight: "none",
         },
       }),
+      render: (amount) => <Typography.Text>{amount}</Typography.Text>,
     },
     {
       title: "STATUS",
       dataIndex: "status",
+      key: "status",
       onCell: () => ({
         style: {
           borderRight: "none",
         },
       }),
-      render: (status: string) => {
-        if (status === "APPROVED") return <Tag color="#52C41A">APPROVED</Tag>;
-
-        return <Tag color="#F5222D">In Stock</Tag>;
-      },
-    },
-    {
-      title: "ACTIONS",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
-      render: (_: any) => (
-        <Button
-          type="link"
-          // onClick={() => handleView(product)}
-          style={{ padding: 0 }}
-        >
-          View
-        </Button>
+      render: (status: string) => (
+        <Tag color={status === "Approved" ? "green" : "#FAFAFA"}>
+          <Typography.Text style={{ color: "#000" }}>{status}</Typography.Text>
+        </Tag>
       ),
     },
   ];
@@ -98,14 +118,9 @@ const UsageHistory = () => {
           flexDirection: "row",
         }}
       >
-        <CurrentStockCard stock={400} minStock={200} />
+        <CurrentStockCard stock={current_stock} minStock={minimum_stock} />
         <LastStockMovementCard
-          datetime="2025-06-14T06:17:00"
-          status="in"
-          quantity={200}
-          invoiceNumber="INV-2025-0001-07"
-          warehouse="Warehouse East"
-          processedBy="Min Min"
+          data={last_stock_movement}
           onViewAll={() => console.log("Go to movements list")}
         />
       </div>
@@ -172,29 +187,8 @@ const UsageHistory = () => {
           size="middle"
           pagination={false}
           columns={columns}
-          dataSource={[
-            {
-              orderId: "PO12345",
-              supplier: "Apple",
-              date: "2023-10-01",
-              amount: "$500.00",
-              status: "APPROVED",
-            },
-            {
-              orderId: "PO12346",
-              supplier: "Samsung",
-              date: "2023-10-05",
-              amount: "$300.00",
-              status: "APPROVED",
-            },
-            {
-              orderId: "PO12347",
-              supplier: "Apple",
-              date: "2023-10-05",
-              amount: "$300.00",
-              status: "APPROVED",
-            },
-          ]}
+          dataSource={purchase_orders}
+          rowKey="product_id"
           bordered
         />
       </Card>

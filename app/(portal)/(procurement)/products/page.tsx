@@ -1,12 +1,21 @@
 "use client";
 
+import CreateCategoryModal from "@/components/products/CreateCategoryModal";
 import ProductFormModal from "@/components/products/ProductFormModal";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import SearchAndFilters from "@/components/shared/SearchAndFilters";
 import StatisticsCards from "@/components/shared/StatisticsCards";
-import CreateCategoryModal from "@/components/products/CreateCategoryModal";
+import { useCategories } from "@/hooks/products/useCategories";
+import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
+import { useProducts } from "@/hooks/products/useProducts";
+import { useProductSKU } from "@/hooks/products/useProductSKU";
+import { useCreate } from "@/hooks/react-query/useCreate";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { usePermission } from "@/hooks/shared/usePermission";
+import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
 import { ProductFormInput } from "@/schemas/products/products.schemas";
+import { CategoryInterface } from "@/types/category/category.type";
 import {
   ProductCurrencyInterface,
   ProductInterface,
@@ -17,23 +26,27 @@ import {
   TagOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
-import { Button, Divider, message, Space, Spin, Table, Tag } from "antd";
+import {
+  App,
+  Button,
+  Divider,
+  Flex,
+  Pagination,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
 import { SortOrder } from "antd/es/table/interface";
-import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
-import { useProducts } from "@/hooks/products/useProducts";
-import { useCreate } from "@/hooks/react-query/useCreate";
-import { useUpdate } from "@/hooks/react-query/useUpdate";
-import { useCategories } from "@/hooks/products/useCategories";
-import { useProductCurrencies } from "@/hooks/products/useProductCurrencies";
-import { useProductSKU } from "@/hooks/products/useProductSKU";
-import { CategoryInterface } from "@/types/category/category.type";
+import { useCallback, useEffect, useState } from "react";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
 
 export default function ProductsPage() {
+  const { message } = App.useApp();
   const router = useRouter();
   const [pagination, setPagination] = useState({
     page: 1,
@@ -61,6 +74,8 @@ export default function ProductsPage() {
     sortField && sortOrder
       ? `${sortField}_${sortOrder === "descend" ? "desc" : "asc"}`
       : undefined;
+
+  const hasPermission = usePermission("can_manage_products_suppliers");
 
   const {
     data: productData,
@@ -256,13 +271,13 @@ export default function ProductsPage() {
     },
     {
       title: "STATUS",
-      dataIndex: "stock",
-      render: (stock: number, record: ProductInterface) => {
-        if (record.min_stock === 0)
-          return <Tag color="#F5222D">Out of Stock</Tag>;
-        if (stock <= record.min_stock)
-          return <Tag color="#FA8C16">Low Stock</Tag>;
-        return <Tag color="#52C41A">In Stock</Tag>;
+      render: (_: any, record: ProductInterface) => {
+        const current = record.current_stock ?? 0;
+        const min = record.min_stock ?? 0;
+
+        if (current === 0) return <Tag color="red">Out of Stock</Tag>;
+        if (current <= min) return <Tag color="orange">Low Stock</Tag>;
+        return <Tag color="green">In Stock</Tag>;
       },
     },
     {
@@ -272,14 +287,22 @@ export default function ProductsPage() {
           <Button type="link" onClick={() => handleView(product)}>
             View
           </Button>
-          <Divider type="vertical" />
-          <Button type="link" onClick={() => handleEdit(product)}>
-            Edit
-          </Button>
+          {hasPermission && (
+            <>
+              <Divider type="vertical" />
+              <Button type="link" onClick={() => handleEdit(product)}>
+                Edit
+              </Button>
+            </>
+          )}
         </Space>
       ),
     },
   ];
+
+  const paginationChangeHandler = (page: number, pageSize?: number) => {
+    setPagination({ page, pageSize: pageSize || 10 });
+  };
 
   if (loadingProduct || loadingSKU)
     return (
@@ -299,6 +322,7 @@ export default function ProductsPage() {
         icon={<TagsOutlined />}
         onAddNew={handleAddNewProduct}
         buttonText="New Product"
+        hasPermission={hasPermission}
         buttonIcon={<PlusOutlined />}
       />
       <StatisticsCards
@@ -347,25 +371,18 @@ export default function ProductsPage() {
         dataSource={products}
         rowKey="id"
         loading={loadingProduct || loadingSKU}
-        pagination={{
-          current: pagination.page,
-          pageSize: pagination.pageSize,
-          total: total,
-        }}
-        onChange={(pagination, filters, sorter) => {
-          setPagination({
-            page: pagination.current ?? 1,
-            pageSize: pagination.pageSize ?? 10,
-          });
-          if (Array.isArray(sorter)) {
-            const sortInfo = sorter[0];
-            setSortField(sortInfo?.field as string);
-            setSortOrder(sortInfo?.order);
-          } else {
-            setSortField(sorter?.field as string);
-            setSortOrder(sorter?.order);
-          }
-        }}
+        footer={() => (
+          <Flex justify="space-between" align="center" gap={4}>
+            <Typography.Text>Total {total} items</Typography.Text>
+            <Pagination
+              current={pagination.page}
+              pageSize={pagination.pageSize}
+              total={total}
+              onChange={paginationChangeHandler}
+            />
+          </Flex>
+        )}
+        pagination={false}
         bordered
       />
 

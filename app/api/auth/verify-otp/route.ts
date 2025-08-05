@@ -2,8 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  let email: string | undefined;
+
   try {
-    const { email, code, isAdmin } = await req.json();
+    const { email: reqEmail, code, isAdmin } = await req.json();
+    email = reqEmail;
 
     if (!email || !code) {
       return NextResponse.json(
@@ -30,28 +33,32 @@ export async function POST(req: Request) {
       );
     }
 
-    // Admin setup logic
     if (isAdmin) {
       const adminData = {
-        name: "Super Admin",
-        role_name: "ADMIN",
+        full_name:
+          email.split("@")[0].charAt(0).toUpperCase() +
+          email.split("@")[0].slice(1),
+        username:
+          "@" +
+          email.split("@")[0] +
+          session.user.id.slice(0, 3) +
+          session.user.id.slice(-3),
+        department: 3,
         permissions: {
-          can_read_purchase_orders: true,
-          can_write_purchase_orders: true,
-          can_read_invoices: true,
-          can_write_invoices: true,
-          can_read_products: true,
-          can_write_products: true,
-          can_read_stock: true,
+          can_view_purchase_orders: true,
+          can_manage_purchase_orders: true,
+          can_view_invoices: true,
+          can_manage_invoices: true,
+          can_view_products_suppliers: true,
+          can_manage_products_suppliers: true,
+          can_view_stock: true,
           can_stock_in: true,
           can_stock_out: true,
-          can_read_warehouses: true,
-          can_write_warehouses: true,
-          can_read_budgets: true,
-          can_write_budgets: true,
-          can_read_budget_allocations: true,
-          can_write_budget_allocations: true,
-          can_read_dashboard: true,
+          can_view_warehouses: true,
+          can_manage_warehouses: true,
+          can_view_budget_allocations: true,
+          can_manage_budget_allocations: true,
+          can_view_dashboard: true,
           can_manage_users: true,
         },
       };
@@ -68,12 +75,14 @@ export async function POST(req: Request) {
         );
       }
 
-      // Insert into profiles table
-      const { error: insertError } = await supabase.from("profiles").insert({
-        id: session.user.id,
-        email: session.user.email,
-        ...adminData,
-      });
+      // Insert into user_profiles table
+      const { error: insertError } = await supabase
+        .from("user_profiles")
+        .insert({
+          id: session.user.id,
+          email: session.user.email,
+          ...adminData,
+        });
 
       if (insertError) {
         console.log("Insert profile error:", insertError);

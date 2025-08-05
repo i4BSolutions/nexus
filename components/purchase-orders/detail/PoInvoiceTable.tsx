@@ -3,7 +3,7 @@ import { CalendarOutlined } from "@ant-design/icons";
 import { Button, Flex, Pagination, Table, TableProps, Typography } from "antd";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import StatusBadge from "../StatusBadge";
+import StatusBadge from "@/components/purchase-invoices/StatusBadge";
 
 export default function PoInvoiceTable({
   data,
@@ -53,21 +53,18 @@ export default function PoInvoiceTable({
     },
     {
       title: "AMOUNT",
-      dataIndex: "amount_local",
-      key: "amount_local",
-      render: (amount, record) => (
-        <div>
-          <div>
-            <Typography.Text>
-              {amount.toFixed(2)} {record.currency_code}
-            </Typography.Text>
-          </div>
+      render: (_, record) => (
+        <>
+          <Typography.Text>
+            {record.amount_local?.toLocaleString() ?? "-"}{" "}
+            {record.currency_code}
+          </Typography.Text>
           <div>
             <Typography.Text type="secondary">
-              (${record.amount_usd.toLocaleString("en-US")})
+              (${record.amount_usd?.toLocaleString() ?? "-"})
             </Typography.Text>
           </div>
-        </div>
+        </>
       ),
     },
     {
@@ -85,7 +82,7 @@ export default function PoInvoiceTable({
           <Button
             style={{ padding: 0 }}
             type="link"
-            onClick={() => router.push(`/purchase-orders/${record.invoice_no}`)}
+            onClick={() => router.push(`/invoices/${record.id}`)}
           >
             View
           </Button>
@@ -106,7 +103,7 @@ export default function PoInvoiceTable({
         footer={() => (
           <div className="flex justify-between">
             <Typography.Text type="secondary">
-              Total {data.length} items
+              Total {total} items
             </Typography.Text>
             <Pagination
               defaultCurrent={1}

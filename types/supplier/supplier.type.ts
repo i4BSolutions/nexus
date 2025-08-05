@@ -1,3 +1,6 @@
+import { PurchaseInvoiceDto } from "../purchase-invoice/purchase-invoice.type";
+import { PurchaseOrderDto } from "../purchase-order/purchase-order.type";
+
 export interface SupplierInterface {
   id: number;
   name: string;
@@ -20,4 +23,18 @@ export interface SuppliersResponse {
     active: number;
     inactive: number;
   };
+}
+
+export interface SupplierPurchaseOrderHistoryResponse {
+  dto: PurchaseOrderDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface SupplierInvoiceHistoryResponse {
+  data: PurchaseInvoiceDto[];
+  total: number;
+  page: number;
+  pageSize: number;
 }

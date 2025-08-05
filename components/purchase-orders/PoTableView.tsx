@@ -1,5 +1,9 @@
 import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
-import { CalendarOutlined } from "@ant-design/icons";
+import {
+  CalendarOutlined,
+  CheckCircleOutlined,
+  HourglassOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Divider,
@@ -18,11 +22,13 @@ export default function PoTableView({
   total,
   pagination,
   paginationChangeHandler,
+  hasPermission = false,
 }: {
   data: PurchaseOrderDto[];
   total: number;
   pagination: { page: number; pageSize: number };
   paginationChangeHandler: (page: number, pageSize?: number) => void;
+  hasPermission?: boolean;
 }) {
   const router = useRouter();
 
@@ -31,7 +37,18 @@ export default function PoTableView({
       title: "PURCHASE ORDER",
       dataIndex: "purchase_order_no",
       key: "id",
-      render: (text) => <a>{text}</a>,
+      render: (text, record) => (
+        <div className="flex items-center gap-1.5">
+          <a>{text}</a>
+          {record.status == "Draft" ? (
+            <HourglassOutlined />
+          ) : record.status == "Approved" ? (
+            <CheckCircleOutlined style={{ color: "#52C41A" }} />
+          ) : (
+            <></>
+          )}
+        </div>
+      ),
     },
     {
       title: "CONTACT PERSON",
@@ -84,9 +101,11 @@ export default function PoTableView({
     },
     {
       title: "STATUS",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => <StatusBadge status={status} />,
+      dataIndex: "purchase_order_smart_status",
+      key: "purchase_order_smart_status",
+      render: (purchase_order_smart_status) => (
+        <StatusBadge status={purchase_order_smart_status} />
+      ),
     },
     {
       title: "Actions",
@@ -101,14 +120,20 @@ export default function PoTableView({
           >
             View
           </Button>
-          <Divider type="vertical" />
-          <Button
-            style={{ padding: 0 }}
-            type="link"
-            onClick={() => router.push(`/purchase-orders/${record.id}/edit`)}
-          >
-            Edit
-          </Button>
+          {hasPermission && (
+            <>
+              <Divider type="vertical" />
+              <Button
+                style={{ padding: 0 }}
+                type="link"
+                onClick={() =>
+                  router.push(`/purchase-orders/${record.id}/edit`)
+                }
+              >
+                Edit
+              </Button>
+            </>
+          )}
         </Flex>
       ),
     },

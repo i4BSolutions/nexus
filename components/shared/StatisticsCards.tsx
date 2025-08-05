@@ -1,6 +1,11 @@
 import { StatItem } from "@/types/shared/stat-item.type";
-import { InfoCircleOutlined } from "@ant-design/icons";
+import {
+  DownCircleOutlined,
+  InfoCircleOutlined,
+  UpCircleOutlined,
+} from "@ant-design/icons";
 import { Card, Flex, Space, Statistic, Tooltip, Typography } from "antd";
+import { ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
 
 const StatisticsCards = ({ stats }: { stats: StatItem[] }) => (
   <Flex className="!mb-6" gap={12}>
@@ -33,15 +38,75 @@ const StatisticsCards = ({ stats }: { stats: StatItem[] }) => (
                 </Tooltip>
               )}
             </Typography.Text>
-            <Statistic
-              value={
-                item.title === "Total POs"
-                  ? item.value
-                  : item.value.toLocaleString()
-              }
-              prefix={item.prefix}
-              suffix={item.suffix}
-            />
+            {item.title === "Stock Movement" ? (
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    style={{
+                      marginTop: 1,
+                      marginRight: 2,
+                      color: "white",
+                      background: "#52C41A",
+                      border: "1px solid #52C41A",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      fontWeight: 400,
+                      padding: "2px 8px",
+                      maxWidth: "fit-content",
+                      alignItems: "center",
+                    }}
+                  >
+                    <UpCircleOutlined /> Stock In{" "}
+                  </div>
+                  <Typography.Text style={{ fontSize: "24px" }}>
+                    {item.value.in.toLocaleString()}
+                  </Typography.Text>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    style={{
+                      marginTop: 1,
+                      marginRight: 2,
+                      color: "white",
+                      background: "#FAAD14",
+                      border: "1px solid #FAAD14",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      fontWeight: 400,
+                      padding: "2px 8px",
+                      maxWidth: "fit-content",
+                    }}
+                  >
+                    <DownCircleOutlined /> Stock Out{" "}
+                  </div>
+                  <Typography.Text style={{ fontSize: "24px" }}>
+                    {item.value.out.toLocaleString()}
+                  </Typography.Text>
+                </div>
+              </div>
+            ) : (
+              <Statistic
+                value={
+                  item.title === "Total POs"
+                    ? item.value
+                    : item.value.toLocaleString()
+                }
+                prefix={item.prefix}
+                suffix={item.suffix}
+              />
+            )}
           </Flex>
           <div
             style={{

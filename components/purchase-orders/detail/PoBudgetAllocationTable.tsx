@@ -39,11 +39,12 @@ export default function PoBudgetAllocationTable({
       title: "AMOUNT",
       dataIndex: "allocated_amount_local",
       key: "allocated_amount_local",
-      render: (amount, record) => (
+      render: (_, record) => (
         <div>
           <div>
             <Typography.Text>
-              {amount.toFixed(2)} {record.currency_code}
+              {record.allocated_amount_local.toLocaleString()}{" "}
+              {record.currency_code}
             </Typography.Text>
           </div>
           <div>
@@ -92,11 +93,12 @@ export default function PoBudgetAllocationTable({
         footer={() => (
           <div className="flex justify-between">
             <Typography.Text type="secondary">
-              Total {data.length} items
+              Total {total} items
             </Typography.Text>
             <Pagination
               defaultCurrent={1}
               current={pagination.page}
+              pageSize={pagination.pageSize}
               total={total}
               onChange={paginationChangeHandler}
             />

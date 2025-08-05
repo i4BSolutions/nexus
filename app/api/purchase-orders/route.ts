@@ -48,7 +48,7 @@ export async function POST(
     sign_person_id: sign_person,
     authorized_signer_id: authorized_sign_person,
     expected_delivery_date,
-    note: note ?? null,
+    note: note,
     status: status ?? "Draft",
   };
 
@@ -67,6 +67,7 @@ export async function POST(
     product_id: item.product_id,
     quantity: item.quantity,
     unit_price_local: item.unit_price_local,
+    is_foc: item.is_foc,
   }));
 
   if (itemsToInsert.length > 0) {
@@ -77,6 +78,17 @@ export async function POST(
     if (itemsError) {
       return NextResponse.json(error(itemsError.message), { status: 500 });
     }
+  }
+
+  const { error: smartStatusError } = await supabase
+    .from("purchase_order_smart_status")
+    .insert({
+      purchase_order_id: order.id,
+      status: "Not Started",
+    });
+
+  if (smartStatusError) {
+    return NextResponse.json(error(smartStatusError.message), { status: 500 });
   }
 
   return NextResponse.json(
@@ -97,14 +109,22 @@ export async function GET(
 > {
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSizeParam = searchParams.get("pageSize") || "10";
-  const pageSize = parseInt(pageSizeParam, 10);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+
   const poNumber = searchParams.get("q") || "";
   const statusParam = searchParams.get("status");
   const sortParam = searchParams.get("sort");
+
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const hasPageSize = searchParams.has("pageSize");
+  const pageSizeParam = searchParams.get("pageSize");
+  const pageSize = pageSizeParam ? parseInt(pageSizeParam, 10) : undefined;
+  let from: number | undefined;
+  let to: number | undefined;
+
+  if (hasPageSize && pageSize !== undefined) {
+    from = (page - 1) * pageSize;
+    to = from + pageSize - 1;
+  }
 
   let query = supabase.from("purchase_order").select(
     `
@@ -125,6 +145,12 @@ export async function GET(
         product_id,
         quantity,
         unit_price_local
+      ),
+      supplier:supplier_id(name),
+      purchase_order_smart_status (
+        status,
+        created_at,
+        updated_at
       )
     `,
     { count: "exact" }
@@ -142,7 +168,7 @@ export async function GET(
     ascending: sortParam === "order_date_asc",
   });
 
-  if (typeof to === "number") {
+  if (typeof from === "number" && typeof to === "number") {
     query = query.range(from, to);
   }
 
@@ -182,15 +208,18 @@ export async function GET(
         (item.quantity * item.unit_price_local) / order.usd_exchange_rate,
       0
     ),
+    supplier: order.supplier.name,
     invoiced_amount: 0,
     allocated_amount: 0,
+    purchase_order_smart_status:
+      order.purchase_order_smart_status?.status ?? "Error",
   }));
 
   const GetPurchaseOrderResponse: PurchaseOrderResponse = {
     dto: orders || [],
     total: count || 0,
     page,
-    pageSize: pageSize,
+    pageSize: pageSize || "all",
     statistics: {
       total: count || 0,
       total_approved: orders

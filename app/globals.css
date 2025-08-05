@@ -24,7 +24,42 @@
   display: none !important;
 }
 
+.custom-carousel .slick-prev,
+.custom-carousel .slick-next {
+  z-index: 1000;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.3); /* dark semi-transparent bg */
+  border-radius: 50%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-carousel .slick-prev::before,
+.custom-carousel .slick-next::before {
+  color: black !important;
+  font-size: 20px;
+  opacity: 1 !important;
+}
+
+.custom-prev-arrow,
+.custom-next-arrow {
+  color: black; /* Set the arrow color */
+}
+
+.custom-prev-arrow:hover,
+.custom-next-arrow:hover {
+  color: darkred !important;
+}
+
 .ant-form-item-label > label {
   display: block;
   width: 100%;
+}
+
+.slick-prev::before,
+.slick-next::before {
+  color: #000 !important; /* Change to black or any visible color */
+  font-size: 24px;
 }

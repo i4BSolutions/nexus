@@ -19,21 +19,23 @@ import {
   Space,
   Typography,
 } from "antd";
+import Link from "antd/es/typography/Link";
+import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
-import dayjs from "dayjs";
-import Link from "antd/es/typography/Link";
 
 export default function CardView({
   data,
   pagination,
   total,
   paginationChangeHandler,
+  hasPermission = false,
 }: {
   data: PurchaseInvoiceDto[];
   pagination: { page: number; pageSize: number };
   total: number;
   paginationChangeHandler: (page: number, pageSize?: number) => void;
+  hasPermission?: boolean;
 }) {
   const router = useRouter();
 
@@ -50,17 +52,16 @@ export default function CardView({
               key: "view",
               icon: <EyeOutlined />,
               onClick: () => {
-                router.push(`/purchase-orders/${item.purchase_invoice_number}`);
+                router.push(`/invoices/${item.id}`);
               },
             },
             {
               label: <span className="text-sm !w-32">Edit</span>,
               key: "edit",
               icon: <EditOutlined />,
+              disabled: !hasPermission,
               onClick: () => {
-                router.push(
-                  `/purchase-orders/${item.purchase_invoice_number}/edit`
-                );
+                router.push(`/invoices/${item.id}/edit`);
               },
             },
           ];
@@ -91,15 +92,17 @@ export default function CardView({
                       }}
                     />
                   </Col>
-                  <Col span={12}>
+                  <Col span={14}>
                     <Typography.Text className="!text-xl !font-semibold">
                       {item.purchase_invoice_number}
                     </Typography.Text>
                     <div className="flex items-center gap-1.5">
-                      <StatusBadge status={item.status} />
+                      <StatusBadge
+                        status={item.is_voided ? "Voided" : item.status}
+                      />
                     </div>
                   </Col>
-                  <Col span={6} className="!grid !place-items-center">
+                  <Col span={2} className="!grid !place-items-center">
                     <Dropdown
                       menu={{ items }}
                       trigger={["click"]}
@@ -176,7 +179,10 @@ export default function CardView({
                     </Typography.Text>
                   </div>
                   <div>
-                    <Link className="m-0 font-medium text-base">
+                    <Link
+                      href={`/purchase-orders/${item.purchase_order_no}`}
+                      className="m-0 font-medium text-base"
+                    >
                       {item.purchase_order_no}
                     </Link>
                   </div>
@@ -188,7 +194,10 @@ export default function CardView({
                       Delivery Progress
                     </Typography.Text>
                   </Col>
-                  <Progress percent={19} strokeColor="#52C41A" />
+                  <Progress
+                    percent={item.delivered_percentage}
+                    strokeColor="#52C41A"
+                  />
                   <Space
                     style={{
                       width: "100%",
@@ -209,7 +218,7 @@ export default function CardView({
                           maxWidth: "fit-content",
                         }}
                       >
-                        10% Delivered
+                        {item.delivered_percentage}% Delivered
                       </div>
                     </Space>
                     <Space>
@@ -225,7 +234,7 @@ export default function CardView({
                           maxWidth: "fit-content",
                         }}
                       >
-                        90% Pending
+                        {item.pending_delivery_percentage}% Pending
                       </div>
                     </Space>
                   </Space>

@@ -52,6 +52,7 @@ export interface PurchaseOrderDetailDto {
     name: string;
   } | null;
   note?: string;
+  purchase_order_smart_status: string;
 }
 
 export interface PoBudgetAllocationInterface {
@@ -93,4 +94,38 @@ export interface UsageHistoryDto {
   allocationProgressPercent: number;
   budgetAllocations: PoBudgetAllocationInterface[];
   total_budget_allocations: number;
+}
+
+export interface InvoiceHistory {
+  invoices: PoInvoiceInterface[];
+  statistics: {
+    total_invoices: number;
+    total_amount_usd: number;
+    total_paid_usd: number;
+    total_remaining_usd: number;
+    total_paid_percent: number;
+    total_invoiced_items: number;
+    total_remaining_items: number;
+    total_invoiced_items_percentage: number;
+  };
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface BudgetAllocationHistory {
+  budgetAllocations: PoBudgetAllocationInterface[];
+  statistics: {
+    total_po_amount_usd: number;
+    total_po_amount_local: number;
+    total_allocated_usd: number;
+    total_allocated_local: number;
+    total_remaining_usd: number;
+    total_remaining_local: number;
+    allocation_progress_percent: number;
+    purchase_order_currency_code: string;
+  };
+  total: number;
+  page: number;
+  pageSize: number;
 }

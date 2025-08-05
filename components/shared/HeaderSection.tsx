@@ -1,22 +1,26 @@
+import { Button, Space, Typography } from "antd";
 import React from "react";
-import { Typography, Button, Space } from "antd";
 
 const HeaderSection = ({
   title,
   description,
   bgColor,
+  iconColor,
   icon,
   onAddNew,
   buttonText,
   buttonIcon,
+  hasPermission = false,
 }: {
   title: string;
   description?: string;
   bgColor?: string;
+  iconColor?: string;
   icon: React.ReactNode;
   onAddNew: () => void;
   buttonText?: string;
   buttonIcon?: React.ReactNode;
+  hasPermission?: boolean;
 }) => (
   <Space
     size="small"
@@ -40,7 +44,7 @@ const HeaderSection = ({
         }}
       >
         {React.cloneElement(icon as any, {
-          style: { fontSize: 20, color: "white" },
+          style: { fontSize: 20, color: iconColor ? iconColor : "white" },
         })}
       </div>
       <Space direction="vertical" size={0}>
@@ -54,7 +58,7 @@ const HeaderSection = ({
         )}
       </Space>
     </Space>
-    {buttonText && (
+    {buttonText && hasPermission && (
       <Button type="primary" onClick={onAddNew} icon={buttonIcon}>
         {buttonText || `New ${title}`}
       </Button>

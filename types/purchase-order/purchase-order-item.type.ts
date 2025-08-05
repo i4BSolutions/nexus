@@ -7,4 +7,6 @@ export interface PurchaseOrderItemInterface {
   unit_price_usd: number;
   sub_total_local: number;
   sub_total_usd: number;
+  invoiced?: number;
+  available?: number;
 }

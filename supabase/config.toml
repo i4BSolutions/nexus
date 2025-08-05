@@ -169,14 +169,14 @@ otp_length = 6
 otp_expiry = 3600
 
 # Use a production-ready SMTP server
-# [auth.email.smtp]
-# enabled = true
-# host = "env(MAILTRAP_SMTP_HOST)"
-# port = "env(MAILTRAP_SMTP_PORT)"
-# user = "env(MAILTRAP_SMTP_USER)"
-# pass = "env(MAILTRAP_SMTP_PASSWORD)"
-# admin_email = "env(MAILTRAP_SMTP_FROM_EMAIL)"
-# sender_name = "env(MAILTRAP_SMTP_FROM_NAME)"
+[auth.email.smtp]
+enabled = true
+host = "env(MAILTRAP_SMTP_HOST)"
+port = "env(MAILTRAP_SMTP_PORT)"
+user = "env(MAILTRAP_SMTP_USER)"
+pass = "env(MAILTRAP_SMTP_PASSWORD)"
+admin_email = "env(MAILTRAP_SMTP_FROM_EMAIL)"
+sender_name = "env(MAILTRAP_SMTP_FROM_NAME)"
 
 # Uncomment to customize email template
 [auth.email.template.invite]

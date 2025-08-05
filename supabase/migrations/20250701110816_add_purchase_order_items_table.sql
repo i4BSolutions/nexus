@@ -4,6 +4,7 @@ create table "public"."purchase_order_items" (
     "product_id" bigint not null,
     "quantity" integer not null,
     "unit_price_local" numeric(15,6) not null,
+    "is_foc" boolean not null default false,
     "created_at" timestamp with time zone default now(),
     "updated_at" timestamp with time zone default now()
 );

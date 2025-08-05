@@ -108,6 +108,7 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
           product_id: item.product,
           quantity: item.quantity,
           unit_price_local: item.unit_price,
+          is_foc: item.foc ? item.foc : false,
         }));
 
         const body = {
