@@ -1,15 +1,19 @@
+import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
 import {
   CheckCircleOutlined,
+  CheckOutlined,
   DollarOutlined,
   EditOutlined,
   EllipsisOutlined,
   EyeOutlined,
   HourglassOutlined,
   InfoCircleOutlined,
+  RollbackOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import {
+  App,
   Button,
   Col,
   Dropdown,
@@ -37,11 +41,14 @@ export default function PoCardView({
   paginationChangeHandler: (page: number, pageSize?: number) => void;
   hasPermission?: boolean;
 }) {
+  const { message } = App.useApp();
   const router = useRouter();
   return (
     <section className="py-6 w-full max-w-[1140px]">
       <div className="grid grid-cols-3 items-center w-full gap-5">
         {data.map((item: PurchaseOrderDto) => {
+          const updateStatus = useUpdate(`purchase-orders`);
+
           const items: MenuProps["items"] = [
             {
               label: <div className="text-sm !w-32">View</div>,
@@ -51,16 +58,87 @@ export default function PoCardView({
                 router.push(`/purchase-orders/${item.id}`);
               },
             },
-            {
-              label: <span className="text-sm !w-32">Edit</span>,
-              key: "edit",
-              icon: <EditOutlined />,
-              disabled: !hasPermission,
-              onClick: () => {
-                router.push(`/purchase-orders/${item.id}/edit`);
-              },
-            },
           ];
+
+          if (item.status === "Draft" && hasPermission) {
+            items.push(
+              {
+                label: <span className="text-sm !w-32">Edit</span>,
+                key: "edit",
+                icon: <EditOutlined />,
+                onClick: () => {
+                  router.push(`/purchase-orders/${item.id}/edit`);
+                },
+              },
+              {
+                label: (
+                  <span className="text-sm !w-32 text-[#52C41A]">Approve</span>
+                ),
+                key: "approve",
+                icon: <CheckOutlined style={{ color: "#52C41A" }} />,
+                onClick: async () => {
+                  await updateStatus.mutateAsync(
+                    {
+                      data: { status: "Approved", reason: "Approve PO" },
+                      id: item.id.toString(),
+                    },
+                    {
+                      onSuccess: () => {
+                        message.success("Purchase order approved successfully");
+                      },
+                      onError: (error: any) => {
+                        message.error(
+                          error?.message || "Failed to approve purchase order"
+                        );
+                      },
+                    }
+                  );
+                },
+              }
+            );
+          } else if (item.status === "Approved" && hasPermission) {
+            items.push(
+              {
+                label: <span className="text-sm !w-32">Edit</span>,
+                key: "edit",
+                icon: <EditOutlined />,
+                onClick: () => {
+                  router.push(`/purchase-orders/${item.id}/edit`);
+                },
+              },
+              {
+                label: (
+                  <span className="text-sm !w-32 text-[#FAAD14]">
+                    Cancel Approval
+                  </span>
+                ),
+                key: "cancel approval",
+                icon: <RollbackOutlined style={{ color: "#FAAD14" }} />,
+                onClick: async () => {
+                  await updateStatus.mutateAsync(
+                    {
+                      data: { status: "Draft", reason: "Cancel Approval" },
+                      id: item.id.toString(),
+                    },
+                    {
+                      onSuccess: () => {
+                        message.success(
+                          "Purchase order approval cancelled successfully"
+                        );
+                      },
+                      onError: (error: any) => {
+                        message.error(
+                          error?.message ||
+                            "Failed to update purchase order status"
+                        );
+                      },
+                    }
+                  );
+                },
+              }
+            );
+          }
+
           return (
             <div
               key={item.id}
@@ -118,7 +196,10 @@ export default function PoCardView({
                       trigger={["click"]}
                       placement="bottomRight"
                     >
-                      <Button icon={<EllipsisOutlined />} />
+                      <Button
+                        icon={<EllipsisOutlined />}
+                        loading={updateStatus.isPending}
+                      />
                     </Dropdown>
                   </Col>
                 </Row>
@@ -192,14 +273,14 @@ export default function PoCardView({
                     </Typography.Text>
                     <p className="m-0 font-medium text-base">
                       $
-                      {item.invoiced_amount
-                        ? item.invoiced_amount.toLocaleString()
+                      {item.remaining_invoiced_amount
+                        ? item.remaining_invoiced_amount.toLocaleString()
                         : 0}
                     </p>
                   </Col>
                 </Row>
                 <Row>
-                  <Progress percent={item.invoiced_amount} />
+                  <Progress percent={item.invoiced_percentage} />
                 </Row>
                 <Row>
                   <Col span={12}>
@@ -226,14 +307,14 @@ export default function PoCardView({
                     </Typography.Text>
                     <p className="m-0 font-medium text-base">
                       $
-                      {item.allocated_amount
-                        ? item.allocated_amount.toLocaleString()
+                      {item.remaining_allocation
+                        ? item.remaining_allocation.toLocaleString()
                         : 0}
                     </p>
                   </Col>
                 </Row>
                 <Row>
-                  <Progress percent={item.allocated_amount} />
+                  <Progress percent={item.allocation_percentage} />
                 </Row>
               </div>
             </div>

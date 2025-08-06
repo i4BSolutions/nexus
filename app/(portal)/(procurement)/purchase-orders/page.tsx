@@ -21,7 +21,7 @@ import {
   PurchaseOrderResponse,
 } from "@/types/purchase-order/purchase-order.type";
 import { StatItem } from "@/types/shared/stat-item.type";
-import { Button, Flex, Segmented, Select, Spin, Typography } from "antd";
+import { Badge, Button, Flex, Segmented, Select, Spin, Typography } from "antd";
 import Input, { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
@@ -66,8 +66,12 @@ export default function PurchaseOrdersPage() {
         usd_exchange_rate: item.usd_exchange_rate,
         contact_person: item.contact_person,
         expected_delivery_date: item.expected_delivery_date,
-        total_invoice_amount: item.invoiced_amount || 0,
-        total_allocated_amount: item.allocated_amount || 0,
+        invoiced_amount: item.invoiced_amount || 0,
+        remaining_invoiced_amount: item.remaining_invoiced_amount || 0,
+        invoiced_percentage: item.invoiced_percentage || 0,
+        allocated_amount: item.allocated_amount || 0,
+        remaining_allocation: item.remaining_allocation || 0,
+        allocation_percentage: item.allocation_percentage || 0.0,
         purchase_order_smart_status: item.purchase_order_smart_status,
       }));
       setData(data);
@@ -82,6 +86,20 @@ export default function PurchaseOrdersPage() {
           borderColor: "#91d5ff",
           tooltip: "Total number of purchase orders",
           total_approved: poData.statistics.total_approved,
+          footerContent: (status === "All Status" || !status) && (
+            <div className="flex justify-between items-center gap-6">
+              <Badge
+                status="success"
+                color="#52c41a"
+                text={`${poData.statistics.total_approved || 0} Approved`}
+              />
+              <Badge
+                status="warning"
+                color="#faad14"
+                text={`${poData.statistics.total_draft || 0} Draft`}
+              />
+            </div>
+          ),
         },
         {
           title: "Total USD Value",
@@ -93,10 +111,9 @@ export default function PurchaseOrdersPage() {
           tooltip: "Total value of all purchase orders",
           prefix: "$",
           approved_text: "approved POs",
-          footerContent: (
+          footerContent: (status === "Approved" || !status) && (
             <Typography.Text type="secondary">
-              Across {poData.statistics.total || 0}
-              approved POs
+              Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
           ),
         },
@@ -109,9 +126,9 @@ export default function PurchaseOrdersPage() {
           borderColor: "#ADC6FF",
           tooltip: "Percentage of total POs that have been invoiced",
           suffix: "%",
-          footerContent: (
+          footerContent: (status === "Approved" || !status) && (
             <Typography.Text type="secondary">
-              Across {poData.statistics.total || 0} approved POs
+              Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
           ),
         },
@@ -124,9 +141,9 @@ export default function PurchaseOrdersPage() {
           borderColor: "#D3ADF7",
           tooltip: "Percentage of total POs that have been allocated",
           suffix: "%",
-          footerContent: (
+          footerContent: (status === "Approved" || !status) && (
             <Typography.Text type="secondary">
-              Across {poData.statistics.total || 0} approved POs
+              Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
           ),
         },
