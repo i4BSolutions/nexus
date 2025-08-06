@@ -1,3 +1,4 @@
+import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { PurchaseOrderDto } from "@/types/purchase-order/purchase-order.type";
 import {
   CheckCircleOutlined,
@@ -12,6 +13,7 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import {
+  App,
   Button,
   Col,
   Dropdown,
@@ -39,12 +41,14 @@ export default function PoCardView({
   paginationChangeHandler: (page: number, pageSize?: number) => void;
   hasPermission?: boolean;
 }) {
-  console.log("PoCardView data:", data);
+  const { message } = App.useApp();
   const router = useRouter();
   return (
     <section className="py-6 w-full max-w-[1140px]">
       <div className="grid grid-cols-3 items-center w-full gap-5">
         {data.map((item: PurchaseOrderDto) => {
+          const updateStatus = useUpdate(`purchase-orders`);
+
           const items: MenuProps["items"] = [
             {
               label: <div className="text-sm !w-32">View</div>,
@@ -72,8 +76,23 @@ export default function PoCardView({
                 ),
                 key: "approve",
                 icon: <CheckOutlined style={{ color: "#52C41A" }} />,
-                onClick: () => {
-                  // Handle approve action here
+                onClick: async () => {
+                  await updateStatus.mutateAsync(
+                    {
+                      data: { status: "Approved", reason: "Approve PO" },
+                      id: item.id.toString(),
+                    },
+                    {
+                      onSuccess: () => {
+                        message.success("Purchase order approved successfully");
+                      },
+                      onError: (error: any) => {
+                        message.error(
+                          error?.message || "Failed to approve purchase order"
+                        );
+                      },
+                    }
+                  );
                 },
               }
             );
@@ -95,8 +114,26 @@ export default function PoCardView({
                 ),
                 key: "cancel approval",
                 icon: <RollbackOutlined style={{ color: "#FAAD14" }} />,
-                onClick: () => {
-                  // Handle cancel approval action here
+                onClick: async () => {
+                  await updateStatus.mutateAsync(
+                    {
+                      data: { status: "Draft", reason: "Cancel Approval" },
+                      id: item.id.toString(),
+                    },
+                    {
+                      onSuccess: () => {
+                        message.success(
+                          "Purchase order approval cancelled successfully"
+                        );
+                      },
+                      onError: (error: any) => {
+                        message.error(
+                          error?.message ||
+                            "Failed to update purchase order status"
+                        );
+                      },
+                    }
+                  );
                 },
               }
             );
@@ -159,7 +196,10 @@ export default function PoCardView({
                       trigger={["click"]}
                       placement="bottomRight"
                     >
-                      <Button icon={<EllipsisOutlined />} />
+                      <Button
+                        icon={<EllipsisOutlined />}
+                        loading={updateStatus.isPending}
+                      />
                     </Dropdown>
                   </Col>
                 </Row>

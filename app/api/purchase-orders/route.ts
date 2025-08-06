@@ -408,7 +408,6 @@ export async function GET(
     statistics: await getStatistics({ status: statusParam ?? undefined }),
   };
 
-  // console.log("Get Purchase Orders Response:", GetPurchaseOrderResponse);
   return NextResponse.json(
     success<PurchaseOrderResponse>(
       GetPurchaseOrderResponse,
