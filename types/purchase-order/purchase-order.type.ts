@@ -47,6 +47,7 @@ export interface PurchaseOrderResponse {
   statistics: {
     total: number;
     total_approved: number;
+    total_draft: number;
     total_usd_value: number;
     invoiced_percentage: number;
     allocated_percentage: number;

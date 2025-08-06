@@ -86,15 +86,19 @@ export default function PurchaseOrdersPage() {
           borderColor: "#91d5ff",
           tooltip: "Total number of purchase orders",
           total_approved: poData.statistics.total_approved,
-          footerContent: (
-            <>
+          footerContent: (status === "All Status" || !status) && (
+            <div className="flex justify-between items-center gap-6">
               <Badge
-                count={poData.statistics.total_approved}
                 status="success"
-                text="Approved POs"
-                // style={{ backgroundColor: "#52c41a" }}
+                color="#52c41a"
+                text={`${poData.statistics.total_approved || 0} Approved`}
               />
-            </>
+              <Badge
+                status="warning"
+                color="#faad14"
+                text={`${poData.statistics.total_draft || 0} Draft`}
+              />
+            </div>
           ),
         },
         {
@@ -107,7 +111,7 @@ export default function PurchaseOrdersPage() {
           tooltip: "Total value of all purchase orders",
           prefix: "$",
           approved_text: "approved POs",
-          footerContent: (
+          footerContent: (status === "Approved" || !status) && (
             <Typography.Text type="secondary">
               Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
@@ -122,7 +126,7 @@ export default function PurchaseOrdersPage() {
           borderColor: "#ADC6FF",
           tooltip: "Percentage of total POs that have been invoiced",
           suffix: "%",
-          footerContent: (
+          footerContent: (status === "Approved" || !status) && (
             <Typography.Text type="secondary">
               Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
@@ -137,7 +141,7 @@ export default function PurchaseOrdersPage() {
           borderColor: "#D3ADF7",
           tooltip: "Percentage of total POs that have been allocated",
           suffix: "%",
-          footerContent: (
+          footerContent: (status === "Approved" || !status) && (
             <Typography.Text type="secondary">
               Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>

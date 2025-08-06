@@ -98,6 +98,118 @@ export async function POST(
 }
 
 /**
+ * This function retrieves statistics for purchase orders.
+ * It calculates the total number of orders by status, the total USD value of orders,
+ * and the percentage of orders that have been invoiced and allocated.
+ * @returns Promise<{ total_orders: number, total_approved: number, total_draft: number,
+ *  total_usd: allocated_percentage, invoiced_percentage: number }>
+ */
+async function getStatistics({ status }: { status?: string }): Promise<{
+  total: number;
+  total_approved: number;
+  total_draft: number;
+  total_usd_value: number;
+  allocated_percentage: number;
+  invoiced_percentage: number;
+}> {
+  const supabase = await createClient();
+
+  const fields = `
+    id,
+    status,
+    usd_exchange_rate,
+    purchase_order_items (
+      product_id,
+      quantity,
+      unit_price_local
+    ),
+    budget_allocation (
+      id,
+      po_id,
+      allocation_amount,
+      status,
+      exchange_rate_usd
+    ),
+    purchase_invoice (
+      id,
+      purchase_order_id,
+      status,
+      exchange_rate_to_usd,
+      purchase_invoice_item (
+        quantity,
+        unit_price_local
+      )
+    )
+  `;
+
+  let query = supabase
+    .from("purchase_order")
+    .select(fields, { count: "exact" });
+
+  if (status) query = query.eq("status", status);
+
+  const { data: orders, error: statsError, count } = await query;
+
+  if (statsError) throw new Error(statsError.message);
+
+  const totalOrders = count || 0;
+  const approvedOrders = orders?.filter((o) => o.status === "Approved") || [];
+  const totalDraft = orders?.filter((o) => o.status === "Draft").length || 0;
+
+  const totalUsd = approvedOrders.reduce((total, order) => {
+    const localAmount =
+      order.purchase_order_items?.reduce(
+        (sum, item) => sum + item.quantity * item.unit_price_local,
+        0
+      ) || 0;
+    return total + localAmount / (order.usd_exchange_rate || 1);
+  }, 0);
+
+  const allocatedAmount = approvedOrders.reduce((total, order) => {
+    const allocations = order.budget_allocation || [];
+    return (
+      total +
+      allocations.reduce((sum, alloc) => {
+        return (
+          sum + (alloc.allocation_amount || 0) / (alloc.exchange_rate_usd || 1)
+        );
+      }, 0)
+    );
+  }, 0);
+
+  const invoicedAmount = approvedOrders.reduce((total, order) => {
+    const invoices = order.purchase_invoice || [];
+    return (
+      total +
+      invoices.reduce((sum, invoice) => {
+        const items = invoice.purchase_invoice_item || [];
+        const invoiceTotal = items.reduce(
+          (itemSum, item) => itemSum + item.quantity * item.unit_price_local,
+          0
+        );
+        return sum + invoiceTotal / (invoice.exchange_rate_to_usd || 1);
+      }, 0)
+    );
+  }, 0);
+
+  const allocatedPercentage =
+    totalUsd > 0 ? (allocatedAmount / totalUsd) * 100 : 0;
+  const invoicedPercentage =
+    totalUsd > 0 ? (invoicedAmount / totalUsd) * 100 : 0;
+
+  const stats = {
+    total: totalOrders,
+    total_approved: approvedOrders.length,
+    total_draft: totalDraft,
+    total_usd_value: totalUsd,
+    allocated_percentage: Number(allocatedPercentage.toFixed(2)),
+    invoiced_percentage: Number(invoicedPercentage.toFixed(2)),
+  };
+
+  return stats;
+}
+
+/**
  * This API route retrieves all purchase orders with optional filtering and sorting.
  * @param req - NextRequest object
  * @returns NextResponse ApiResponse<PurchaseOrderInterface[]>
@@ -293,44 +405,10 @@ export async function GET(
     total: count || 0,
     page,
     pageSize: pageSize || "all",
-    statistics: {
-      total: count || 0,
-      total_approved: orders
-        ? orders.filter((order) => order.status === "Approved").length
-        : 0,
-      total_usd_value: orders
-        ? orders
-            .filter((order) => order.status === "Approved")
-            .reduce((total, order) => total + order.amount_usd, 0)
-        : 0,
-      invoiced_percentage: orders
-        ? Number(
-            (
-              (orders.reduce(
-                (total, order) => total + order.invoiced_amount,
-                0
-              ) /
-                orders.reduce((total, order) => total + order.amount_usd, 0)) *
-              100
-            ).toFixed(2) || 0.0
-          )
-        : 0.0,
-      allocated_percentage: orders
-        ? Number(
-            (
-              (orders.reduce(
-                (total, order) => total + order.allocated_amount,
-                0
-              ) /
-                orders.reduce((total, order) => total + order.amount_usd, 0)) *
-              100
-            ).toFixed(2) || 0.0
-          )
-        : 0.0,
-    },
+    statistics: await getStatistics({ status: statusParam ?? undefined }),
   };
 
-  console.log("Get Purchase Orders Response:", GetPurchaseOrderResponse);
+  // console.log("Get Purchase Orders Response:", GetPurchaseOrderResponse);
   return NextResponse.json(
     success<PurchaseOrderResponse>(
       GetPurchaseOrderResponse,
