@@ -323,11 +323,7 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                             ]}
                             style={{ marginBottom: 0 }}
                           >
-                            <InputNumber
-                              min={0}
-                              style={{ width: "100%" }}
-                              disabled={items[name]?.foc}
-                            />
+                            <InputNumber min={0} style={{ width: "100%" }} />
                           </Form.Item>
                         </Col>
 
