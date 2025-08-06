@@ -17,7 +17,7 @@ export interface Budget {
   unutilized_amount_usd?: number;
   utilization_percentage?: number;
   po_count?: number;
-  total_po_value?: number;
+  total_po_value_usd?: number;
   created_by?: string;
   created_at?: string;
   updated_at?: string;
@@ -46,8 +46,6 @@ export interface BudgetResponse {
     totalAllocated: number;
     totalInvoiced: number;
     averageUtilization: number;
-    budgetsOverUtilized: number;
-    budgetsUnderUtilized: number;
     invoicedVsAllocatedPercentage: number;
     allocatedVsPlannedPercentage: number;
   };

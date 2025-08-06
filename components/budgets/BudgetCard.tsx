@@ -399,7 +399,7 @@ const BudgetCard = ({ data, onStatusChange }: BudgetsSectionProps) => {
                 <Typography.Text
                   style={{ fontSize: 12, fontWeight: 400, color: "#00000073" }}
                 >
-                  Total PO Value: $ {budget.total_po_value}
+                  Total PO Value: $ {budget.total_po_value_usd}
                 </Typography.Text>
               </Flex>
             </Card>
