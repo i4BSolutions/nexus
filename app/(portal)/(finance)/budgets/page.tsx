@@ -1,29 +1,30 @@
 "use client";
 
 import BudgetCard from "@/components/budgets/BudgetCard";
-import BudgetStatsCard, {
-  StatItem,
-} from "@/components/budgets/BudgetStatsCard";
+import BudgetStatsCard from "@/components/budgets/BudgetStatsCard";
 import TableView from "@/components/budgets/TableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
+import { useSoftDeleteBudget } from "@/hooks/budget-statistics/useSoftDeleteBudget";
 import { useList } from "@/hooks/react-query/useList";
-import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
+import { usePermission } from "@/hooks/shared/usePermission";
 import {
-  DollarCircleOutlined,
-  DownCircleOutlined,
-  PlusOutlined,
-  UpCircleOutlined,
-} from "@ant-design/icons";
-import { Empty, Flex, Spin, Input, Select, Button, Segmented } from "antd";
+  Budget,
+  BudgetResponse,
+  BudgetStatistics,
+} from "@/types/budgets/budgets.type";
+import { mapBudgetStatsToItems } from "@/utils/mapStatistics";
+import { DollarCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { useQuery } from "@tanstack/react-query";
+import { Button, Empty, Flex, Input, Segmented, Select, Spin } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
-import { useSoftDeleteBudget } from "@/hooks/budget-statistics/useSoftDeleteBudget";
 
 export default function BudgetsPage() {
+  const hasPermission = usePermission("can_manage_budget_allocations");
+
   const router = useRouter();
 
   const [viewMode, setViewMode] = useState<"Card" | "Table">("Card");
@@ -182,6 +183,7 @@ export default function BudgetsPage() {
         onAddNew={handleAddNewBudget}
         buttonText="New Budget"
         buttonIcon={<PlusOutlined />}
+        hasPermission={hasPermission}
       />
 
       <BudgetStatsCard stats={statItems} />
@@ -257,10 +259,11 @@ export default function BudgetsPage() {
           {viewMode === "Card" ? (
             <BudgetCard
               data={budgets}
+              hasPermission={hasPermission}
               onStatusChange={handleSoftDeleteBudget}
             />
           ) : (
-            <TableView data={budgets.items} />
+            <TableView data={budgets.items} hasPermission={hasPermission} />
           )}
         </>
       )}

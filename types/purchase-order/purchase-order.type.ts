@@ -48,3 +48,15 @@ export interface PurchaseOrderResponse {
     allocated_percentage: number;
   };
 }
+
+export interface PurchaseOrderHistory {
+  id: number;
+  purchase_order_id: number;
+  changed_at: string;
+  changed_by: string;
+  changed_field: string;
+  new_values: string;
+  old_values: string;
+  reason: string;
+  reason_created_at: string;
+}

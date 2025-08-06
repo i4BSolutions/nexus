@@ -3,14 +3,14 @@
 import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
 import {
   Card,
-  Tag,
-  Progress,
-  Tooltip,
-  Row,
   Col,
   Empty,
-  Typography,
   Popover,
+  Progress,
+  Row,
+  Tag,
+  Tooltip,
+  Typography,
   Flex,
 } from "antd";
 import {
@@ -28,9 +28,14 @@ import { useState } from "react";
 type BudgetsSectionProps = {
   data: BudgetResponse;
   onStatusChange: (budget: Budget) => void;
+  hasPermission?: boolean;
 };
 
-const BudgetCard = ({ data, onStatusChange }: BudgetsSectionProps) => {
+const BudgetCard = ({
+  data,
+  onStatusChange,
+  hasPermission = false,
+}: BudgetsSectionProps) => {
   const budgets = data.items;
 
   const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
@@ -94,49 +99,51 @@ const BudgetCard = ({ data, onStatusChange }: BudgetsSectionProps) => {
                     </div>
                   </div>
                 </div>
-                <Popover
-                  content={
-                    <div style={{ width: 160 }}>
-                      <div
-                        onClick={() => {
-                          onStatusChange?.(budget);
-                          setOpenPopoverId(null);
-                        }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {budget.status ? (
-                          <StopOutlined style={{ marginRight: 8 }} />
-                        ) : (
-                          <CheckCircleOutlined style={{ marginRight: 8 }} />
-                        )}
-                        <span>{budget.status ? "Inactive" : "Active"}</span>
+                {hasPermission && (
+                  <Popover
+                    content={
+                      <div style={{ width: 160 }}>
+                        <div
+                          onClick={() => {
+                            onStatusChange?.(budget);
+                            setOpenPopoverId(null);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {budget.status ? (
+                            <StopOutlined style={{ marginRight: 8 }} />
+                          ) : (
+                            <CheckCircleOutlined style={{ marginRight: 8 }} />
+                          )}
+                          <span>{budget.status ? "Inactive" : "Active"}</span>
+                        </div>
                       </div>
-                    </div>
-                  }
-                  open={openPopoverId === budget.id}
-                  onOpenChange={(visible) => {
-                    setOpenPopoverId(visible ? budget.id : null);
-                  }}
-                  trigger="click"
-                  placement="bottomRight"
-                >
-                  <EllipsisOutlined
-                    style={{
-                      cursor: "pointer",
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      border: "1px solid #d9d9d9",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                    }
+                    open={openPopoverId === budget.id}
+                    onOpenChange={(visible) => {
+                      setOpenPopoverId(visible ? budget.id : null);
                     }}
-                  />
-                </Popover>
+                    trigger="click"
+                    placement="bottomRight"
+                  >
+                    <EllipsisOutlined
+                      style={{
+                        cursor: "pointer",
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        border: "1px solid #d9d9d9",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    />
+                  </Popover>
+                )}
               </div>
 
               {/* Card Body */}

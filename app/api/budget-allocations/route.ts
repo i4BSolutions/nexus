@@ -58,7 +58,6 @@ export async function GET(
   let allocatedUSDQuery = supabase
     .from("budget_allocation")
     .select("*")
-    .eq("status", "Approved")
     .neq("status", "Canceled");
 
   if (q)

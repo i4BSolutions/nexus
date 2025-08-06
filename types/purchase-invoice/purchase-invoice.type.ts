@@ -29,6 +29,9 @@ export interface PurchaseInvoiceDto {
   total_amount_usd: number;
   status: string;
   note?: string;
+  supplier_name?: string;
+  delivered_percentage?: number;
+  pending_delivery_percentage?: number;
 }
 
 export interface PurchaseInvoiceResponse {

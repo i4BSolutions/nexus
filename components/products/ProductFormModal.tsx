@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  App,
   Button,
   Divider,
   Form,
@@ -52,6 +53,7 @@ export default function ProductFormModal({
   onCreateCategory,
   loading = false,
 }: ProductFormModalProps) {
+  const { message } = App.useApp();
   const isEdit = mode === "edit";
 
   const {

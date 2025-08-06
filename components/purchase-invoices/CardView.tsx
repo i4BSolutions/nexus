@@ -19,21 +19,23 @@ import {
   Space,
   Typography,
 } from "antd";
+import Link from "antd/es/typography/Link";
+import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
-import dayjs from "dayjs";
-import Link from "antd/es/typography/Link";
 
 export default function CardView({
   data,
   pagination,
   total,
   paginationChangeHandler,
+  hasPermission = false,
 }: {
   data: PurchaseInvoiceDto[];
   pagination: { page: number; pageSize: number };
   total: number;
   paginationChangeHandler: (page: number, pageSize?: number) => void;
+  hasPermission?: boolean;
 }) {
   const router = useRouter();
 
@@ -57,6 +59,7 @@ export default function CardView({
               label: <span className="text-sm !w-32">Edit</span>,
               key: "edit",
               icon: <EditOutlined />,
+              disabled: !hasPermission,
               onClick: () => {
                 router.push(`/invoices/${item.id}/edit`);
               },
@@ -189,7 +192,10 @@ export default function CardView({
                       Delivery Progress
                     </Typography.Text>
                   </Col>
-                  <Progress percent={19} strokeColor="#52C41A" />
+                  <Progress
+                    percent={item.delivered_percentage}
+                    strokeColor="#52C41A"
+                  />
                   <Space
                     style={{
                       width: "100%",
@@ -210,7 +216,7 @@ export default function CardView({
                           maxWidth: "fit-content",
                         }}
                       >
-                        10% Delivered
+                        {item.delivered_percentage}% Delivered
                       </div>
                     </Space>
                     <Space>
@@ -226,7 +232,7 @@ export default function CardView({
                           maxWidth: "fit-content",
                         }}
                       >
-                        90% Pending
+                        {item.pending_delivery_percentage}% Pending
                       </div>
                     </Space>
                   </Space>

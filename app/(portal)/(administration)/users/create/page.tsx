@@ -36,6 +36,7 @@ import { useState } from "react";
 export default function UserCreationPage() {
   const router = useRouter();
   const { message } = App.useApp();
+  const [form] = Form.useForm<UserFieldType>();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -137,8 +138,9 @@ export default function UserCreationPage() {
         </Space>
       </Space>
 
-      <Form
+      <Form<UserFieldType>
         name="user-creation-form"
+        form={form}
         layout="vertical"
         autoComplete="off"
         onFinish={onFinish}
@@ -158,6 +160,18 @@ export default function UserCreationPage() {
           manage_budgets_allocations: false,
           view_dashboard: false,
           manage_users: false,
+        }}
+        onValuesChange={(changed) => {
+          const changedKey = Object.keys(changed)[0];
+          if (changedKey.startsWith("manage_stock_")) {
+            const correspondingViewKey = "view_stock";
+            form.setFieldsValue({ [correspondingViewKey]: true });
+            return;
+          }
+          if (changedKey.startsWith("manage_")) {
+            const correspondingViewKey = changedKey.replace("manage_", "view_");
+            form.setFieldsValue({ [correspondingViewKey]: true });
+          }
         }}
       >
         {/* User Information */}
@@ -289,49 +303,43 @@ export default function UserCreationPage() {
             </Col>
 
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="view_purchase_orders"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">View Purchase Orders</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can view purchase order list and details
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="view_purchase_orders"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">View Purchase Orders</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can view purchase order list and details
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
 
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="manage_purchase_orders"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">Manage Purchase Orders</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can create, edit, and delete purchase orders
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="manage_purchase_orders"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">Manage Purchase Orders</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can create, edit, and delete purchase orders
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
           </Row>
           <Row
@@ -354,50 +362,46 @@ export default function UserCreationPage() {
               <span className=" text-lg font-semibold">Invoices</span>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="view_invoices"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">View Invoices</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can view invoice list and details
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="view_invoices"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">View Invoices</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can view invoice list and details
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="manage_invoices"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">Manage Invoices</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can create, edit, and delete invoices
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="manage_invoices"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">Manage Invoices</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can create, edit, and delete invoices
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
           </Row>
+
+          {/* Products & Suppliers */}
           <Row
             style={{
               borderBottom: "2px solid #F5F5F5",
@@ -420,48 +424,42 @@ export default function UserCreationPage() {
               </span>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="view_products_suppliers"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">View Products & Suppliers</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can view list and details of products & suppliers
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="view_products_suppliers"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">View Products & Suppliers</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can view list and details of products & suppliers
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="manage_products_suppliers"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">Manage Products & Suppliers</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can create, edit, and delete products & suppliers
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="manage_products_suppliers"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">Manage Products & Suppliers</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can create, edit, and delete products & suppliers
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
           </Row>
 
@@ -486,70 +484,64 @@ export default function UserCreationPage() {
               <span className=" text-lg font-semibold">Stock Management</span>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="view_stock"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">View Stock</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can view inventory and stock movements
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="view_stock"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">View Stock</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can view inventory and stock movements
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
-            <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="manage_stock_in"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 12,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">Record Stock-In</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can record incoming stock movements
-                    </Typography.Text>
-                  </div>
+            <Col span={8} className="!space-y-2">
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="stock_in"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">Record Stock-In</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can record incoming stock movements
+                  </Typography.Text>
                 </div>
-              </Form.Item>
-              <Form.Item<UserFieldType>
-                name="manage_stock_out"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">Record Stock-Out</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can record outgoing stock movements
-                    </Typography.Text>
-                  </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="stock_out"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">Record Stock-Out</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can record outgoing stock movements
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
           </Row>
+
+          {/* Warehouses */}
           <Row
             style={{
               borderBottom: "2px solid #F5F5F5",
@@ -570,50 +562,46 @@ export default function UserCreationPage() {
               <span className=" text-lg font-semibold">Warehouses</span>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="view_warehouses"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">View Warehouses</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can view warehouse list and details
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="view_warehouses"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">View Warehouses</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can view warehouse list and details
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="manage_warehouses"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">Manage Warehouses</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can create, edit, and delete warehouses
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="manage_warehouses"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">Manage Warehouses</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can create, edit, and delete warehouses
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
           </Row>
+
+          {/* Budget Management */}
           <Row
             style={{
               borderBottom: "2px solid #F5F5F5",
@@ -634,50 +622,42 @@ export default function UserCreationPage() {
               <span className=" text-lg font-semibold">Budget Management</span>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="view_budgets_allocations"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">View Budgets & Allocations</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can view budgets & allocations
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="view_budgets_allocations"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">View Budgets & Allocations</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can view budgets & allocations
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="manage_budgets_allocations"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">
-                      Manage Budgets & Allocations
-                    </span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can create, edit, and allocate budgets
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="manage_budgets_allocations"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">Manage Budgets & Allocations</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can create, edit, and allocate budgets
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
           </Row>
           <Row

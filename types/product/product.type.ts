@@ -10,6 +10,7 @@ export interface ProductInterface {
   description: string;
   created_at: string;
   updated_at: string;
+  current_stock?: number;
 }
 
 export interface ProductCurrencyInterface {
@@ -41,4 +42,35 @@ export interface ProductPriceHistoryInterface {
 
 export interface ProductPriceHistoryResponse {
   items: ProductPriceHistoryInterface[];
+}
+
+export interface LastStockMovement {
+  date: string | undefined;
+  type: "IN" | "OUT" | undefined;
+  quantity: number | undefined;
+  invoice_id: number | undefined;
+  processed_by: string | undefined;
+  warehouse_name: string | undefined;
+}
+
+export interface ProductPurchaseOrder {
+  purchase_order_no: string;
+  supplier_name: string;
+  order_date: string;
+  quantity: number;
+  unit_price: string;
+  amount: string;
+  amount_usd: string;
+  status: string;
+}
+
+export interface ProductUsageHistory {
+  product_id: number;
+  current_stock: number;
+  minimum_stock: number;
+  last_stock_movement: LastStockMovement | null;
+  purchase_orders: ProductPurchaseOrder[];
+  page?: number;
+  pageSize?: number;
+  total?: number;
 }

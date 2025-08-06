@@ -1,5 +1,6 @@
 "use client";
 
+import EditHistory from "@/components/purchase-orders/detail/EditHistory";
 import PoCancelModal from "@/components/purchase-orders/detail/PoCancelModal";
 import PoDetailPDF from "@/components/purchase-orders/detail/PoDetailPdf";
 import PoDetailView from "@/components/purchase-orders/detail/PoDetailView";
@@ -8,7 +9,9 @@ import StatusBadge from "@/components/purchase-orders/StatusBadge";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { usePermission } from "@/hooks/shared/usePermission";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
+import { PurchaseOrderHistory } from "@/types/purchase-order/purchase-order.type";
 import {
   ArrowLeftOutlined,
   CheckCircleOutlined,
@@ -39,6 +42,7 @@ export default function PurchaseOrderDetailPage() {
   const { message } = App.useApp();
 
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const hasPermission = usePermission("can_manage_purchase_orders");
 
   const { data: detailData, isLoading } = useGetById<PurchaseOrderDetailDto>(
     "purchase-orders",
@@ -50,6 +54,18 @@ export default function PurchaseOrderDetailPage() {
     "purchase-orders",
     params.id as string,
   ]);
+
+  const {
+    data: historyDataRaw,
+    isLoading: historyLoading,
+    error: historyError,
+  } = useGetById(
+    "purchase-orders/edit-history",
+    params.id as string,
+    !!params.id
+  );
+
+  const historyData = historyDataRaw as PurchaseOrderHistory[];
 
   const updatePUrchaseOrderStatus = useUpdate(
     "purchase-orders/cancel-purchase-order",
@@ -90,7 +106,12 @@ export default function PurchaseOrderDetailPage() {
     {
       key: "usage-history",
       label: "Usage History",
-      children: <PoUsageHistory />,
+      children: <PoUsageHistory id={params.id as string} />,
+    },
+    {
+      key: "edit-history",
+      label: "Edit History",
+      children: <EditHistory data={historyData} />,
     },
   ];
 
@@ -159,22 +180,26 @@ export default function PurchaseOrderDetailPage() {
                   Download PDF
                 </PDFDownloadLink>
               </Button>
-              <Button
-                type="primary"
-                icon={<EditOutlined />}
-                onClick={() =>
-                  router.push(`/purchase-orders/${params.id}/edit`)
-                }
-              >
-                Edit PO
-              </Button>
-              <Dropdown
-                menu={{ items: dropDownItems }}
-                trigger={["click"]}
-                placement="bottomRight"
-              >
-                <Button icon={<EllipsisOutlined />} />
-              </Dropdown>
+              {hasPermission && (
+                <>
+                  <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    onClick={() =>
+                      router.push(`/purchase-orders/${params.id}/edit`)
+                    }
+                  >
+                    Edit PO
+                  </Button>
+                  <Dropdown
+                    menu={{ items: dropDownItems }}
+                    trigger={["click"]}
+                    placement="bottomRight"
+                  >
+                    <Button icon={<EllipsisOutlined />} />
+                  </Dropdown>
+                </>
+              )}
             </Flex>
           </Flex>
         </div>
