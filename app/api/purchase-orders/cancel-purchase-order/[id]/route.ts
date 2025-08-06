@@ -11,6 +11,19 @@ export async function PUT(
   const supabase = await createClient();
   const { id } = await context.params;
 
+  const { data: invoice, error: invoiceError } = await supabase
+    .from("purchase_invoice")
+    .select("id")
+    .eq("purchase_order_id", id)
+    .single();
+
+  if (invoice) {
+    return NextResponse.json(
+      error("Cannot cancel purchase order with an associated invoice"),
+      { status: 400 }
+    );
+  }
+
   const { error: statusError } = await supabase
     .from("purchase_order_smart_status")
     .update({ status: "Cancel" })
