@@ -2,13 +2,6 @@
 
 import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
 import {
-  CheckCircleOutlined,
-  DollarCircleOutlined,
-  EllipsisOutlined,
-  InfoCircleOutlined,
-  StopOutlined,
-} from "@ant-design/icons";
-import {
   Card,
   Col,
   Empty,
@@ -18,7 +11,17 @@ import {
   Tag,
   Tooltip,
   Typography,
+  Flex,
 } from "antd";
+import {
+  InfoCircleOutlined,
+  DollarCircleOutlined,
+  EllipsisOutlined,
+  StopOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
+  ShoppingCartOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useState } from "react";
 
@@ -379,6 +382,33 @@ const BudgetCard = ({
                   />
                 </div>
               </div>
+              <Flex
+                justify="space-between"
+                align="center"
+                style={{
+                  borderTop: "1px solid #f0f0f0",
+                  backgroundColor: "#FAFAFA",
+                  padding: 14,
+                  fontSize: 13,
+                  color: "#595959",
+                }}
+              >
+                <Typography.Text
+                  style={{ fontSize: 12, fontWeight: 400, color: "#00000073" }}
+                >
+                  <ShoppingCartOutlined
+                    style={{
+                      marginRight: 4,
+                    }}
+                  />
+                  {budget.po_count} POs
+                </Typography.Text>
+                <Typography.Text
+                  style={{ fontSize: 12, fontWeight: 400, color: "#00000073" }}
+                >
+                  Total PO Value: $ {budget.total_po_value_usd}
+                </Typography.Text>
+              </Flex>
             </Card>
           </Col>
         ))}
