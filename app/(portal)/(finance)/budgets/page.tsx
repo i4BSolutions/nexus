@@ -1,7 +1,9 @@
 "use client";
 
 import BudgetCard from "@/components/budgets/BudgetCard";
-import BudgetStatsCard from "@/components/budgets/BudgetStatsCard";
+import BudgetStatsCard, {
+  StatItem,
+} from "@/components/budgets/BudgetStatsCard";
 import TableView from "@/components/budgets/TableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
@@ -14,7 +16,12 @@ import {
   BudgetStatistics,
 } from "@/types/budgets/budgets.type";
 import { mapBudgetStatsToItems } from "@/utils/mapStatistics";
-import { DollarCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  DollarCircleOutlined,
+  DownCircleOutlined,
+  PlusOutlined,
+  UpCircleOutlined,
+} from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Empty, Flex, Input, Segmented, Select, Spin } from "antd";
 import { SearchProps } from "antd/es/input";
