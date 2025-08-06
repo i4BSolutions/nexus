@@ -4,7 +4,7 @@ import {
   CheckCircleTwoTone,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
-import { App, Flex, Spin, Tag, Typography } from "antd";
+import { App, Card, Col, Flex, Row, Spin, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import React from "react";
 
@@ -65,59 +65,163 @@ const BudgetAllocationLinkedPOView = ({ id }: { id: number }) => {
         </div>
       </Flex>
 
-      <div className="px-6 py-5">
-        <div className="grid grid-cols-6 font-semibold text-xs text-gray-500 pb-2">
-          <span>PURCHASE ORDER</span>
-          <span>SUPPLIER</span>
-          <span>ORDER DATE</span>
-          <span>EXPECTED DELIVERY DATE</span>
-          <span>AMOUNT</span>
-          <span>STATUS</span>
-        </div>
-        <div className="grid grid-cols-6 items-center text-sm py-3 px-4 rounded-xl border border-[#F0F0F0] bg-white shadow-sm">
+      <Card className="!px-0 !pb-0" variant="outlined">
+        {/* Header Row */}
+        <Row
+          gutter={0}
+          style={{
+            fontWeight: 600,
+            fontSize: 12,
+            padding: "12px 24px",
+            background: "#FAFAFA",
+            borderBottom: "1px solid #E0E0E0",
+          }}
+          align="middle"
+        >
+          <Col span={4}>PURCHASE ORDER</Col>
+          <Col span={4}>SUPPLIER</Col>
+          <Col span={4}>ORDER DATE</Col>
+          <Col span={4}>EXPECTED DELIVERY DATE</Col>
+          <Col span={4}>AMOUNT</Col>
+          <Col span={4}>STATUS</Col>
+        </Row>
+
+        {/* Data Row */}
+        <Row
+          gutter={0}
+          align="middle"
+          style={{
+            padding: "14px 24px",
+            backgroundColor: "white",
+            borderBottom: "1px solid #F0F0F0",
+          }}
+        >
           {/* Purchase Order Number */}
-          <div className="flex items-center gap-2 text-blue-500 font-medium">
-            PO-{linkedPOData?.purchase_order_no}
-            <CheckCircleTwoTone twoToneColor="#52c41a" />
-          </div>
+          <Col span={4}>
+            <div className="flex items-center gap-2 text-blue-500 font-medium">
+              PO-{linkedPOData?.purchase_order_no}
+              <CheckCircleTwoTone twoToneColor="#52c41a" />
+            </div>
+          </Col>
 
           {/* Supplier */}
-          <span>Supplier</span>
+          <Col span={4}>{linkedPOData?.supplier?.name}</Col>
 
           {/* Order Date */}
-          <Flex align="center" gap={6}>
-            <CalendarOutlined />
-            {dayjs(linkedPOData?.order_date).format("MMM D, YYYY")}
-          </Flex>
+          <Col span={4}>
+            <Flex align="center" gap={6}>
+              <CalendarOutlined />
+              {dayjs(linkedPOData?.order_date).format("MMM D, YYYY")}
+            </Flex>
+          </Col>
 
           {/* Expected Delivery */}
-          <Flex align="center" gap={6}>
-            <CalendarOutlined />
-            {dayjs(linkedPOData?.expected_delivery_date).format("MMM D, YYYY")}
-          </Flex>
+          <Col span={4}>
+            <Flex align="center" gap={6}>
+              <CalendarOutlined />
+              {dayjs(linkedPOData?.expected_delivery_date).format(
+                "MMM D, YYYY"
+              )}
+            </Flex>
+          </Col>
 
           {/* Amount */}
-          <div>
-            {linkedPOData?.amount_local.toLocaleString(undefined, {
+          <Col span={4}>
+            {linkedPOData?.total_amount_local.toLocaleString(undefined, {
               minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
             })}{" "}
-            {linkedPOData?.currency_code}
+            {linkedPOData?.currency?.currency_code}
             <br />
-            <Typography.Text type="secondary">
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               (
-              {linkedPOData?.amount_usd.toLocaleString(undefined, {
+              {linkedPOData?.total_amount_usd.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
               })}{" "}
               USD)
             </Typography.Text>
-          </div>
+          </Col>
 
           {/* Status */}
-          <Tag color="blue" style={{ borderRadius: 6 }}>
-            {linkedPOData?.status}
-          </Tag>
-        </div>
-      </div>
+          <Col span={4}>
+            <Tag
+              color="blue"
+              style={{
+                borderRadius: 16,
+                padding: "0 12px",
+                fontSize: 13,
+                fontWeight: 500,
+              }}
+            >
+              {linkedPOData?.status}
+            </Tag>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* <Card style={{ border: "1px solid #e0e0e0", borderRadius: 8 }}>
+        <Row
+          gutter={16}
+          style={{
+            fontWeight: 600,
+            // padding: "12px",
+            background: "#fafafa",
+            borderBottom: "1px solid #e0e0e0",
+          }}
+          align="middle"
+        >
+          <Col span={4}>PURCHASE ORDER</Col>
+          <Col span={4}>SUPPLIER</Col>
+          <Col span={4}>ORDER DATE</Col>
+          <Col span={4}>EXPECTED DELIVERY DATE</Col>
+          <Col span={4}>AMOUNT</Col>
+          <Col span={4}>STATUS</Col>
+        </Row>
+        <Row
+          gutter={16}
+          align="middle"
+          style={{
+            // padding: "2px 20px",
+            borderBottom: "1px solid #f0f0f0",
+          }}
+        >
+          <Col span={4}>
+            <div className="flex items-center gap-2 text-blue-500 font-medium">
+              PO-{linkedPOData?.purchase_order_no}
+              <CheckCircleTwoTone twoToneColor="#52c41a" />
+            </div>
+          </Col>
+          <Col span={4}>{linkedPOData?.supplier?.name}</Col>
+          <Col span={4}>
+            <Flex align="center" gap={6}>
+              <CalendarOutlined />
+              {dayjs(linkedPOData?.order_date).format("MMM D, YYYY")}
+            </Flex>
+          </Col>
+          <Col span={4}>
+            <Flex align="center" gap={6}>
+              <CalendarOutlined />
+              {dayjs(linkedPOData?.expected_delivery_date).format(
+                "MMM D, YYYY"
+              )}
+            </Flex>
+          </Col>
+          <Col span={4}>
+            {linkedPOData?.total_amount_local.toFixed(2)}{" "}
+            {linkedPOData?.currency?.currency_code}
+            <br />
+            <Typography.Text type="secondary">
+              ({linkedPOData?.total_amount_usd.toFixed(2)} USD)
+            </Typography.Text>
+          </Col>
+          <Col span={4}>
+            <Tag color="blue" style={{ borderRadius: 6, textAlign: "center" }}>
+              {linkedPOData?.status}
+            </Tag>
+          </Col>
+        </Row>
+      </Card> */}
     </section>
   );
 };
