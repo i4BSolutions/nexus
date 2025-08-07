@@ -210,6 +210,13 @@ export async function POST(
     });
   }
 
+  const invoiceItemsTyped =
+    allInvoiceItemsRaw as unknown as PurchaseInvoiceItemWithInvoice[];
+
+  const allInvoiceItems = invoiceItemsTyped.filter(
+    (item) => item.purchase_invoice?.is_voided === false
+  );
+
   // Build maps
   const poQuantities: Record<number, number> = {};
   const invoicedQuantities: Record<number, number> = {};
