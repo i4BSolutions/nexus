@@ -18,19 +18,8 @@ export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
     return NextResponse.json(error(dbError.message), { status: 500 });
   }
 
-  if (!latestPiData) {
-    const defaultPiNo = "INV-2025-0001";
-
-    return NextResponse.json(
-      success(defaultPiNo, "Default PI number retrieved"),
-      {
-        status: 200,
-      }
-    );
-  }
-
   const generatedPiNumber = generatePiNumber(
-    latestPiData.purchase_invoice_number
+    latestPiData?.purchase_invoice_number ?? null
   );
 
   return NextResponse.json(
