@@ -312,66 +312,75 @@ export async function GET(
       .from("purchase_invoice")
       .select("id, purchase_order_id, exchange_rate_to_usd, is_voided");
 
+    const { data: poSmartStatuses } = await supabase
+      .from("purchase_order_smart_status")
+      .select("id, purchase_order_id, status, created_at");
+
+    const latestSmartStatusByPO: Record<number, string> = {};
+    poSmartStatuses
+      ?.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+      .forEach((s) => {
+        if (!latestSmartStatusByPO[s.purchase_order_id]) {
+          latestSmartStatusByPO[s.purchase_order_id] = s.status;
+        }
+      });
+
     const enrichedItems = paginated.map((budget) => {
       const planned_usd = Number(budget.planned_amount_usd || 0);
-
       const budgetPOs = pos?.filter((po) => po.budget_id === budget.id) || [];
       const poIds = budgetPOs.map((po) => po.id);
 
-      const budgetAllocs =
-        allocations?.filter((a) => poIds.includes(a.po_id)) || [];
-      const allocated = budgetAllocs.reduce(
+      const activePOIds = budgetPOs
+        .filter((po) => latestSmartStatusByPO[po.id] !== "Canceled")
+        .map((po) => po.id);
+
+      const activeAllocs =
+        allocations?.filter((a) => activePOIds.includes(a.po_id)) || [];
+
+      const allocated = activeAllocs.reduce(
         (sum, a) => sum + Number(a.equivalent_usd || 0),
         0
       );
 
-      const budgetInvoices =
+      const allocated_variance = planned_usd - allocated;
+
+      const allocation_pct =
+        planned_usd > 0 ? (allocated / planned_usd) * 100 : 0;
+
+      const relatedInvoices =
         invoices?.filter((i) => poIds.includes(i.purchase_order_id)) || [];
-
-      const validInvoices = budgetInvoices.filter((i) => !i.is_voided);
-
+      const validInvoices = relatedInvoices.filter((i) => !i.is_voided);
       const invoiced = validInvoices.reduce(
         (sum, i) => sum + (Number(i.exchange_rate_to_usd) || 0),
         0
       );
-
-      const totalInvoiceAmount = budgetInvoices.reduce(
-        (sum, i) => sum + (Number(i.exchange_rate_to_usd) || 0),
-        0
-      );
-
-      const unutilized_usd = allocated - totalInvoiceAmount;
-
-      const allocated_variance = planned_usd - allocated;
-      const allocation_pct =
-        planned_usd > 0 ? (allocated / planned_usd) * 100 : 0;
       const utilization_pct = allocated > 0 ? (invoiced / allocated) * 100 : 0;
 
+      const unutilized_usd = allocated - invoiced;
+
       let totalPOValueUSD = 0;
-
       for (const po of budgetPOs) {
-        const usdRate = Number(po.usd_exchange_rate || 1);
         const items =
-          poItems?.filter(
-            (item) => item.purchase_order_id === po.id && item.is_foc === false
-          ) || [];
-
-        const poTotalLocal = items.reduce((sum, item) => {
-          const qty = Number(item.quantity || 0);
-          const unitPrice = Number(item.unit_price_local || 0);
-          return sum + qty * unitPrice;
+          poItems?.filter((i) => i.purchase_order_id === po.id && !i.is_foc) ||
+          [];
+        const poTotal = items.reduce((sum, item) => {
+          return (
+            sum +
+            Number(item.quantity || 0) * Number(item.unit_price_local || 0)
+          );
         }, 0);
-
-        const poValueUSD = poTotalLocal;
-        totalPOValueUSD += poValueUSD;
+        totalPOValueUSD += poTotal;
       }
 
       return {
         ...budget,
         planned_amount_usd: planned_usd,
         allocated_amount_usd: Number(allocated.toFixed(2)),
-        invoiced_amount_usd: Number(invoiced.toFixed(2)),
         allocated_variance_usd: Number(allocated_variance.toFixed(2)),
+        invoiced_amount_usd: Number(invoiced.toFixed(2)),
         allocation_percentage: Number(allocation_pct.toFixed(2)),
         utilization_percentage: Number(utilization_pct.toFixed(2)),
         unutilized_amount_usd: Number(unutilized_usd.toFixed(2)),
@@ -415,13 +424,6 @@ export async function GET(
           validUtilizations.length
         : 0;
 
-    const budgetsOverUtilized = activeBudgets.filter(
-      (b) => b.utilization_percentage > 110
-    ).length;
-    const budgetsUnderUtilized = activeBudgets.filter(
-      (b) => b.utilization_percentage < 50
-    ).length;
-
     return NextResponse.json(
       success(
         {
@@ -443,8 +445,6 @@ export async function GET(
               invoicedVsAllocatedPercentage.toFixed(2)
             ),
             averageUtilization: Number(averageUtilization.toFixed(2)),
-            budgetsOverUtilized,
-            budgetsUnderUtilized,
           },
         },
         "Budgets retrieved successfully"
