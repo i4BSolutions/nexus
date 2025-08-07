@@ -402,6 +402,63 @@ export async function PUT(
     updatedInvoice
   );
 
+  // Step 1: Get all invoice IDs related to the purchase order
+  const { data: invoiceItems, error: invoiceItemsError } = await supabase
+    .from("purchase_invoice_item")
+    .select("purchase_invoice_id")
+    .eq("purchase_order_id", currentInvoice.purchase_order_id);
+
+  if (invoiceItemsError) {
+    console.error(
+      "Failed to fetch invoice items for PO:",
+      invoiceItemsError.message
+    );
+  } else {
+    const invoiceIds = Array.from(
+      new Set(invoiceItems.map((item) => item.purchase_invoice_id))
+    ); // Deduplicate in case of duplicates
+
+    if (invoiceIds.length > 0) {
+      // Step 2: Fetch all invoices using those IDs
+      const { data: relatedInvoices, error: fetchInvoicesError } =
+        await supabase
+          .from("purchase_invoice")
+          .select("id, is_voided")
+          .in("id", invoiceIds);
+
+      if (fetchInvoicesError) {
+        console.error(
+          "Error fetching related invoices:",
+          fetchInvoicesError.message
+        );
+      } else {
+        const anyNonVoided = relatedInvoices.some(
+          (inv) => inv.is_voided === false
+        );
+
+        if (!anyNonVoided) {
+          // All voided → mark PO as Not Started
+          const { error: updatePOStatusError } = await supabase
+            .from("purchase_order_smart_status")
+            .upsert(
+              {
+                purchase_order_id: currentInvoice.purchase_order_id,
+                status: "Not Started",
+              },
+              { onConflict: "purchase_order_id" }
+            );
+
+          if (updatePOStatusError) {
+            console.error(
+              "Failed to update PO smart status:",
+              updatePOStatusError.message
+            );
+          }
+        }
+      }
+    }
+  }
+
   if (!body.is_voided) {
     // Log the reason for update
     const { error: purchaseInvoiceUpdateReasonError } = await supabase
