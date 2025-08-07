@@ -190,10 +190,19 @@ export async function POST(
   }
 
   // Sum all previously invoiced quantities (including this invoice)
-  const { data: allInvoiceItems, error: allInvoiceItemsError } = await supabase
-    .from("purchase_invoice_item")
-    .select("product_id, quantity")
-    .eq("purchase_order_id", purchase_order_id);
+  const { data: allInvoiceItemsRaw, error: allInvoiceItemsError } =
+    await supabase
+      .from("purchase_invoice_item")
+      .select(
+        `
+          product_id,
+          quantity,
+          purchase_invoice:purchase_invoice_id (
+            is_voided
+          )
+        `
+      )
+      .eq("purchase_order_id", purchase_order_id);
 
   if (allInvoiceItemsError) {
     return NextResponse.json(error(allInvoiceItemsError.message), {
@@ -208,6 +217,7 @@ export async function POST(
   for (const item of allPOItems) {
     poQuantities[item.product_id] = item.quantity;
   }
+
   for (const item of allInvoiceItems) {
     invoicedQuantities[item.product_id] =
       (invoicedQuantities[item.product_id] || 0) + item.quantity;
