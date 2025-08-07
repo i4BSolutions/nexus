@@ -9,6 +9,14 @@ import {
 import { ApiResponse } from "@/types/shared/api-response-type";
 import { PurchaseOrderItemInterface } from "@/types/purchase-order/purchase-order-item.type";
 
+type PurchaseInvoiceItemWithInvoice = {
+  product_id: number;
+  quantity: number;
+  purchase_invoice: {
+    is_voided: boolean;
+  } | null;
+};
+
 // Step 1: Get Purchase Order Items Quantity
 async function getPurchaseOrderItems(
   purchase_order_id: number
@@ -30,48 +38,54 @@ async function getPurchaseOrderItems(
 
 // Step 2: Check if the purchase order items quantity is greater than the purchase invoice items quantity
 async function checkPurchaseOrderItemsQuantity(
-  purchaseOrderItems: any,
-  invoiceItems: any,
+  purchaseOrderItems: any[],
+  invoiceItems: any[],
   purchase_order_id: number
-) {
+): Promise<boolean> {
   const supabase = await createClient();
 
-  // Fetch all previous invoice items for this purchase order
   const { data: previousInvoiceItems, error } = await supabase
     .from("purchase_invoice_item")
-    .select("product_id, quantity")
+    .select("product_id, quantity, purchase_invoice(is_voided)")
     .eq("purchase_order_id", purchase_order_id);
 
   if (error) throw new Error(error.message);
 
-  // Sum previous quantities by product_id
-  const previousQuantities: Record<number, number> = {};
+  const typedItems =
+    previousInvoiceItems as unknown as PurchaseInvoiceItemWithInvoice[];
 
-  for (const item of previousInvoiceItems) {
+  // Filter out items linked to voided invoices
+  const validInvoiceItems = typedItems.filter(
+    (item) => item.purchase_invoice && item.purchase_invoice.is_voided === false
+  );
+
+  // Sum quantities
+  const previousQuantities: Record<number, number> = {};
+  for (const item of validInvoiceItems) {
     previousQuantities[item.product_id] =
       (previousQuantities[item.product_id] || 0) + item.quantity;
   }
 
-  // Map purchase order items by product_id for easy lookup
+  // Check each invoice item against remaining PO quantity
   const poItemMap = Object.fromEntries(
-    purchaseOrderItems.map((item: any) => [item.product_id, item])
+    purchaseOrderItems.map((item) => [item.product_id, item])
   );
 
-  // Check each item in the new invoice
   for (const invoiceItem of invoiceItems) {
     const poItem = poItemMap[invoiceItem.product_id];
-    if (!poItem) return false; // Product not in purchase order
+    if (!poItem) return false;
 
     const prevQty = previousQuantities[invoiceItem.product_id] || 0;
     const availableQty = poItem.quantity - prevQty;
 
     if (invoiceItem.quantity > availableQty) {
-      return false; // Exceeds available quantity
+      return false;
     }
   }
 
   return true;
 }
+
 /**
  * This API route creates a purchase invoice.
  * @param req - NextRequest object
