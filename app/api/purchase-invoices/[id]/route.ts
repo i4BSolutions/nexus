@@ -454,6 +454,24 @@ export async function PUT(
               updatePOStatusError.message
             );
           }
+        } else {
+          // At least one non-voided invoice → mark PO as Partially Invoiced
+          const { error: updatePOStatusError } = await supabase
+            .from("purchase_order_smart_status")
+            .upsert(
+              {
+                purchase_order_id: currentInvoice.purchase_order_id,
+                status: "Partially Invoiced",
+              },
+              { onConflict: "purchase_order_id" }
+            );
+
+          if (updatePOStatusError) {
+            console.error(
+              "Failed to update PO smart status:",
+              updatePOStatusError.message
+            );
+          }
         }
       }
     }
