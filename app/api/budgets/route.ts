@@ -334,7 +334,7 @@ export async function GET(
       const poIds = budgetPOs.map((po) => po.id);
 
       const activePOIds = budgetPOs
-        .filter((po) => latestSmartStatusByPO[po.id] !== "Canceled")
+        .filter((po) => latestSmartStatusByPO[po.id] !== "Cancel")
         .map((po) => po.id);
 
       const activeAllocs =
