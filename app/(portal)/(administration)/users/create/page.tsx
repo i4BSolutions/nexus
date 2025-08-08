@@ -56,7 +56,10 @@ export default function UserCreationPage() {
 
   const onFinish: FormProps<UserFieldType>["onFinish"] = (values) => {
     const permissionKeys = Object.keys(values).filter(
-      (key) => key.startsWith("view_") || key.startsWith("manage_")
+      (key) =>
+        key.startsWith("view_") ||
+        key.startsWith("manage_") ||
+        key.startsWith("stock_")
     );
 
     const hasAtLeastOnePermission = permissionKeys.some(
@@ -152,8 +155,8 @@ export default function UserCreationPage() {
           view_products_suppliers: false,
           manage_products_suppliers: false,
           view_stock: false,
-          manage_stock_in: false,
-          manage_stock_out: false,
+          stock_in: false,
+          stock_out: false,
           view_warehouses: false,
           manage_warehouses: false,
           view_budgets_allocations: false,
@@ -163,10 +166,9 @@ export default function UserCreationPage() {
         }}
         onValuesChange={(changed) => {
           const changedKey = Object.keys(changed)[0];
-          if (changedKey.startsWith("manage_stock_")) {
+          if (changedKey.startsWith("stock_")) {
             const correspondingViewKey = "view_stock";
             form.setFieldsValue({ [correspondingViewKey]: true });
-            return;
           }
           if (changedKey.startsWith("manage_")) {
             const correspondingViewKey = changedKey.replace("manage_", "view_");
