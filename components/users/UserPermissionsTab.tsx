@@ -451,7 +451,7 @@ export default function UserPermissionsTab({
               }}
             >
               <div className="flex items-center gap-4">
-                {data.permissions.can_view_budget_allocations ? (
+                {data.permissions.can_view_budgets_allocations ? (
                   <CheckCircleOutlined
                     style={{ color: "#722ED1", fontSize: 20 }}
                   />
@@ -477,7 +477,7 @@ export default function UserPermissionsTab({
               }}
             >
               <div className="flex items-center gap-4">
-                {data.permissions.can_manage_budget_allocations ? (
+                {data.permissions.can_manage_budgets_allocations ? (
                   <CheckCircleOutlined
                     style={{ color: "#722ED1", fontSize: 20 }}
                   />
