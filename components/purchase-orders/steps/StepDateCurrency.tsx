@@ -3,18 +3,18 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 
 // Ant Design
-import { Space, Typography, Form, DatePicker, Select, Input } from "antd";
+import { DatePicker, Form, Input, Select, Space, Typography } from "antd";
 
 // Day.js
 import dayjs from "dayjs";
 
 // React Query
-import { useQuery } from "@tanstack/react-query";
 import { useList } from "@/hooks/react-query/useList";
+import { useQuery } from "@tanstack/react-query";
 
 // Types
-import { ProductCurrencyInterface } from "@/types/product/product.type";
 import { BudgetResponse } from "@/types/budgets/budgets.type";
+import { ProductCurrencyInterface } from "@/types/product/product.type";
 
 interface StepDateCurrencyProps {
   onNext: (values: any) => void;
@@ -111,9 +111,6 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                 <DatePicker
                   size="large"
                   style={{ width: "100%" }}
-                  disabledDate={(current) =>
-                    current && current < dayjs().startOf("day")
-                  }
                   onChange={(date) => {
                     setOrderDate(date);
                     // Optionally reset expected_delivery_date if it's before new order_date
@@ -153,17 +150,7 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                   },
                 ]}
               >
-                <DatePicker
-                  size="large"
-                  style={{ width: "100%" }}
-                  disabledDate={(current) => {
-                    // Disable before today and before selected order date
-                    const minDate = orderDate
-                      ? orderDate.startOf("day")
-                      : dayjs().startOf("day");
-                    return current && current < minDate;
-                  }}
-                />
+                <DatePicker size="large" style={{ width: "100%" }} />
               </Form.Item>
             </Space>
 
