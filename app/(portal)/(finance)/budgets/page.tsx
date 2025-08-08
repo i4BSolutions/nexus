@@ -10,27 +10,21 @@ import HeaderSection from "@/components/shared/HeaderSection";
 import { useSoftDeleteBudget } from "@/hooks/budget-statistics/useSoftDeleteBudget";
 import { useList } from "@/hooks/react-query/useList";
 import { usePermission } from "@/hooks/shared/usePermission";
-import {
-  Budget,
-  BudgetResponse,
-  BudgetStatistics,
-} from "@/types/budgets/budgets.type";
-import { mapBudgetStatsToItems } from "@/utils/mapStatistics";
+import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
 import {
   DollarCircleOutlined,
   DownCircleOutlined,
   PlusOutlined,
   UpCircleOutlined,
 } from "@ant-design/icons";
-import { useQuery } from "@tanstack/react-query";
 import { Button, Empty, Flex, Input, Segmented, Select, Spin } from "antd";
 import { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
-import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function BudgetsPage() {
-  const hasPermission = usePermission("can_manage_budget_allocations");
+  const hasPermission = usePermission("can_manage_budgets_allocations");
 
   const router = useRouter();
 

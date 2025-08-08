@@ -34,7 +34,7 @@ import { useCallback, useEffect, useState } from "react";
 const { RangePicker } = DatePicker;
 
 export default function BudgetAllocationsPage() {
-  const hasPermission = usePermission("can_manage_budget_allocations");
+  const hasPermission = usePermission("can_manage_budgets_allocations");
   const router = useRouter();
   const [statItems, setStatItems] = useState<StatItem[]>([]);
   const [status, setStatus] = useState<string | undefined>(undefined);
