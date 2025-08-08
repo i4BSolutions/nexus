@@ -26,6 +26,7 @@ type StockTransaction = {
     sku: string;
   };
   reason: string;
+  invoice_number: string;
 };
 
 // Helper function to format date/time
@@ -198,17 +199,22 @@ export async function GET(
     .from("stock_transaction")
     .select(
       `
-        id,
-        created_at,
-        quantity,
-        type,
-        invoice_line_item_id,
-        product:product_id (
-          name,
-          sku
-        ),
-        reason
-      `
+      id,
+      created_at,
+      quantity,
+      type,
+      invoice_line_item_id,
+      product:product_id (
+        name,
+        sku
+      ),
+      reason,
+      purchase_invoice_item:invoice_line_item_id (
+        purchase_invoice (
+          purchase_invoice_number
+        )
+      )
+    `
     )
     .eq("warehouse_id", id)
     .order("created_at", { ascending: false })
@@ -222,6 +228,9 @@ export async function GET(
     invoice_line_item_id: m.invoice_line_item_id,
     product: Array.isArray(m.product) ? m.product[0] : m.product,
     reason: m.reason || "",
+    invoice_number:
+      m.purchase_invoice_item?.purchase_invoice?.purchase_invoice_number ||
+      null,
   }));
 
   const stockMovementLogs = movements.map((m) => {
@@ -234,9 +243,7 @@ export async function GET(
       name: m.product?.name,
       direction: m.type === "IN" ? "Stock In" : "Stock Out",
       quantity: m.quantity,
-      reference: m.invoice_line_item_id
-        ? `INV-${m.invoice_line_item_id.toString().padStart(4, "0")}`
-        : m.reason,
+      reference: m.invoice_number ? m.invoice_number : m.reason,
     };
   });
 

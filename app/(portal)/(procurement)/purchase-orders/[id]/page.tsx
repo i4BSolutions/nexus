@@ -122,9 +122,10 @@ export default function PurchaseOrderDetailPage() {
         data: { status: "Cancel" },
       });
       message.success("Purchase Order cancelled successfully");
-    } catch (error) {
-      message.error("Failed to cancel Purchase Order");
-      console.error("Error cancelling Purchase Order:", error);
+    } catch (error: any) {
+      message.error(
+        error?.message ? error?.message : "Failed to cancel Purchase Order"
+      );
     }
   };
 
@@ -171,36 +172,40 @@ export default function PurchaseOrderDetailPage() {
             </Flex>
 
             {/* Right Header */}
-            <Flex align="center" gap={8}>
-              <Button icon={<DownloadOutlined />}>
-                <PDFDownloadLink
-                  document={<PoDetailPDF data={detailData} />}
-                  fileName={`PO_${detailData.id}.pdf`}
-                >
-                  Download PDF
-                </PDFDownloadLink>
-              </Button>
-              {hasPermission && (
-                <>
-                  <Button
-                    type="primary"
-                    icon={<EditOutlined />}
-                    onClick={() =>
-                      router.push(`/purchase-orders/${params.id}/edit`)
-                    }
+            {detailData.purchase_order_smart_status === "Cancel" ? (
+              <></>
+            ) : (
+              <Flex align="center" gap={8}>
+                <Button icon={<DownloadOutlined />}>
+                  <PDFDownloadLink
+                    document={<PoDetailPDF data={detailData} />}
+                    fileName={`PO_${detailData.id}.pdf`}
                   >
-                    Edit PO
-                  </Button>
-                  <Dropdown
-                    menu={{ items: dropDownItems }}
-                    trigger={["click"]}
-                    placement="bottomRight"
-                  >
-                    <Button icon={<EllipsisOutlined />} />
-                  </Dropdown>
-                </>
-              )}
-            </Flex>
+                    Download PDF
+                  </PDFDownloadLink>
+                </Button>
+                {hasPermission && (
+                  <>
+                    <Button
+                      type="primary"
+                      icon={<EditOutlined />}
+                      onClick={() =>
+                        router.push(`/purchase-orders/${params.id}/edit`)
+                      }
+                    >
+                      Edit PO
+                    </Button>
+                    <Dropdown
+                      menu={{ items: dropDownItems }}
+                      trigger={["click"]}
+                      placement="bottomRight"
+                    >
+                      <Button icon={<EllipsisOutlined />} />
+                    </Dropdown>
+                  </>
+                )}
+              </Flex>
+            )}
           </Flex>
         </div>
         {/* Purchase Order Detail Tabs */}

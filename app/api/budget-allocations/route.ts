@@ -60,8 +60,6 @@ export async function GET(
     .select("*")
     .neq("status", "Canceled");
 
-  if (q)
-    allocatedUSDQuery = allocatedUSDQuery.ilike("allocation_number", `%${q}%`);
   if (startDate)
     allocatedUSDQuery = allocatedUSDQuery.gte("allocation_date", startDate);
   if (endDate)

@@ -18,8 +18,8 @@ export interface UserDetailResponse {
     can_stock_out: boolean;
     can_view_warehouses: boolean;
     can_manage_warehouses: boolean;
-    can_view_budget_allocations: boolean;
-    can_manage_budget_allocations: boolean;
+    can_view_budgets_allocations: boolean;
+    can_manage_budgets_allocations: boolean;
     can_view_dashboard: boolean;
     can_manage_users: boolean;
   };

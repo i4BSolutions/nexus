@@ -20,7 +20,8 @@ export async function GET(
   const category = searchParams.get("category") || "";
   const stockStatus = searchParams.get("stock_status");
   const sort = searchParams.get("sort") || "sku";
-  const isActiveParam = searchParams.get("is_active");
+  const isActiveParam =
+    searchParams.get("is_active") ?? searchParams.get("status");
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSizeParam = searchParams.get("pageSize") || "10";

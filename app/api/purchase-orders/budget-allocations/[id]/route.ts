@@ -59,7 +59,7 @@ export async function GET(
   const { data: allAllocations, error: allError } = await supabase
     .from("budget_allocation")
     .select("*")
-    .eq("budget_id", po.budget_id);
+    .eq("po_id", poId);
 
   if (allError) {
     return NextResponse.json(error("Failed to calculate allocation stats"), {
@@ -84,7 +84,7 @@ export async function GET(
     .select("*, budget:budget_id(budget_name, currency_code)", {
       count: "exact",
     })
-    .eq("budget_id", po.budget_id)
+    .eq("po_id", poId)
     .order("created_at", { ascending: false });
 
   if (pageSize !== "all" && typeof to === "number") {

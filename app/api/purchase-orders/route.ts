@@ -98,6 +98,118 @@ export async function POST(
 }
 
 /**
+ * This function retrieves statistics for purchase orders.
+ * It calculates the total number of orders by status, the total USD value of orders,
+ * and the percentage of orders that have been invoiced and allocated.
+ * @returns Promise<{ total_orders: number, total_approved: number, total_draft: number,
+ *  total_usd: allocated_percentage, invoiced_percentage: number }>
+ */
+async function getStatistics({ status }: { status?: string }): Promise<{
+  total: number;
+  total_approved: number;
+  total_draft: number;
+  total_usd_value: number;
+  allocated_percentage: number;
+  invoiced_percentage: number;
+}> {
+  const supabase = await createClient();
+
+  const fields = `
+    id,
+    status,
+    usd_exchange_rate,
+    purchase_order_items (
+      product_id,
+      quantity,
+      unit_price_local
+    ),
+    budget_allocation (
+      id,
+      po_id,
+      allocation_amount,
+      status,
+      exchange_rate_usd
+    ),
+    purchase_invoice (
+      id,
+      purchase_order_id,
+      status,
+      exchange_rate_to_usd,
+      purchase_invoice_item (
+        quantity,
+        unit_price_local
+      )
+    )
+  `;
+
+  let query = supabase
+    .from("purchase_order")
+    .select(fields, { count: "exact" });
+
+  if (status) query = query.eq("status", status);
+
+  const { data: orders, error: statsError, count } = await query;
+
+  if (statsError) throw new Error(statsError.message);
+
+  const totalOrders = count || 0;
+  const approvedOrders = orders?.filter((o) => o.status === "Approved") || [];
+  const totalDraft = orders?.filter((o) => o.status === "Draft").length || 0;
+
+  const totalUsd = approvedOrders.reduce((total, order) => {
+    const localAmount =
+      order.purchase_order_items?.reduce(
+        (sum, item) => sum + item.quantity * item.unit_price_local,
+        0
+      ) || 0;
+    return total + localAmount / (order.usd_exchange_rate || 1);
+  }, 0);
+
+  const allocatedAmount = approvedOrders.reduce((total, order) => {
+    const allocations = order.budget_allocation || [];
+    return (
+      total +
+      allocations.reduce((sum, alloc) => {
+        return (
+          sum + (alloc.allocation_amount || 0) / (alloc.exchange_rate_usd || 1)
+        );
+      }, 0)
+    );
+  }, 0);
+
+  const invoicedAmount = approvedOrders.reduce((total, order) => {
+    const invoices = order.purchase_invoice || [];
+    return (
+      total +
+      invoices.reduce((sum, invoice) => {
+        const items = invoice.purchase_invoice_item || [];
+        const invoiceTotal = items.reduce(
+          (itemSum, item) => itemSum + item.quantity * item.unit_price_local,
+          0
+        );
+        return sum + invoiceTotal / (invoice.exchange_rate_to_usd || 1);
+      }, 0)
+    );
+  }, 0);
+
+  const allocatedPercentage =
+    totalUsd > 0 ? (allocatedAmount / totalUsd) * 100 : 0;
+  const invoicedPercentage =
+    totalUsd > 0 ? (invoicedAmount / totalUsd) * 100 : 0;
+
+  const stats = {
+    total: totalOrders,
+    total_approved: approvedOrders.length,
+    total_draft: totalDraft,
+    total_usd_value: totalUsd,
+    allocated_percentage: Number(allocatedPercentage.toFixed(2)),
+    invoiced_percentage: Number(invoicedPercentage.toFixed(2)),
+  };
+
+  return stats;
+}
+
+/**
  * This API route retrieves all purchase orders with optional filtering and sorting.
  * @param req - NextRequest object
  * @returns NextResponse ApiResponse<PurchaseOrderInterface[]>
@@ -186,51 +298,114 @@ export async function GET(
     return NextResponse.json(error(getError.message), { status: 500 });
   }
 
-  const orders = data?.map((order) => ({
-    id: order.id,
-    purchase_order_no: order.purchase_order_no,
-    order_date: dayjs(order.order_date).format("MMM D, YYYY"),
-    status: order.status,
-    expected_delivery_date: dayjs(order.expected_delivery_date).format(
-      "MMM D, YYYY"
-    ),
-    usd_exchange_rate: order.usd_exchange_rate,
-    currency_code: order.product_currency.currency_code,
-    contact_person: order.contact_person.name,
-    amount_local: order.purchase_order_items.reduce(
+  const { data: budgetAllocationData, error: budgetAllocationError } =
+    await supabase
+      .from("budget_allocation")
+      .select("id, po_id, allocation_amount, status, exchange_rate_usd");
+
+  if (budgetAllocationError) {
+    return NextResponse.json(error(budgetAllocationError.message), {
+      status: 500,
+    });
+  }
+
+  const { data: invoiceData, error: invoiceError } = await supabase.from(
+    "purchase_invoice"
+  ).select(`
+      id,
+      purchase_order_id,
+      status,
+      exchange_rate_to_usd,
+      purchase_invoice_item (
+        quantity,
+        unit_price_local
+      )
+    `);
+
+  if (invoiceError) {
+    return NextResponse.json(error(invoiceError.message), { status: 500 });
+  }
+
+  const orders = data?.map((order) => {
+    const amount_local = order.purchase_order_items.reduce(
       (total: number, item: { quantity: number; unit_price_local: number }) =>
         total + item.quantity * item.unit_price_local,
       0
-    ),
-    amount_usd: order.purchase_order_items.reduce(
-      (total: number, item: { quantity: number; unit_price_local: number }) =>
-        total +
-        (item.quantity * item.unit_price_local) / order.usd_exchange_rate,
-      0
-    ),
-    supplier: order.supplier.name,
-    invoiced_amount: 0,
-    allocated_amount: 0,
-    purchase_order_smart_status:
-      order.purchase_order_smart_status?.status ?? "Error",
-  }));
+    );
+
+    const invoicedAmountUsd = invoiceData
+      ? invoiceData
+          .filter((invoice) => invoice.purchase_order_id === order.id)
+          .reduce(
+            (total: number, invoice) =>
+              total +
+              invoice.purchase_invoice_item.reduce(
+                (
+                  itemTotal: number,
+                  item: { quantity: number; unit_price_local: number }
+                ) => itemTotal + item.quantity * item.unit_price_local,
+                0
+              ) /
+                invoice.exchange_rate_to_usd,
+            0
+          )
+      : 0;
+
+    const remainingInvoicedAmount =
+      amount_local / (order.usd_exchange_rate || 1) - invoicedAmountUsd;
+
+    const amount_usd = amount_local / (order.usd_exchange_rate || 1);
+
+    const order_budget_allocation = budgetAllocationData
+      ? budgetAllocationData.filter(
+          (allocation) => allocation.po_id === order.id
+        )
+      : [];
+
+    const allocated_amount =
+      order_budget_allocation.length > 0
+        ? (
+            order_budget_allocation[0]?.allocation_amount /
+            order_budget_allocation[0]?.exchange_rate_usd
+          ).toFixed(2)
+        : 0;
+
+    const remaining_allocation = amount_usd - Number(allocated_amount);
+
+    return {
+      id: order.id,
+      purchase_order_no: order.purchase_order_no,
+      order_date: dayjs(order.order_date).format("MMM D, YYYY"),
+      status: order.status,
+      expected_delivery_date: dayjs(order.expected_delivery_date).format(
+        "MMM D, YYYY"
+      ),
+      usd_exchange_rate: Number(order.usd_exchange_rate.toFixed(3)),
+      currency_code: order.product_currency.currency_code,
+      contact_person: order.contact_person.name,
+      amount_local: Number(amount_local.toFixed(3)),
+      amount_usd: Number(amount_usd.toFixed(3)),
+      supplier: order.supplier.name,
+      invoiced_amount: Number(invoicedAmountUsd.toFixed(3)),
+      remaining_invoiced_amount: Number(remainingInvoicedAmount.toFixed(3)),
+      invoiced_percentage:
+        Number(((invoicedAmountUsd / amount_usd) * 100).toFixed(2)) || 0,
+      allocated_amount: Number(Number(allocated_amount).toFixed(3)) || 0,
+      remaining_allocation: Number(remaining_allocation) || 0,
+      allocation_percentage:
+        Number(((Number(allocated_amount) / amount_usd) * 100).toFixed(2)) ||
+        0.0,
+      purchase_order_smart_status:
+        order.purchase_order_smart_status?.status ?? "Error",
+    };
+  });
 
   const GetPurchaseOrderResponse: PurchaseOrderResponse = {
     dto: orders || [],
     total: count || 0,
     page,
     pageSize: pageSize || "all",
-    statistics: {
-      total: count || 0,
-      total_approved: orders
-        ? orders.filter((order) => order.status === "Approved").length
-        : 0,
-      total_usd_value: orders
-        ? orders.reduce((total, order) => total + order.amount_usd, 0)
-        : 0,
-      invoiced_percentage: 0,
-      allocated_percentage: 0,
-    },
+    statistics: await getStatistics({ status: statusParam ?? undefined }),
   };
 
   return NextResponse.json(

@@ -398,9 +398,33 @@ export default function InvoiceSecondStep({
                               {...restField}
                               name={[name, "invoice_unit_price_local"]}
                               style={{ marginBottom: 0 }}
+                              rules={[
+                                {
+                                  validator: (_, value) => {
+                                    const itemData =
+                                      poDetailData?.product_items?.[name];
+
+                                    if (itemData?.is_foc === false) {
+                                      if (
+                                        value === undefined ||
+                                        value === null ||
+                                        value <= 0
+                                      ) {
+                                        return Promise.reject(
+                                          new Error(
+                                            "Unit price must be greater than 0"
+                                          )
+                                        );
+                                      }
+                                    }
+
+                                    return Promise.resolve();
+                                  },
+                                },
+                              ]}
                             >
                               <InputNumber
-                                min={1}
+                                min={0}
                                 style={{ width: "150px", marginLeft: 16 }}
                               />
                             </Form.Item>

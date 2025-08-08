@@ -9,4 +9,5 @@ export interface PurchaseOrderItemInterface {
   sub_total_usd: number;
   invoiced?: number;
   available?: number;
+  is_foc?: boolean;
 }

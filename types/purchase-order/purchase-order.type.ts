@@ -31,7 +31,11 @@ export interface PurchaseOrderDto {
   contact_person: string;
   expected_delivery_date: string;
   invoiced_amount?: number;
+  remaining_invoiced_amount?: number;
+  invoiced_percentage?: number;
   allocated_amount?: number;
+  remaining_allocation?: number;
+  allocation_percentage?: number;
   purchase_order_smart_status: string;
 }
 
@@ -43,6 +47,7 @@ export interface PurchaseOrderResponse {
   statistics: {
     total: number;
     total_approved: number;
+    total_draft: number;
     total_usd_value: number;
     invoiced_percentage: number;
     allocated_percentage: number;

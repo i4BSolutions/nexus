@@ -1,6 +1,5 @@
 INSERT INTO
   "public"."budgets" (
-    "id",
     "budget_name",
     "project_name",
     "description",
@@ -16,7 +15,6 @@ INSERT INTO
   )
 VALUES
   (
-    '1',
     'Campaign A',
     'Project Alpha',
     null,
@@ -31,7 +29,6 @@ VALUES
     '2025-07-02 03:51:44.659978+00'
   ),
   (
-    '2',
     'Campaign B',
     'Project Beta',
     null,
@@ -46,7 +43,6 @@ VALUES
     '2025-07-02 03:51:44.659978+00'
   ),
   (
-    '3',
     'Campaign C',
     'Project Gamma',
     null,
@@ -61,7 +57,6 @@ VALUES
     '2025-07-02 03:51:44.659978+00'
   ),
   (
-    '4',
     'Campaign D',
     'Project Delta',
     null,
@@ -76,7 +71,6 @@ VALUES
     '2025-07-02 03:51:44.659978+00'
   ),
   (
-    '5',
     'Campaign E',
     'Project E',
     null,
@@ -91,7 +85,6 @@ VALUES
     '2025-07-03 07:23:54+00'
   ),
   (
-    '6',
     'Campaign F',
     'Project F',
     null,
@@ -106,7 +99,6 @@ VALUES
     '2025-07-03 07:26:51+00'
   ),
   (
-    '7',
     'Testing Budget',
     'Testing Project',
     null,
@@ -121,7 +113,6 @@ VALUES
     '2025-07-03 07:36:11+00'
   ),
   (
-    '8',
     'Test',
     'test',
     null,
@@ -136,7 +127,6 @@ VALUES
     '2025-07-04 10:34:21.699966+00'
   ),
   (
-    '9',
     'Test',
     'test',
     null,
