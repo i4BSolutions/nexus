@@ -148,7 +148,6 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                 const currentItems = form.getFieldValue("items") || [];
 
                 if (isFOC) {
-                  currentItems[changedIndex].quantity = 0;
                   currentItems[changedIndex].unit_price = 0;
                   form.setFieldsValue({ items: currentItems });
                 }
