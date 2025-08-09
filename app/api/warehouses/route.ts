@@ -55,7 +55,7 @@ export async function GET(
 
   const { data: priceData, error: priceError } = await supabase
     .from("purchase_invoice_item")
-    .select("product_id, unit_price_local, created_at")
+    .select("product_id, unit_price_local, quantity, created_at")
     .order("created_at", { ascending: false });
 
   if (priceError) {
@@ -64,12 +64,21 @@ export async function GET(
     });
   }
 
-  const latestPriceMap: Record<number, number> = {};
-
-  for (const row of priceData || []) {
-    if (!(row.product_id in latestPriceMap)) {
-      latestPriceMap[row.product_id] = row.unit_price_local;
-    }
+  // Calculate WAC for each product (exclude FOC items, use quantity)
+  const totalCostMap: Record<number, number> = {};
+  const totalQtyMap: Record<number, number> = {};
+  for (const item of priceData || []) {
+    const productId = item.product_id;
+    const unitPrice = item.unit_price_local;
+    const qty = item.quantity || 0;
+    if (unitPrice === 0) continue; // Exclude FOC
+    totalCostMap[productId] = (totalCostMap[productId] || 0) + unitPrice * qty;
+    totalQtyMap[productId] = (totalQtyMap[productId] || 0) + qty;
+  }
+  const wacMap: Record<number, number> = {};
+  for (const productId in totalCostMap) {
+    const totalQty = totalQtyMap[productId];
+    wacMap[+productId] = totalQty > 0 ? totalCostMap[productId] / totalQty : 0;
   }
 
   type Totals = Record<number, { total_items: number; total_amount: number }>;
@@ -77,12 +86,10 @@ export async function GET(
 
   for (const row of inventoryData || []) {
     const { product_id, warehouse_id, quantity } = row;
-    const unit_price = latestPriceMap[product_id] || 0;
-
+    const unit_price = wacMap[product_id] || 0;
     if (!warehouseTotals[warehouse_id]) {
       warehouseTotals[warehouse_id] = { total_items: 0, total_amount: 0 };
     }
-
     warehouseTotals[warehouse_id].total_items += quantity;
     warehouseTotals[warehouse_id].total_amount += quantity * unit_price;
   }
