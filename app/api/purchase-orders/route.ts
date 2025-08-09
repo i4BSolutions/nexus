@@ -238,35 +238,30 @@ export async function GET(
     to = from + pageSize - 1;
   }
 
-  let query = supabase.from("purchase_order").select(
-    `
-      id,
-      purchase_order_no,
-      order_date,
-      status,
-      product_currency (
-        currency_code
-      ),
-      usd_exchange_rate,
-      contact_person:contact_person_id  (
-        id,
-        name
-      ),
-      expected_delivery_date,
-      purchase_order_items (
-        product_id,
-        quantity,
-        unit_price_local
-      ),
-      supplier:supplier_id(name),
-      purchase_order_smart_status (
-        status,
-        created_at,
-        updated_at
-      )
-    `,
-    { count: "exact" }
-  );
+  const fields = [
+    // Basic PO info
+    "id",
+    "purchase_order_no",
+    "order_date",
+    "status",
+    "usd_exchange_rate",
+    "expected_delivery_date",
+
+    // Relations
+    "product_currency ( currency_code )",
+    "contact_person:contact_person_id ( id, name )",
+    "purchase_order_items ( product_id, quantity, unit_price_local )",
+    "supplier:supplier_id ( name )",
+    "purchase_order_smart_status ( status, created_at, updated_at )",
+    "budget_allocation ( id, po_id, allocation_amount, status, exchange_rate_usd )",
+    "purchase_invoice ( id, purchase_order_id, status, exchange_rate_to_usd, is_voided, purchase_invoice_item ( quantity, unit_price_local ) )",
+  ];
+
+  let query = supabase
+    .from("purchase_order")
+    .select(fields.join(","), { count: "exact" });
+
+  query = query.not("purchase_invoice.is_voided", "eq", true);
 
   if (poNumber) {
     query = query.ilike("purchase_order_no", `%${poNumber}%`);
@@ -298,34 +293,6 @@ export async function GET(
     return NextResponse.json(error(getError.message), { status: 500 });
   }
 
-  const { data: budgetAllocationData, error: budgetAllocationError } =
-    await supabase
-      .from("budget_allocation")
-      .select("id, po_id, allocation_amount, status, exchange_rate_usd");
-
-  if (budgetAllocationError) {
-    return NextResponse.json(error(budgetAllocationError.message), {
-      status: 500,
-    });
-  }
-
-  const { data: invoiceData, error: invoiceError } = await supabase.from(
-    "purchase_invoice"
-  ).select(`
-      id,
-      purchase_order_id,
-      status,
-      exchange_rate_to_usd,
-      purchase_invoice_item (
-        quantity,
-        unit_price_local
-      )
-    `);
-
-  if (invoiceError) {
-    return NextResponse.json(error(invoiceError.message), { status: 500 });
-  }
-
   const orders = data?.map((order) => {
     const amount_local = order.purchase_order_items.reduce(
       (total: number, item: { quantity: number; unit_price_local: number }) =>
@@ -333,41 +300,39 @@ export async function GET(
       0
     );
 
-    const invoicedAmountUsd = invoiceData
-      ? invoiceData
-          .filter((invoice) => invoice.purchase_order_id === order.id)
-          .reduce(
-            (total: number, invoice) =>
-              total +
-              invoice.purchase_invoice_item.reduce(
-                (
-                  itemTotal: number,
-                  item: { quantity: number; unit_price_local: number }
-                ) => itemTotal + item.quantity * item.unit_price_local,
-                0
-              ) /
-                invoice.exchange_rate_to_usd,
-            0
-          )
-      : 0;
+    const invoicedAmountUsd = order.purchase_invoice.reduce(
+      (total: number, invoice: any) => {
+        const invoiceTotal = invoice.purchase_invoice_item.reduce(
+          (
+            itemTotal: number,
+            item: { quantity: number; unit_price_local: number }
+          ) => itemTotal + item.quantity * item.unit_price_local,
+          0
+        );
+        return total + invoiceTotal / (invoice.exchange_rate_to_usd || 1) || 0;
+      },
+      0
+    );
 
     const remainingInvoicedAmount =
       amount_local / (order.usd_exchange_rate || 1) - invoicedAmountUsd;
 
     const amount_usd = amount_local / (order.usd_exchange_rate || 1);
 
-    const order_budget_allocation = budgetAllocationData
-      ? budgetAllocationData.filter(
-          (allocation) => allocation.po_id === order.id
-        )
-      : [];
+    const order_budget_allocation = order.budget_allocation || [];
 
     const allocated_amount =
       order_budget_allocation.length > 0
-        ? (
-            order_budget_allocation[0]?.allocation_amount /
-            order_budget_allocation[0]?.exchange_rate_usd
-          ).toFixed(2)
+        ? order_budget_allocation
+            .reduce(
+              (
+                total: number,
+                curr: { allocation_amount: number; exchange_rate_usd: number }
+              ) =>
+                total + (curr.allocation_amount / curr.exchange_rate_usd || 0),
+              0
+            )
+            .toFixed(2)
         : 0;
 
     const remaining_allocation = amount_usd - Number(allocated_amount);

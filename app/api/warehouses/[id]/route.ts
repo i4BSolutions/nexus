@@ -115,6 +115,8 @@ export async function GET(
     const productId = item.product_id;
     const unitPrice = item.unit_price_local;
     const qty = item.quantity;
+    // Exclude FOC items (unit price is 0)
+    if (unitPrice === 0) continue;
 
     totalCostMap[productId] = (totalCostMap[productId] || 0) + unitPrice * qty;
     totalQtyMap[productId] = (totalQtyMap[productId] || 0) + qty;

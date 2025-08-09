@@ -111,6 +111,26 @@ export async function POST(
     invoice_items,
   } = body;
 
+  // Check if purchase_order_smart_status is Cancel
+  const { data: smartStatusRow, error: smartStatusFetchError } = await supabase
+    .from("purchase_order_smart_status")
+    .select("status")
+    .eq("purchase_order_id", purchase_order_id)
+    .single();
+
+  if (smartStatusFetchError) {
+    return NextResponse.json(error(smartStatusFetchError.message), {
+      status: 500,
+    });
+  }
+
+  if (smartStatusRow?.status === "Cancel") {
+    return NextResponse.json(
+      error("Cannot create invoice for a cancelled purchase order"),
+      { status: 400 }
+    );
+  }
+
   // Step 1: Get Purchase Order Items Quantity
   const purchaseOrderItems = await getPurchaseOrderItems(purchase_order_id);
 

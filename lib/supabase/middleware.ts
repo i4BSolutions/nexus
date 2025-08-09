@@ -4,8 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
 const routePermissions: Record<string, string> = {
   "/purchase-orders": "can_view_purchase_orders",
   "/invoices": "can_view_invoices",
-  "/budgets": "can_view_budget_allocations",
-  "/budget-allocations": "can_view_budget_allocations",
+  "/budgets": "can_view_budgets_allocations",
+  "/budget-allocations": "can_view_budgets_allocations",
   "/stock-management": "can_view_stock",
   "/warehouses": "can_view_warehouses",
   "/users": "can_manage_users",

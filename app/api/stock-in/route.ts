@@ -43,7 +43,7 @@ export async function POST(
     // Check invoice line item
     const { data: lineItem, error: itemError } = await supabase
       .from("purchase_invoice_item")
-      .select("quantity")
+      .select("quantity, purchase_invoice_id")
       .eq("id", invoice_line_item_id)
       .single();
 
@@ -51,6 +51,29 @@ export async function POST(
       errors.push({
         item,
         error: "Invoice line item not found",
+      });
+      continue;
+    }
+
+    // Check if the related purchase invoice is voided
+    const { data: invoiceData, error: invoiceError } = await supabase
+      .from("purchase_invoice")
+      .select("is_voided")
+      .eq("id", lineItem.purchase_invoice_id)
+      .single();
+
+    if (invoiceError) {
+      errors.push({
+        item,
+        error: "Failed to check invoice status",
+      });
+      continue;
+    }
+
+    if (invoiceData?.is_voided) {
+      errors.push({
+        item,
+        error: "Cannot stock in items from a voided invoice",
       });
       continue;
     }

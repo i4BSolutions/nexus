@@ -13,11 +13,11 @@ export async function PUT(
 
   const { data: invoice, error: invoiceError } = await supabase
     .from("purchase_invoice")
-    .select("id")
+    .select("id, is_voided")
     .eq("purchase_order_id", id)
     .single();
 
-  if (invoice) {
+  if (invoice?.is_voided == false) {
     return NextResponse.json(
       error("Cannot cancel purchase order with an associated invoice"),
       { status: 400 }

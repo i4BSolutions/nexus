@@ -91,6 +91,7 @@ export default function InvoiceCreatePage() {
         }
       );
     } catch (error) {
+      message.error("Cannot create invoice for a cancelled purchase order");
       message.error("Failed to create purchase invoice. Please try again.");
     } finally {
     }
