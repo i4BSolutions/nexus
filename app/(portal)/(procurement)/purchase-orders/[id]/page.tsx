@@ -179,7 +179,7 @@ export default function PurchaseOrderDetailPage() {
                 <Button icon={<DownloadOutlined />}>
                   <PDFDownloadLink
                     document={<PoDetailPDF data={detailData} />}
-                    fileName={`PO_${detailData.id}.pdf`}
+                    fileName={`${detailData.purchase_order_no}.pdf`}
                   >
                     Download PDF
                   </PDFDownloadLink>

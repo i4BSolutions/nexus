@@ -254,12 +254,14 @@ export async function GET(
     "supplier:supplier_id ( name )",
     "purchase_order_smart_status ( status, created_at, updated_at )",
     "budget_allocation ( id, po_id, allocation_amount, status, exchange_rate_usd )",
-    "purchase_invoice ( id, purchase_order_id, status, exchange_rate_to_usd, purchase_invoice_item ( quantity, unit_price_local ) )",
+    "purchase_invoice ( id, purchase_order_id, status, exchange_rate_to_usd, is_voided, purchase_invoice_item ( quantity, unit_price_local ) )",
   ];
 
   let query = supabase
     .from("purchase_order")
     .select(fields.join(","), { count: "exact" });
+
+  query = query.not("purchase_invoice.is_voided", "eq", true);
 
   if (poNumber) {
     query = query.ilike("purchase_order_no", `%${poNumber}%`);
@@ -321,10 +323,16 @@ export async function GET(
 
     const allocated_amount =
       order_budget_allocation.length > 0
-        ? (
-            order_budget_allocation[0]?.allocation_amount /
-            order_budget_allocation[0]?.exchange_rate_usd
-          ).toFixed(2)
+        ? order_budget_allocation
+            .reduce(
+              (
+                total: number,
+                curr: { allocation_amount: number; exchange_rate_usd: number }
+              ) =>
+                total + (curr.allocation_amount / curr.exchange_rate_usd || 0),
+              0
+            )
+            .toFixed(2)
         : 0;
 
     const remaining_allocation = amount_usd - Number(allocated_amount);
