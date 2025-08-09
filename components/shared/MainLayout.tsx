@@ -48,8 +48,8 @@ export default function MainLayout({
     suppliers: "can_view_products_suppliers",
     "stock-management": "can_view_stock",
     warehouses: "can_view_warehouses",
-    budgets: "can_view_budget_allocations",
-    "budget-allocations": "can_view_budget_allocations",
+    budgets: "can_view_budgets_allocations",
+    "budget-allocations": "can_view_budgets_allocations",
     users: "can_manage_users",
   };
 
