@@ -171,7 +171,7 @@ export default function PiDetailsPage() {
                 <Button icon={<DownloadOutlined />}>
                   <PDFDownloadLink
                     document={<PiDetailPDF data={invoiceData ?? []} />}
-                    fileName={`PI_${id}.pdf`}
+                    fileName={`${invoiceData.purchase_invoice_number}.pdf`}
                   >
                     Download PDF
                   </PDFDownloadLink>

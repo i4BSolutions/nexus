@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { getAuthenticatedUser } from "@/helper/getUser";
 import { error, success } from "@/lib/api-response";
+import { createClient } from "@/lib/supabase/server";
 import {
   BudgetAllocationsInterface,
   BudgetAllocationsResponse,
 } from "@/types/budget-allocations/budget-allocations.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
+import { NextRequest, NextResponse } from "next/server";
 
 const bucket = "core-orbit";
 
@@ -28,7 +28,7 @@ export async function GET(
 
   let paginatedQuery = supabase
     .from("budget_allocation")
-    .select("*", { count: "exact" })
+    .select("*, purchase_order(purchase_order_no)", { count: "exact" })
     .neq("status", "Canceled");
 
   if (q) paginatedQuery = paginatedQuery.ilike("allocation_number", `%${q}%`);
@@ -144,11 +144,11 @@ export async function GET(
       }
     });
   }
-
   // Attach transfer_evidence_urls to each allocation
   const items =
-    data?.map((item) => ({
+    data?.map(({ purchase_order, ...item }) => ({
       ...item,
+      purchase_order_no: purchase_order?.purchase_order_no || null,
       transfer_evidence_urls: Array.isArray(item.transfer_evidence)
         ? item.transfer_evidence.map(
             (key: string) => signedUrlMap.get(key) || null

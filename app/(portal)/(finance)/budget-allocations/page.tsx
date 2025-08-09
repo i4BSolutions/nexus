@@ -28,6 +28,7 @@ import {
 import Input, { SearchProps } from "antd/es/input";
 import { ColumnsType, SortOrder } from "antd/es/table/interface";
 import dayjs from "dayjs";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -137,10 +138,12 @@ export default function BudgetAllocationsPage() {
     },
     {
       title: "PO NUMBER",
-      dataIndex: "po_id",
-      key: "po_id",
-      render: (po_id, record) => (
-        <a>PO-2025-{String(po_id).padStart(4, "0")}</a>
+      dataIndex: "purchase_order_no",
+      key: "purchase_order_no",
+      render: (purchase_order_no, record) => (
+        <Link href={`/purchase-orders/${record.po_id}`}>
+          {purchase_order_no}
+        </Link>
       ),
     },
     {
