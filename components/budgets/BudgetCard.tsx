@@ -18,7 +18,6 @@ import {
   DollarCircleOutlined,
   EllipsisOutlined,
   StopOutlined,
-  DeleteOutlined,
   CheckCircleOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
@@ -267,6 +266,7 @@ const BudgetCard = ({
                     </Typography.Text>
                   </div>
                 </div>
+
                 <div
                   style={{
                     marginTop: 8,
@@ -294,7 +294,12 @@ const BudgetCard = ({
                   </div>
                   <Progress
                     percent={budget.allocation_percentage}
-                    strokeColor="#40A9FF"
+                    strokeColor={
+                      typeof budget.allocation_percentage === "number" &&
+                      budget.allocation_percentage > 100
+                        ? "red"
+                        : "#40A9FF"
+                    }
                     trailColor="#F5F5F5"
                     showInfo={false}
                   />
@@ -376,7 +381,12 @@ const BudgetCard = ({
                   </div>
                   <Progress
                     percent={budget.utilization_percentage}
-                    strokeColor="#9254DE"
+                    strokeColor={
+                      typeof budget.utilization_percentage === "number" &&
+                      budget.utilization_percentage > 100
+                        ? "red"
+                        : "#9254DE"
+                    }
                     trailColor="#F5F5F5"
                     showInfo={false}
                   />
