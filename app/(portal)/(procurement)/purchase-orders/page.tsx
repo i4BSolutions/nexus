@@ -158,7 +158,12 @@ export default function PurchaseOrdersPage() {
       </Flex>
     );
   }
-  if (!data) return null;
+
+  if (!data)
+    return (
+      <div className="grid place-items-center h-[500px]">No data available</div>
+    );
+
   if (!statItems) return null;
 
   const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) => {
