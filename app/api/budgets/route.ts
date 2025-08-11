@@ -219,7 +219,6 @@ export async function GET(
         invoices?.filter((inv) => poIds.includes(inv.purchase_order_id)) || [];
 
       let invoicedUSD = 0;
-      let totalInvoiceItemsUSD = 0;
 
       for (const inv of relatedInvoices) {
         const items =
@@ -232,8 +231,6 @@ export async function GET(
         const usdValue =
           itemsTotalLocal / (Number(inv.exchange_rate_to_usd) || 1);
 
-        totalInvoiceItemsUSD += usdValue;
-
         if (!inv.is_voided) {
           invoicedUSD += usdValue;
         }
@@ -242,7 +239,7 @@ export async function GET(
       const utilization_pct =
         allocated > 0 ? (invoicedUSD / allocated) * 100 : 0;
 
-      const unutilized_usd = allocated - totalInvoiceItemsUSD;
+      const unutilized_usd = allocated - invoicedUSD;
 
       // PO Value
       let totalPOValueUSD = 0;
