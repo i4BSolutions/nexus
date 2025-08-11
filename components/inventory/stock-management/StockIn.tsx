@@ -265,101 +265,93 @@ const StockInForm = ({
                         <Col span={6}>QUANTITY TO STOCK IN</Col>
                       </Row>
 
-                      {fields
-                        .filter((_, index) => {
-                          const item = invoiceData?.invoice_items?.[index];
-                          return (
-                            typeof item?.remaining_to_stock_in === "number" &&
-                            item.remaining_to_stock_in > 0
-                          );
-                        })
-                        .map(({ key, name, ...restField }, index) => {
-                          const item = invoiceData?.invoice_items?.[name];
-                          if (!item) return null;
+                      {fields.map(({ key, name, ...restField }, index) => {
+                        const item = validInvoiceItems[index];
+                        if (!item) return null;
 
-                          return (
-                            <Row
-                              key={key}
-                              gutter={16}
-                              align="middle"
-                              style={{
-                                padding: "12px 20px",
-                                borderBottom: "1px solid #f0f0f0",
-                              }}
-                            >
-                              <Col span={2}>
-                                <Form.Item
-                                  {...restField}
-                                  name={[name, "checked"]}
-                                  valuePropName="checked"
-                                  initialValue={false}
-                                  style={{ marginBottom: 0 }}
-                                >
-                                  <Checkbox />
-                                </Form.Item>
-                              </Col>
-                              <Col span={4}>
-                                <Typography.Text>
-                                  {item.product_name}
-                                </Typography.Text>
-                              </Col>
-                              <Col span={4}>
-                                <Typography.Text>
-                                  {item.product_sku}
-                                </Typography.Text>
-                              </Col>
-                              <Col span={4}>
-                                <Typography.Text>
-                                  {item.total_ordered}
-                                </Typography.Text>
-                              </Col>
-                              <Col span={4}>
-                                <Typography.Text>
-                                  {item.remaining_to_stock_in}
-                                </Typography.Text>
-                              </Col>
-                              <Col span={6}>
-                                <Form.Item
-                                  {...restField}
-                                  name={[name, "stock_in_quantity"]}
-                                  initialValue={1}
-                                  style={{ marginBottom: 0 }}
-                                  rules={[
-                                    {
-                                      required: true,
-                                      message: "Quantity is required.",
-                                    },
-                                    {
-                                      validator: (_, value) => {
-                                        const remaining =
-                                          item.remaining_to_stock_in ?? 1;
-                                        if (typeof value !== "number")
-                                          return Promise.resolve();
-                                        if (value <= 0) {
-                                          return Promise.reject(
-                                            new Error(
-                                              "Quantity must be greater than 0."
-                                            )
-                                          );
-                                        }
-                                        if (value > remaining) {
-                                          return Promise.reject(
-                                            new Error(
-                                              `Cannot exceed remaining quantity (${remaining})`
-                                            )
-                                          );
-                                        }
+                        return (
+                          <Row
+                            key={key}
+                            gutter={16}
+                            align="middle"
+                            style={{
+                              padding: "12px 20px",
+                              borderBottom: "1px solid #f0f0f0",
+                            }}
+                          >
+                            <Col span={2}>
+                              <Form.Item
+                                {...restField}
+                                name={[name, "checked"]}
+                                valuePropName="checked"
+                                initialValue={false}
+                                style={{ marginBottom: 0 }}
+                              >
+                                <Checkbox />
+                              </Form.Item>
+                            </Col>
+                            <Col span={4}>
+                              <Typography.Text>
+                                {item.product_name}
+                              </Typography.Text>
+                            </Col>
+                            <Col span={4}>
+                              <Typography.Text>
+                                {item.product_sku}
+                              </Typography.Text>
+                            </Col>
+                            <Col span={4}>
+                              <Typography.Text>
+                                {item.total_ordered}
+                              </Typography.Text>
+                            </Col>
+                            <Col span={4}>
+                              <Typography.Text>
+                                {item.remaining_to_stock_in}
+                              </Typography.Text>
+                            </Col>
+                            <Col span={6}>
+                              <Form.Item
+                                {...restField}
+                                name={[name, "stock_in_quantity"]}
+                                initialValue={1}
+                                style={{ marginBottom: 0 }}
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: "Quantity is required.",
+                                  },
+                                  {
+                                    validator: (_, value) => {
+                                      const remaining =
+                                        item.remaining_to_stock_in ?? 1;
+                                      if (typeof value !== "number")
                                         return Promise.resolve();
-                                      },
+                                      if (value <= 0) {
+                                        return Promise.reject(
+                                          new Error(
+                                            "Quantity must be greater than 0."
+                                          )
+                                        );
+                                      }
+                                      if (value > remaining) {
+                                        return Promise.reject(
+                                          new Error(
+                                            `Cannot exceed remaining quantity (${remaining})`
+                                          )
+                                        );
+                                      }
+                                      return Promise.resolve();
                                     },
-                                  ]}
-                                >
-                                  <InputNumber style={{ width: "100%" }} />
-                                </Form.Item>
-                              </Col>
-                            </Row>
-                          );
-                        })}
+                                  },
+                                ]}
+                              >
+                                <InputNumber style={{ width: "100%" }} />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                        );
+                      })}
                     </div>
                   )}
                 </Form.List>

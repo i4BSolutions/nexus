@@ -19,7 +19,6 @@ export async function GET(
 
   const q = searchParams.get("q")?.trim().toLowerCase() || "";
   const statusFilter = searchParams.get("status");
-
   const sortParam = searchParams.get("sort");
 
   let sortField: "created_at" | "project_name" | "budget_name" = "created_at";
@@ -44,17 +43,29 @@ export async function GET(
       return NextResponse.json(error("Failed to fetch budgets", 500));
     }
 
-    const filteredBudgets = allBudgets.filter((b) => {
-      const matchesSearch =
-        q === "" ||
+    const statusScopedBudgets = allBudgets.filter((b) =>
+      !statusFilter ? true : b.status === (statusFilter === "true")
+    );
+
+    const searchScoped = statusScopedBudgets.filter((b) => {
+      if (!q) return true;
+      return (
         b.budget_name.toLowerCase().includes(q) ||
-        b.project_name.toLowerCase().includes(q);
-      const matchesStatus =
-        !statusFilter || b.status === (statusFilter === "true");
-      return matchesSearch && matchesStatus;
+        b.project_name.toLowerCase().includes(q)
+      );
     });
 
-    const sorted = [...filteredBudgets].sort((a, b) => {
+    // const filteredBudgets = allBudgets.filter((b) => {
+    //   const matchesSearch =
+    //     q === "" ||
+    //     b.budget_name.toLowerCase().includes(q) ||
+    //     b.project_name.toLowerCase().includes(q);
+    //   const matchesStatus =
+    //     !statusFilter || b.status === (statusFilter === "true");
+    //   return matchesSearch && matchesStatus;
+    // });
+
+    const sorted = [...searchScoped].sort((a, b) => {
       if (sortField === "created_at") {
         return sortDirection === "asc"
           ? dayjs(a.created_at).unix() - dayjs(b.created_at).unix()
@@ -72,10 +83,17 @@ export async function GET(
         ? sorted
         : sorted.slice((page - 1) * pageSize, page * pageSize);
 
+    const statusScopeIds = statusScopedBudgets.map((b) => b.id);
+
     // Load all required data
     const { data: pos } = await supabase
       .from("purchase_order")
       .select("id, budget_id, usd_exchange_rate");
+
+    const posInScope = (pos || []).filter((po) =>
+      statusScopeIds.includes(po.budget_id)
+    );
+    const poIdsInScope = posInScope.map((po) => po.id);
 
     const { data: poItems } = await supabase
       .from("purchase_order_items")
@@ -113,55 +131,56 @@ export async function GET(
 
     // const enrichedItems = paginated.map((budget) => {
     //   const planned_usd = Number(budget.planned_amount_usd || 0);
+
+    //   // Get POs for this budget
     //   const budgetPOs = pos?.filter((po) => po.budget_id === budget.id) || [];
     //   const poIds = budgetPOs.map((po) => po.id);
 
+    //   // Active POs (not canceled)
     //   const activePOIds = budgetPOs
     //     .filter((po) => latestSmartStatusByPO[po.id] !== "Cancel")
     //     .map((po) => po.id);
 
+    //   // Allocations
     //   const activeAllocs =
     //     allocations?.filter((a) => activePOIds.includes(a.po_id)) || [];
-
     //   const allocated = activeAllocs.reduce(
     //     (sum, a) => sum + Number(a.equivalent_usd || 0),
     //     0
     //   );
-
     //   const allocated_variance = planned_usd - allocated;
-
     //   const allocation_pct =
     //     planned_usd > 0 ? (allocated / planned_usd) * 100 : 0;
 
-    //   const relatedInvoices =
-    //     invoices?.filter((i) => poIds.includes(i.purchase_order_id)) || [];
+    //   // Invoices linked to this budget's POs
 
-    //   let validInvoiceTotalUSD = 0;
-    //   let totalInvoiceTotalUSD = 0;
+    //   const relatedInvoices =
+    //     invoices?.filter((inv) => poIds.includes(inv.purchase_order_id)) || [];
+
+    //   let invoicedUSD = 0;
 
     //   for (const inv of relatedInvoices) {
     //     const items =
     //       invoiceItems?.filter((it) => it.purchase_invoice_id === inv.id) || [];
-    //     const invoiceLocalTotal = items.reduce(
+    //     const itemsTotalLocal = items.reduce(
     //       (sum, it) =>
     //         sum + Number(it.quantity || 0) * Number(it.unit_price_local || 0),
     //       0
     //     );
-    //     const invoiceUSD =
-    //       invoiceLocalTotal * Number(inv.exchange_rate_to_usd || 0);
+    //     const usdValue =
+    //       itemsTotalLocal / (Number(inv.exchange_rate_to_usd) || 1);
 
-    //     totalInvoiceTotalUSD += invoiceUSD;
     //     if (!inv.is_voided) {
-    //       validInvoiceTotalUSD += invoiceUSD;
+    //       invoicedUSD += usdValue;
     //     }
     //   }
 
     //   const utilization_pct =
-    //     allocated > 0 ? (validInvoiceTotalUSD / allocated) * 100 : 0;
+    //     allocated > 0 ? (invoicedUSD / allocated) * 100 : 0;
 
-    //   // Now voided invoice amounts will increase unutilized in real-time
-    //   const unutilized_usd = allocated - totalInvoiceTotalUSD;
+    //   const unutilized_usd = allocated - invoicedUSD;
 
+    //   // PO Value
     //   let totalPOValueUSD = 0;
     //   for (const po of budgetPOs) {
     //     const items =
@@ -181,7 +200,7 @@ export async function GET(
     //     planned_amount_usd: planned_usd,
     //     allocated_amount_usd: Number(allocated.toFixed(2)),
     //     allocated_variance_usd: Number(allocated_variance.toFixed(2)),
-    //     invoiced_amount_usd: Number(validInvoiceTotalUSD.toFixed(2)),
+    //     invoiced_amount_usd: Number(invoicedUSD.toFixed(2)),
     //     allocation_percentage: Number(allocation_pct.toFixed(2)),
     //     utilization_percentage: Number(utilization_pct.toFixed(2)),
     //     unutilized_amount_usd: Number(unutilized_usd.toFixed(2)),
@@ -190,99 +209,108 @@ export async function GET(
     //   };
     // });
 
-    const enrichedItems = paginated.map((budget) => {
-      const planned_usd = Number(budget.planned_amount_usd || 0);
+    const enrich = (budgetsArr: typeof allBudgets) => {
+      return budgetsArr.map((budget) => {
+        const planned_usd = Number(budget.planned_amount_usd || 0);
 
-      // Get POs for this budget
-      const budgetPOs = pos?.filter((po) => po.budget_id === budget.id) || [];
-      const poIds = budgetPOs.map((po) => po.id);
+        // POs for this budget (restricted to status scope POs)
+        const budgetPOs = posInScope.filter((po) => po.budget_id === budget.id);
+        const poIds = budgetPOs.map((po) => po.id);
 
-      // Active POs (not canceled)
-      const activePOIds = budgetPOs
-        .filter((po) => latestSmartStatusByPO[po.id] !== "Cancel")
-        .map((po) => po.id);
+        // Only active (not "Cancel") POs count for allocations
+        const activePOIds = budgetPOs
+          .filter((po) => latestSmartStatusByPO[po.id] !== "Cancel")
+          .map((po) => po.id);
 
-      // Allocations
-      const activeAllocs =
-        allocations?.filter((a) => activePOIds.includes(a.po_id)) || [];
-      const allocated = activeAllocs.reduce(
-        (sum, a) => sum + Number(a.equivalent_usd || 0),
-        0
-      );
-      const allocated_variance = planned_usd - allocated;
-      const allocation_pct =
-        planned_usd > 0 ? (allocated / planned_usd) * 100 : 0;
-
-      // Invoices linked to this budget's POs
-
-      const relatedInvoices =
-        invoices?.filter((inv) => poIds.includes(inv.purchase_order_id)) || [];
-
-      let invoicedUSD = 0;
-
-      for (const inv of relatedInvoices) {
-        const items =
-          invoiceItems?.filter((it) => it.purchase_invoice_id === inv.id) || [];
-        const itemsTotalLocal = items.reduce(
-          (sum, it) =>
-            sum + Number(it.quantity || 0) * Number(it.unit_price_local || 0),
+        // Allocations from active POs
+        const activeAllocs = (allocations || []).filter((a) =>
+          activePOIds.includes(a.po_id)
+        );
+        const allocated = activeAllocs.reduce(
+          (sum, a) => sum + Number(a.equivalent_usd || 0),
           0
         );
-        const usdValue =
-          itemsTotalLocal / (Number(inv.exchange_rate_to_usd) || 1);
+        const allocated_variance = planned_usd - allocated;
+        const allocation_pct =
+          planned_usd > 0 ? (allocated / planned_usd) * 100 : 0;
 
-        if (!inv.is_voided) {
-          invoicedUSD += usdValue;
-        }
-      }
+        // Invoices for this budget's POs
+        const relatedInvoices = (invoices || []).filter((inv) =>
+          poIds.includes(inv.purchase_order_id)
+        );
 
-      const utilization_pct =
-        allocated > 0 ? (invoicedUSD / allocated) * 100 : 0;
-
-      const unutilized_usd = allocated - invoicedUSD;
-
-      // PO Value
-      let totalPOValueUSD = 0;
-      for (const po of budgetPOs) {
-        const items =
-          poItems?.filter((i) => i.purchase_order_id === po.id && !i.is_foc) ||
-          [];
-        const poTotal = items.reduce((sum, item) => {
-          return (
-            sum +
-            Number(item.quantity || 0) * Number(item.unit_price_local || 0)
+        let invoicedUSD = 0;
+        for (const inv of relatedInvoices) {
+          const items = (invoiceItems || []).filter(
+            (it) => it.purchase_invoice_id === inv.id
           );
-        }, 0);
-        totalPOValueUSD += poTotal;
-      }
+          const itemsTotalLocal = items.reduce(
+            (sum, it) =>
+              sum + Number(it.quantity || 0) * Number(it.unit_price_local || 0),
+            0
+          );
+          const usdValue =
+            itemsTotalLocal / (Number(inv.exchange_rate_to_usd) || 1);
 
-      return {
-        ...budget,
-        planned_amount_usd: planned_usd,
-        allocated_amount_usd: Number(allocated.toFixed(2)),
-        allocated_variance_usd: Number(allocated_variance.toFixed(2)),
-        invoiced_amount_usd: Number(invoicedUSD.toFixed(2)),
-        allocation_percentage: Number(allocation_pct.toFixed(2)),
-        utilization_percentage: Number(utilization_pct.toFixed(2)),
-        unutilized_amount_usd: Number(unutilized_usd.toFixed(2)),
-        po_count: budgetPOs.length,
-        total_po_value_usd: Number(totalPOValueUSD.toFixed(2)),
-      };
-    });
+          if (!inv.is_voided) {
+            invoicedUSD += usdValue;
+          }
+        }
+
+        const utilization_pct =
+          allocated > 0 ? (invoicedUSD / allocated) * 100 : 0;
+        const unutilized_usd = allocated - invoicedUSD;
+
+        // PO Value (sum of non-FOC items) — using local as-is (you may convert with rate if needed)
+        let totalPOValueUSD = 0;
+        for (const po of budgetPOs) {
+          const items =
+            (poItems || []).filter(
+              (i) => i.purchase_order_id === po.id && !i.is_foc
+            ) || [];
+          const poTotal = items.reduce((sum, item) => {
+            return (
+              sum +
+              Number(item.quantity || 0) * Number(item.unit_price_local || 0)
+            );
+          }, 0);
+          totalPOValueUSD += poTotal;
+        }
+
+        return {
+          ...budget,
+          planned_amount_usd: planned_usd,
+          allocated_amount_usd: Number(allocated.toFixed(2)),
+          allocated_variance_usd: Number(allocated_variance.toFixed(2)),
+          invoiced_amount_usd: Number(invoicedUSD.toFixed(2)),
+          allocation_percentage: Number(allocation_pct.toFixed(2)),
+          utilization_percentage: Number(utilization_pct.toFixed(2)),
+          unutilized_amount_usd: Number(unutilized_usd.toFixed(2)),
+          po_count: budgetPOs.length,
+          total_po_value_usd: Number(totalPOValueUSD.toFixed(2)),
+        };
+      });
+    };
 
     // Statistics for dashboard
-    const activeBudgets = enrichedItems.filter((b) => b.status === true);
+    const enrichedVisible = enrich(paginated);
+
+    // 6) Enrich the whole status scope (status only) for statistics
+    const enrichedForStats = enrich(statusScopedBudgets);
+
+    // 7) Compute statistics ONLY from status scope (not affected by search/pagination)
+    const activeBudgets = enrichedForStats.filter((b) => b.status === true);
 
     const totalPlanned = activeBudgets.reduce(
-      (sum, b) => sum + b.planned_amount_usd,
+      (sum, b) => sum + (b.planned_amount_usd || 0),
       0
     );
     const totalAllocated = activeBudgets.reduce(
-      (sum, b) => sum + b.allocated_amount_usd,
+      (sum, b) => sum + (b.allocated_amount_usd || 0),
       0
     );
     const totalInvoiced = activeBudgets.reduce(
-      (sum, b) => sum + b.invoiced_amount_usd,
+      (sum, b) => sum + (b.invoiced_amount_usd || 0),
       0
     );
 
@@ -293,20 +321,54 @@ export async function GET(
 
     const validUtilizations = activeBudgets
       .filter(
-        (b) => b.allocated_amount_usd > 0 && !isNaN(b.utilization_percentage)
+        (b) =>
+          b.allocated_amount_usd > 0 &&
+          !isNaN(b.utilization_percentage as number)
       )
-      .map((b) => b.utilization_percentage);
+      .map((b) => b.utilization_percentage as number);
 
     const averageUtilization =
       validUtilizations.length > 0
-        ? validUtilizations.reduce((sum, val) => sum + val, 0) /
+        ? validUtilizations.reduce((sum, v) => sum + v, 0) /
           validUtilizations.length
         : 0;
+
+    // const activeBudgets = enrichedItems.filter((b) => b.status === true);
+
+    // const totalPlanned = activeBudgets.reduce(
+    //   (sum, b) => sum + b.planned_amount_usd,
+    //   0
+    // );
+    // const totalAllocated = activeBudgets.reduce(
+    //   (sum, b) => sum + b.allocated_amount_usd,
+    //   0
+    // );
+    // const totalInvoiced = activeBudgets.reduce(
+    //   (sum, b) => sum + b.invoiced_amount_usd,
+    //   0
+    // );
+
+    // const allocatedVsPlannedPercentage =
+    //   totalPlanned > 0 ? (totalAllocated / totalPlanned) * 100 : 0;
+    // const invoicedVsAllocatedPercentage =
+    //   totalAllocated > 0 ? (totalInvoiced / totalAllocated) * 100 : 0;
+
+    // const validUtilizations = activeBudgets
+    //   .filter(
+    //     (b) => b.allocated_amount_usd > 0 && !isNaN(b.utilization_percentage)
+    //   )
+    //   .map((b) => b.utilization_percentage);
+
+    // const averageUtilization =
+    //   validUtilizations.length > 0
+    //     ? validUtilizations.reduce((sum, val) => sum + val, 0) /
+    //       validUtilizations.length
+    //     : 0;
 
     return NextResponse.json(
       success(
         {
-          items: enrichedItems,
+          items: enrichedVisible,
           total: allBudgets.length,
           page,
           pageSize: pageSize === "all" ? allBudgets.length : pageSize,
