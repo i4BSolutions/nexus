@@ -21,6 +21,7 @@ import { useEffect } from "react";
 import { DownloadOutlined, TagOutlined } from "@ant-design/icons";
 import StockInHistory from "./StockInHistory";
 import {
+  PurchaseInvoiceDto,
   PurchaseInvoiceInterface,
   PurchaseInvoiceResponse,
 } from "@/types/purchase-invoice/purchase-invoice.type";
@@ -32,7 +33,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 interface StockFormProps {
-  invoices: PurchaseInvoiceResponse | undefined;
+  invoices: PurchaseInvoiceDto[] | undefined;
   warehouses: WarehouseInterface[] | undefined;
   stockInHistories: StockTransactionHistory[] | undefined;
   invoiceLoading?: boolean;
@@ -56,7 +57,7 @@ const StockInForm = ({
   const { message } = App.useApp();
 
   const selectedInvoice = Form.useWatch("invoice", form);
-  const selectedInvoiceId = invoices?.items.find(
+  const selectedInvoiceId = invoices?.find(
     (inv) => inv.purchase_invoice_number === selectedInvoice
   )?.id;
 
@@ -177,7 +178,7 @@ const StockInForm = ({
                 allowClear
                 placeholder="Select Invoice"
               >
-                {invoices?.items.map((i) => (
+                {invoices?.map((i) => (
                   <Option key={i.id} value={i.purchase_invoice_number}>
                     {i.purchase_invoice_number}
                   </Option>
