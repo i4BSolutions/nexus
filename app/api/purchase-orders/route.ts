@@ -146,8 +146,6 @@ async function getStatistics({ status }: { status?: string }): Promise<{
     .from("purchase_order")
     .select(fields, { count: "exact" });
 
-  if (status) query = query.eq("status", status);
-
   const { data: orders, error: statsError, count } = await query;
 
   if (statsError) throw new Error(statsError.message);

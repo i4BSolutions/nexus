@@ -46,9 +46,9 @@ export default function PurchaseOrdersPage() {
       page: pagination.page,
       pageSize: pagination.pageSize,
       sort: sortOrder
-        ? `id_${sortOrder === "ascend" ? "asc" : "desc"}`
+        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
         : undefined,
-      status: status,
+      status: status !== "All Status" ? status : undefined,
       q: searchText,
     }
   );
@@ -86,7 +86,7 @@ export default function PurchaseOrdersPage() {
           borderColor: "#91d5ff",
           tooltip: "Total number of purchase orders",
           total_approved: poData.statistics.total_approved,
-          footerContent: (status === "All Status" || !status) && (
+          footerContent: (
             <div className="flex justify-between items-center gap-6">
               <Badge
                 status="success"
@@ -111,7 +111,7 @@ export default function PurchaseOrdersPage() {
           tooltip: "Total value of all purchase orders",
           prefix: "$",
           approved_text: "approved POs",
-          footerContent: (status === "Approved" || !status) && (
+          footerContent: (
             <Typography.Text type="secondary">
               Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
@@ -126,7 +126,7 @@ export default function PurchaseOrdersPage() {
           borderColor: "#ADC6FF",
           tooltip: "Percentage of total POs that have been invoiced",
           suffix: "%",
-          footerContent: (status === "Approved" || !status) && (
+          footerContent: (
             <Typography.Text type="secondary">
               Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
@@ -141,7 +141,7 @@ export default function PurchaseOrdersPage() {
           borderColor: "#D3ADF7",
           tooltip: "Percentage of total POs that have been allocated",
           suffix: "%",
-          footerContent: (status === "Approved" || !status) && (
+          footerContent: (
             <Typography.Text type="secondary">
               Across {poData.statistics.total_approved || 0} approved POs
             </Typography.Text>
@@ -189,10 +189,7 @@ export default function PurchaseOrdersPage() {
   };
 
   const clearFiltersHandler = () => {
-    setStatus(undefined);
-    setSearchText("");
-    setSortOrder(undefined);
-    setPagination({ page: 1, pageSize: 10 });
+    setStatus("All Status");
   };
 
   const paginationChangeHandler = (page: number, pageSize?: number) => {
