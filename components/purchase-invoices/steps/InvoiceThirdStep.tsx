@@ -4,7 +4,10 @@ import {
 } from "@/types/product/product.type";
 import { InvoiceFieldType } from "@/types/purchase-invoice/purchase-invoice.type";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
-import { PurchaseOrderResponse } from "@/types/purchase-order/purchase-order.type";
+import {
+  PurchaseOrderDto,
+  PurchaseOrderResponse,
+} from "@/types/purchase-order/purchase-order.type";
 import getCurrencyCode from "@/utils/getCurrencyCode";
 import { CalendarOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { FormInstance } from "antd";
@@ -20,7 +23,7 @@ export default function InvoiceThirdStep({
   form: FormInstance<InvoiceFieldType>;
   poDetailData: PurchaseOrderDetailDto;
   currenciesData: ProductCurrencyInterface[];
-  purchaseOrdersData: PurchaseOrderResponse;
+  purchaseOrdersData: PurchaseOrderDto[];
   productsData: ProductResponse;
 }) {
   const invoiceItems = form.getFieldValue("invoice_items");

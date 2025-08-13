@@ -51,6 +51,10 @@ export default function InvoiceCreatePage() {
   const { data: purchaseOrdersData, isLoading: purchaseOrdersLoading } =
     useGetAll<PurchaseOrderResponse>("purchase-orders", ["purchase-orders"]);
 
+  const filteredPurchaseOrders = purchaseOrdersData?.dto.filter(
+    (po) => po.purchase_order_smart_status !== "Cancel"
+  );
+
   const { data: productsData, isLoading: productsLoading } =
     useList<ProductResponse>("products", {
       pageSize: "all" as any,
@@ -151,7 +155,7 @@ export default function InvoiceCreatePage() {
             form={form}
             poDetailData={poDetailData!}
             poDetailLoading={poDetailLoading}
-            purchaseOrdersData={purchaseOrdersData}
+            purchaseOrdersData={filteredPurchaseOrders || []}
             currenciesData={currenciesData}
             productsData={productsData}
           />
@@ -161,7 +165,7 @@ export default function InvoiceCreatePage() {
           <InvoiceThirdStep
             form={form}
             poDetailData={poDetailData!}
-            purchaseOrdersData={purchaseOrdersData}
+            purchaseOrdersData={filteredPurchaseOrders || []}
             currenciesData={currenciesData}
             productsData={productsData}
           />
