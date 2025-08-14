@@ -23,6 +23,10 @@ const StockManagementPage = () => {
   const { data: piData, isLoading: piLoading } =
     useList<PurchaseInvoiceResponse>("purchase-invoices");
 
+  const filteredInvoices = piData?.items.filter(
+    (invoice) => invoice.is_voided !== true
+  );
+
   const { data: warehousesData, isLoading: warehouseLoading } =
     useList<WarehouseResponse>("warehouses");
 
@@ -46,7 +50,7 @@ const StockManagementPage = () => {
       label: "Stock In",
       children: canStockIn ? (
         <StockIn
-          invoices={piData}
+          invoices={filteredInvoices}
           invoiceLoading={piLoading}
           warehouses={warehousesData?.items}
           stockInHistories={stockInHistoryData}

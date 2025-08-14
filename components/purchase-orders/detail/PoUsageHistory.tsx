@@ -1,6 +1,7 @@
 import {
   BudgetAllocationHistory,
   InvoiceHistory,
+  PurchaseOrderDetailDto,
   UsageHistoryDto,
 } from "@/types/purchase-order/purchase-order-detail.type";
 import {
@@ -15,11 +16,18 @@ import PoBudgetAllocationTable from "./PoBudgetAllocationTable";
 import PoInvoiceTable from "./PoInvoiceTable";
 import { usePaginatedById } from "@/hooks/react-query/usePaginatedById";
 
-export default function PoUsageHistory({ id }: { id: string }) {
+export default function PoUsageHistory({
+  id,
+  poData,
+}: {
+  id: string;
+  poData: PurchaseOrderDetailDto;
+}) {
   const [invoicePagination, setInvoicePagination] = useState({
     page: 1,
     pageSize: 3,
   });
+
   const [budgetPagination, setBudgetPagination] = useState({
     page: 1,
     pageSize: 3,
@@ -116,7 +124,12 @@ export default function PoUsageHistory({ id }: { id: string }) {
             <Flex justify="space-between" align="center">
               <Statistic
                 title={"Invoice Coverage"}
-                value={invoiceHistory?.statistics.total_paid_percent.toFixed(2)}
+                value={(
+                  (invoiceHistory?.statistics.total_amount_usd
+                    ? invoiceHistory?.statistics.total_amount_usd /
+                      poData?.total_amount_usd
+                    : 0) * 100
+                ).toFixed(2)}
                 suffix={"%"}
               />
               <FileTextOutlined
@@ -139,12 +152,17 @@ export default function PoUsageHistory({ id }: { id: string }) {
               style={{ marginBottom: 10, marginTop: 10 }}
             >
               <Progress
-                percent={invoiceHistory?.statistics.total_paid_percent}
+                percent={
+                  (invoiceHistory?.statistics.total_amount_usd
+                    ? invoiceHistory?.statistics.total_amount_usd /
+                      poData?.total_amount_usd
+                    : 0) * 100
+                }
                 strokeColor={"#FFC53D"}
                 showInfo={false}
               />
-              ${invoiceHistory?.statistics.total_paid_usd.toLocaleString()}/
-              {invoiceHistory?.statistics.total_amount_usd.toLocaleString()}
+              ${invoiceHistory?.statistics.total_amount_usd.toLocaleString()}/
+              {poData?.total_amount_usd.toLocaleString()}
             </Flex>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               {invoiceHistory?.statistics.total_invoices} Invoices Created

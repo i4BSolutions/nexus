@@ -60,6 +60,7 @@ export async function GET(
     .select("*")
     .neq("status", "Canceled");
 
+  if (status) allocatedUSDQuery = allocatedUSDQuery.eq("status", status);
   if (startDate)
     allocatedUSDQuery = allocatedUSDQuery.gte("allocation_date", startDate);
   if (endDate)
@@ -87,7 +88,6 @@ export async function GET(
     .select("*")
     .neq("status", "Canceled");
 
-  if (q) statsQuery = statsQuery.ilike("allocation_number", `%${q}%`);
   if (status) statsQuery = statsQuery.eq("status", status);
   if (startDate) statsQuery = statsQuery.gte("allocation_date", startDate);
   if (endDate) statsQuery = statsQuery.lte("allocation_date", endDate);

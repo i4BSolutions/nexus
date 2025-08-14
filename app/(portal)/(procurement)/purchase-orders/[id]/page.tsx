@@ -106,7 +106,7 @@ export default function PurchaseOrderDetailPage() {
     {
       key: "usage-history",
       label: "Usage History",
-      children: <PoUsageHistory id={params.id as string} />,
+      children: <PoUsageHistory poData={detailData} id={params.id as string} />,
     },
     {
       key: "edit-history",

@@ -43,12 +43,12 @@ export default function PoCardView({
 }) {
   const { message } = App.useApp();
   const router = useRouter();
+  const updateStatus = useUpdate(`purchase-orders`);
+
   return (
     <section className="py-6 w-full max-w-[1140px]">
       <div className="grid grid-cols-3 items-center w-full gap-5">
         {data.map((item: PurchaseOrderDto) => {
-          const updateStatus = useUpdate(`purchase-orders`);
-
           const items: MenuProps["items"] = [
             {
               label: <div className="text-sm !w-32">View</div>,

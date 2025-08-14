@@ -4,7 +4,10 @@ import {
 } from "@/types/product/product.type";
 import { InvoiceFieldType } from "@/types/purchase-invoice/purchase-invoice.type";
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
-import { PurchaseOrderResponse } from "@/types/purchase-order/purchase-order.type";
+import {
+  PurchaseOrderDto,
+  PurchaseOrderResponse,
+} from "@/types/purchase-order/purchase-order.type";
 import getCurrencyCode from "@/utils/getCurrencyCode";
 import type { FormInstance } from "antd";
 import {
@@ -33,7 +36,7 @@ export default function InvoiceSecondStep({
   form: FormInstance<InvoiceFieldType>;
   poDetailData: PurchaseOrderDetailDto;
   currenciesData: ProductCurrencyInterface[];
-  purchaseOrdersData: PurchaseOrderResponse;
+  purchaseOrdersData: PurchaseOrderDto[];
   productsData: ProductResponse;
   poDetailLoading: boolean;
 }) {
@@ -87,7 +90,7 @@ export default function InvoiceSecondStep({
             return false;
           }}
           options={[
-            ...(purchaseOrdersData?.dto.map((po) => ({
+            ...(purchaseOrdersData?.map((po) => ({
               value: po.id,
               label: po.purchase_order_no,
             })) || []),
