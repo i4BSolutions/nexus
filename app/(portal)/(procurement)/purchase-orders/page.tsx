@@ -153,16 +153,19 @@ export default function PurchaseOrdersPage() {
 
   if (isPending) {
     return (
-      <Flex justify="center" align="center" style={{ height: "100vh" }}>
+      <Flex justify="center" align="center" style={{ height: "500px" }}>
         <Spin />
       </Flex>
     );
   }
 
-  if (!data)
+  if (!data) {
     return (
-      <div className="grid place-items-center h-[500px]">No data available</div>
+      <Flex justify="center" align="center" style={{ height: "600px" }}>
+        <Spin />
+      </Flex>
     );
+  }
 
   if (!statItems) return null;
 

@@ -40,7 +40,7 @@ export default function CardView({
   const router = useRouter();
 
   return (
-    <section className="py-4">
+    <section className="py-6">
       <div
         className="grid gap-4"
         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(325px, 1fr))" }}
@@ -76,8 +76,8 @@ export default function CardView({
                   background: "linear-gradient(90deg, #FFFBE6 0%, #FFF 100%)",
                 }}
               >
-                <Row>
-                  <Col span={6} className="!grid !place-items-center">
+                <Row style={{ paddingLeft: 12 }}>
+                  <Col span={4} className="!grid !place-items-center">
                     <DollarOutlined
                       style={{
                         width: 32,
@@ -92,7 +92,7 @@ export default function CardView({
                       }}
                     />
                   </Col>
-                  <Col span={14}>
+                  <Col span={16}>
                     <Typography.Text className="!text-xl !font-semibold">
                       {item.purchase_invoice_number}
                     </Typography.Text>
@@ -102,7 +102,7 @@ export default function CardView({
                       />
                     </div>
                   </Col>
-                  <Col span={2} className="!grid !place-items-center">
+                  <Col span={4} className="!grid !place-items-center">
                     <Dropdown
                       menu={{ items }}
                       trigger={["click"]}
@@ -196,7 +196,7 @@ export default function CardView({
                   </Col>
                   <Progress
                     percent={item.delivered_percentage}
-                    strokeColor="#52C41A"
+                    strokeColor={"#52C41A"}
                   />
                   <Space
                     style={{
@@ -208,9 +208,15 @@ export default function CardView({
                     <Space>
                       <div
                         style={{
-                          color: "#52C41A",
-                          background: "#F6FFED",
-                          border: "1px solid #B7EB8F",
+                          color: item.delivered_percentage
+                            ? "#52C41A"
+                            : "#F5222D",
+                          background: item.delivered_percentage
+                            ? "#F6FFED"
+                            : "#FFF1F0",
+                          border: item.delivered_percentage
+                            ? "1px solid #B7EB8F"
+                            : "1px solid #FFA39E",
                           borderRadius: "8px",
                           fontSize: "12px",
                           fontWeight: 400,
@@ -224,9 +230,9 @@ export default function CardView({
                     <Space>
                       <div
                         style={{
-                          color: "#F5222D",
-                          background: "#FFF1F0",
-                          border: "1px solid #FFA39E",
+                          color: "#FA8C16",
+                          background: "#FFF7E6",
+                          border: "1px solid #FFD591",
                           borderRadius: "8px",
                           fontSize: "12px",
                           fontWeight: 400,
