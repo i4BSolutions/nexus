@@ -197,8 +197,8 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <section className="px-6 grid place-items-center w-full">
-      <div className="w-full max-w-[1140px]">
+    <section className="mx-auto max-w-7xl">
+      <div>
         <Breadcrumbs
           items={[{ title: "Home", href: "/" }, { title: "Purchase Orders" }]}
         />

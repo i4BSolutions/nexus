@@ -2,13 +2,13 @@
 
 import { PurchaseOrderHistory } from "@/types/purchase-order/purchase-order.type";
 import {
-  EditOutlined,
   CalendarOutlined,
+  DollarCircleOutlined,
+  EditOutlined,
   SwapOutlined,
   TableOutlined,
-  DollarCircleOutlined,
 } from "@ant-design/icons";
-import { Card, Col, Row, Space, Typography, Tag, Tooltip } from "antd";
+import { Card, Col, Row, Space, Typography } from "antd";
 
 const { Title, Text } = Typography;
 
@@ -107,14 +107,18 @@ const EditHistory = ({ data }: { data: PurchaseOrderHistory[] }) => {
 
   return (
     <Card
+      style={{
+        borderRadius: "16px 16px 0 0",
+      }}
       styles={{
         header: {
           background: "linear-gradient(90deg, #F9F0FF 0%, #FFF 100%)",
           borderBottom: "1px solid #D3ADF7",
+          borderRadius: "16px 16px 0 0",
         },
       }}
       title={
-        <Space style={{ margin: "10px 0" }}>
+        <div style={{ margin: "10px 0" }}>
           <Space
             style={{
               width: 32,
@@ -142,7 +146,7 @@ const EditHistory = ({ data }: { data: PurchaseOrderHistory[] }) => {
                 : "No updates yet"}
             </Text>
           </Space>
-        </Space>
+        </div>
       }
       variant="outlined"
     >

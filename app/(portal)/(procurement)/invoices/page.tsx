@@ -232,7 +232,7 @@ export default function InvoicesPage() {
   };
 
   return (
-    <section className="max-w-7xl mx-auto py-10 px-4">
+    <section className="max-w-7xl mx-auto py-10 px-6">
       {/* Breadcrumbs */}
       <Breadcrumbs
         items={[{ title: "Home", href: "/" }, { title: "Invoices" }]}

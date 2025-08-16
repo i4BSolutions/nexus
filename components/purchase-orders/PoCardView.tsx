@@ -314,7 +314,15 @@ export default function PoCardView({
                   </Col>
                 </Row>
                 <Row>
-                  <Progress percent={item.allocation_percentage} />
+                  <Progress
+                    percent={item.allocation_percentage}
+                    strokeColor={
+                      item.allocation_percentage &&
+                      item.allocation_percentage < 100
+                        ? "#9254DE"
+                        : "#52C41A"
+                    }
+                  />
                 </Row>
               </div>
             </div>
