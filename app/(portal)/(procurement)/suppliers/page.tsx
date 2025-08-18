@@ -217,7 +217,7 @@ export default function SuppliersPage() {
   ];
 
   return (
-    <section className="max-w-7xl mx-auto py-10 px-4">
+    <section className="max-w-7xl mx-auto">
       {/* Breadcrumb */}
       <Breadcrumbs
         items={[{ title: "Home", href: "/" }, { title: "Suppliers" }]}

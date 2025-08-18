@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, Space, Typography, Tag } from "antd";
-import { SwapOutlined, EyeOutlined } from "@ant-design/icons";
 import { LastStockMovement } from "@/types/product/product.type";
+import { EyeOutlined, SwapOutlined } from "@ant-design/icons";
+import { Card, Space, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 
 const { Text, Title, Link } = Typography;
@@ -21,14 +21,18 @@ export default function LastStockMovementCard({
 
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       style={{
         maxWidth: "100%",
         width: 564,
         borderRadius: 16,
         boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
       }}
-      bodyStyle={{ padding: 0 }}
+      styles={{
+        body: {
+          padding: 0,
+        },
+      }}
     >
       {/* Header */}
       <div

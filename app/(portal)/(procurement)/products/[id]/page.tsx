@@ -140,7 +140,7 @@ const ProductDetailPage = () => {
   };
 
   return (
-    <section className="max-w-7xl mx-auto py-10 px-4">
+    <section className="max-w-7xl mx-auto">
       <Breadcrumbs
         items={[
           { title: "Home", href: "/" },
@@ -200,6 +200,7 @@ const ProductDetailPage = () => {
 
       {/* Tabs */}
       <Tabs
+        size="large"
         defaultActiveKey="details"
         items={[
           {

@@ -20,9 +20,11 @@ const TableCardWrapper = ({
 }: TableCardWrapperProps) => {
   return (
     <Card
-      headStyle={{
-        background: gradient,
-        borderBottom: `1px solid ${borderColor}`,
+      styles={{
+        header: {
+          background: gradient,
+          borderBottom: `1px solid ${borderColor}`,
+        },
       }}
       title={
         <Space
