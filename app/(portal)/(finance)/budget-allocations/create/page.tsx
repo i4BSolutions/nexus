@@ -1,12 +1,10 @@
 "use client";
 
 import BudgetAllocationForm from "@/components/budget-allocations/BudgetAllocationForm";
-import { useCreate } from "@/hooks/react-query/useCreate";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useMutation } from "@tanstack/react-query";
 import { message, Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
 
 const createAllocation = async (formData: FormData) => {
   const res = await fetch("/api/budget-allocations", {
@@ -33,7 +31,7 @@ const CreateBudgetAllocationsPage = () => {
   });
 
   return (
-    <section className="max-w-7xl mx-auto py-4 px-6">
+    <section className="max-w-7xl mx-auto">
       <Space
         size="small"
         style={{

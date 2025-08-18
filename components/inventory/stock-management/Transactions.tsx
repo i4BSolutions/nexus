@@ -23,13 +23,12 @@ import {
   Flex,
   Pagination,
   Select,
-  Space,
   Tag,
   Typography,
 } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 const { RangePicker } = DatePicker;
 
@@ -203,7 +202,7 @@ const Transactions = () => {
 
   return (
     <>
-      <Flex align="center" gap={8}>
+      <div className="flex items-center gap-2 w-full mb-4">
         <span>Filter(s):</span>
         <RangePicker
           onChange={(dates) => setDateRange(dates)}
@@ -266,8 +265,8 @@ const Transactions = () => {
         >
           Clear Filter(s)
         </Button>
-      </Flex>
-      <Space style={{ width: "100%" }}>
+      </div>
+      <div style={{ width: "100%" }}>
         <Table
           columns={columns}
           loading={stockTransactionsLoading}
@@ -295,7 +294,7 @@ const Transactions = () => {
             </Flex>
           )}
         />
-      </Space>
+      </div>
     </>
   );
 };

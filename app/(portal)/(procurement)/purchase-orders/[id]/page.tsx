@@ -130,7 +130,7 @@ export default function PurchaseOrderDetailPage() {
   };
 
   return (
-    <section className="grid place-items-center max-w-7xl mx-auto">
+    <section className="max-w-7xl mx-auto">
       {/* Header Section */}
       <div className="w-full">
         <Breadcrumbs

@@ -158,7 +158,7 @@ const BudgetAllocationDetailPage = () => {
   };
 
   return (
-    <section className="px-4">
+    <section className="max-w-7xl mx-auto">
       <div className="px-6">
         <Breadcrumbs
           items={[

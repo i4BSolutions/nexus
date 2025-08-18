@@ -52,7 +52,7 @@ export default function UserDetailPage() {
   ];
 
   return (
-    <section className="px-4">
+    <section className="max-w-7xl mx-auto">
       {/* Header Section */}
       <div className="px-6">
         <Breadcrumbs
