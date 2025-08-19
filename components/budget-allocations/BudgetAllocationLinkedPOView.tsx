@@ -6,7 +6,6 @@ import {
 } from "@ant-design/icons";
 import { App, Card, Col, Flex, Row, Spin, Tag, Typography } from "antd";
 import dayjs from "dayjs";
-import React from "react";
 
 const BudgetAllocationLinkedPOView = ({ id }: { id: number }) => {
   const { message } = App.useApp();
@@ -23,7 +22,7 @@ const BudgetAllocationLinkedPOView = ({ id }: { id: number }) => {
 
   if (linkedPOIsLoading || !data) {
     return (
-      <div className="flex justify-center items-center h-full">
+      <div className="flex justify-center items-center h-[500px]">
         <Spin />
       </div>
     );

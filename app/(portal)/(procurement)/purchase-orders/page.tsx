@@ -153,16 +153,19 @@ export default function PurchaseOrdersPage() {
 
   if (isPending) {
     return (
-      <Flex justify="center" align="center" style={{ height: "100vh" }}>
+      <Flex justify="center" align="center" style={{ height: "500px" }}>
         <Spin />
       </Flex>
     );
   }
 
-  if (!data)
+  if (!data) {
     return (
-      <div className="grid place-items-center h-[500px]">No data available</div>
+      <Flex justify="center" align="center" style={{ height: "600px" }}>
+        <Spin />
+      </Flex>
     );
+  }
 
   if (!statItems) return null;
 
@@ -197,8 +200,8 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <section className="px-6 grid place-items-center w-full">
-      <div className="w-full max-w-[1140px]">
+    <section className="mx-auto max-w-7xl">
+      <div>
         <Breadcrumbs
           items={[{ title: "Home", href: "/" }, { title: "Purchase Orders" }]}
         />

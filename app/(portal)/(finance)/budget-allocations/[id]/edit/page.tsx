@@ -2,13 +2,11 @@
 
 import BudgetAllocationForm from "@/components/budget-allocations/BudgetAllocationForm";
 import { useGetById } from "@/hooks/react-query/useGetById";
-import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { BudgetAllocationsInterface } from "@/types/budget-allocations/budget-allocations.type";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useMutation } from "@tanstack/react-query";
 import { App, Space, Spin, Typography } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import React from "react";
 
 const updateAllocation = async ({
   id,
@@ -64,7 +62,7 @@ const BudgetAllocationEditPage = () => {
   }
 
   return (
-    <section className="max-w-7xl mx-auto py-4 px-6">
+    <section className="max-w-7xl mx-auto">
       <Space
         size="small"
         style={{

@@ -77,8 +77,8 @@ export default function UsersPage() {
   }
 
   return (
-    <section className="px-6 grid place-items-center w-full">
-      <div className="w-full max-w-[1140px]">
+    <section className="max-w-7xl mx-auto">
+      <div className="w-full">
         <Breadcrumbs
           items={[
             { title: "Home", href: "/" },

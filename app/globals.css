@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --container-7xl: 1140px;
+}
+
 .white-placeholder input::placeholder {
   color: rgba(255, 255, 255, 0.25) !important;
   opacity: 1;

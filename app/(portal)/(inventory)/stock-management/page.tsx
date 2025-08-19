@@ -105,8 +105,8 @@ const StockManagementPage = () => {
   };
 
   return (
-    <section className="px-6 grid place-items-center w-full pb-3">
-      <div className="w-full max-w-[1140px]">
+    <section className="max-w-7xl mx-auto">
+      <div className="w-full">
         <Breadcrumbs
           items={[{ title: "Home", href: "/" }, { title: "Stock Management" }]}
         />

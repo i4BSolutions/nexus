@@ -1,8 +1,8 @@
+import { usePaginatedById } from "@/hooks/react-query/usePaginatedById";
 import {
   BudgetAllocationHistory,
   InvoiceHistory,
   PurchaseOrderDetailDto,
-  UsageHistoryDto,
 } from "@/types/purchase-order/purchase-order-detail.type";
 import {
   DollarOutlined,
@@ -14,7 +14,6 @@ import { Card, Flex, Progress, Statistic, Typography } from "antd";
 import { useEffect, useState } from "react";
 import PoBudgetAllocationTable from "./PoBudgetAllocationTable";
 import PoInvoiceTable from "./PoInvoiceTable";
-import { usePaginatedById } from "@/hooks/react-query/usePaginatedById";
 
 export default function PoUsageHistory({
   id,
@@ -108,11 +107,11 @@ export default function PoUsageHistory({
             }}
           />
           <div>
-            <Typography.Title level={3} className="!mb-0">
+            <Typography.Title level={4} className="!mb-0">
               Related Invoices
             </Typography.Title>
-            <Typography.Text type="secondary">
-              Invoices linked to this purchase order{" "}
+            <Typography.Text type="secondary" className="!font-semibold">
+              Invoices linked to this purchase order
             </Typography.Text>
           </div>
         </Flex>
@@ -296,10 +295,10 @@ export default function PoUsageHistory({
             }}
           />
           <div>
-            <Typography.Title level={3} className="!mb-0">
+            <Typography.Title level={4} className="!mb-0">
               Related Budget Allocations
             </Typography.Title>
-            <Typography.Text type="secondary">
+            <Typography.Text type="secondary" className="!font-semibold">
               Budget allocations linked to this purchase order
             </Typography.Text>
           </div>

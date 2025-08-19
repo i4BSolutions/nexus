@@ -150,7 +150,7 @@ export default function PoCardView({
                   background: "linear-gradient(90deg, #E6F7FF 0%, #FFF 100%)",
                 }}
               >
-                <Row>
+                <Row style={{ paddingLeft: 12 }}>
                   <Col span={4} className="!grid !place-items-center">
                     <DollarOutlined
                       style={{
@@ -166,7 +166,7 @@ export default function PoCardView({
                       }}
                     />
                   </Col>
-                  <Col span={14}>
+                  <Col span={16}>
                     <div className="flex items-center gap-1.5">
                       <Typography.Text className="!text-xl !font-semibold">
                         {item.purchase_order_no}
@@ -190,7 +190,7 @@ export default function PoCardView({
                       <StatusBadge status={item.purchase_order_smart_status} />
                     </div>
                   </Col>
-                  <Col span={6} className="!grid !place-items-center">
+                  <Col span={4} className="!grid !place-items-center">
                     <Dropdown
                       menu={{ items }}
                       trigger={["click"]}
@@ -314,7 +314,15 @@ export default function PoCardView({
                   </Col>
                 </Row>
                 <Row>
-                  <Progress percent={item.allocation_percentage} />
+                  <Progress
+                    percent={item.allocation_percentage}
+                    strokeColor={
+                      item.allocation_percentage &&
+                      item.allocation_percentage < 100
+                        ? "#9254DE"
+                        : "#52C41A"
+                    }
+                  />
                 </Row>
               </div>
             </div>

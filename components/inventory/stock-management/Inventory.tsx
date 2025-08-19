@@ -6,13 +6,11 @@ import { useList } from "@/hooks/react-query/useList";
 import {
   InventoryListFilterParams,
   InventoryListInterface,
-  InventoryListResponse,
   InventoryResponse,
 } from "@/types/inventory/inventory.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
-import { DollarCircleOutlined } from "@ant-design/icons";
+import { DollarCircleOutlined, TagOutlined } from "@ant-design/icons";
 import {
-  Alert,
   App,
   Button,
   Empty,
@@ -25,7 +23,7 @@ import {
   Typography,
 } from "antd";
 import { SearchProps } from "antd/es/input";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 const Inventory = () => {
   const { message } = App.useApp();
@@ -139,7 +137,7 @@ const Inventory = () => {
             title: "Total Items",
             value: inventoryListData?.total_item_count ?? 0,
             tooltip: "Total Items",
-            icon: <DollarCircleOutlined />,
+            icon: <TagOutlined />,
             bgColor: "#36CFC9",
             gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFFFFF 100%)",
             borderColor: "#87E8DE",

@@ -117,7 +117,7 @@ export default function UserCreationPage() {
     );
 
   return (
-    <section className="max-w-7xl mx-auto py-4 px-6">
+    <section className="max-w-7xl mx-auto">
       {/* Header */}
       <Space
         size="small"

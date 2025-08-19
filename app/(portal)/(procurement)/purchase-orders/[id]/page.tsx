@@ -130,84 +130,80 @@ export default function PurchaseOrderDetailPage() {
   };
 
   return (
-    <section className="px-6 grid place-items-center w-full">
-      <div className="w-full max-w-[1140px]">
-        {/* Header Section */}
-        <div>
-          <Breadcrumbs
-            items={[
-              { title: "Home", href: "/" },
-              { title: "Purchase Orders", href: "/purchase-orders" },
-              {
-                title: detailData.purchase_order_no || "Purchase Order Detail",
-              },
-            ]}
-          />
-          <Flex justify="space-between" align="center" className="!mb-4">
-            {/* Left Header */}
-            <Flex align="center" gap={16}>
-              <button
-                className="flex justify-center items-center"
-                onClick={() => router.back()}
-              >
-                <ArrowLeftOutlined
-                  style={{ fontSize: 16, cursor: "pointer" }}
-                />
-              </button>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <Typography.Title level={3} style={{ marginBottom: 1 }}>
-                    {detailData.purchase_order_no || "Purchase Order Detail"}
-                  </Typography.Title>
-                  {detailData.status == "Draft" ? (
-                    <HourglassOutlined />
-                  ) : detailData.status == "Approved" ? (
-                    <CheckCircleOutlined style={{ color: "#52C41A" }} />
-                  ) : (
-                    <></>
-                  )}
-                </div>
-                <StatusBadge status={detailData.purchase_order_smart_status} />
-              </div>
-            </Flex>
-
-            {/* Right Header */}
-            {detailData.purchase_order_smart_status === "Cancel" ? (
-              <></>
-            ) : (
-              <Flex align="center" gap={8}>
-                <Button icon={<DownloadOutlined />}>
-                  <PDFDownloadLink
-                    document={<PoDetailPDF data={detailData} />}
-                    fileName={`${detailData.purchase_order_no}.pdf`}
-                  >
-                    Download PDF
-                  </PDFDownloadLink>
-                </Button>
-                {hasPermission && (
-                  <>
-                    <Button
-                      type="primary"
-                      icon={<EditOutlined />}
-                      onClick={() =>
-                        router.push(`/purchase-orders/${params.id}/edit`)
-                      }
-                    >
-                      Edit PO
-                    </Button>
-                    <Dropdown
-                      menu={{ items: dropDownItems }}
-                      trigger={["click"]}
-                      placement="bottomRight"
-                    >
-                      <Button icon={<EllipsisOutlined />} />
-                    </Dropdown>
-                  </>
+    <section className="max-w-7xl mx-auto">
+      {/* Header Section */}
+      <div className="w-full">
+        <Breadcrumbs
+          items={[
+            { title: "Home", href: "/" },
+            { title: "Purchase Orders", href: "/purchase-orders" },
+            {
+              title: detailData.purchase_order_no || "Purchase Order Detail",
+            },
+          ]}
+        />
+        <Flex justify="space-between" align="center" className="!mb-4">
+          {/* Left Header */}
+          <Flex align="center" gap={16}>
+            <button
+              className="flex justify-center items-center"
+              onClick={() => router.back()}
+            >
+              <ArrowLeftOutlined style={{ fontSize: 16, cursor: "pointer" }} />
+            </button>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <Typography.Title level={3} style={{ marginBottom: 1 }}>
+                  {detailData.purchase_order_no || "Purchase Order Detail"}
+                </Typography.Title>
+                {detailData.status == "Draft" ? (
+                  <HourglassOutlined />
+                ) : detailData.status == "Approved" ? (
+                  <CheckCircleOutlined style={{ color: "#52C41A" }} />
+                ) : (
+                  <></>
                 )}
-              </Flex>
-            )}
+              </div>
+              <StatusBadge status={detailData.purchase_order_smart_status} />
+            </div>
           </Flex>
-        </div>
+
+          {/* Right Header */}
+          {detailData.purchase_order_smart_status === "Cancel" ? (
+            <></>
+          ) : (
+            <Flex align="center" gap={8}>
+              <Button icon={<DownloadOutlined />}>
+                <PDFDownloadLink
+                  document={<PoDetailPDF data={detailData} />}
+                  fileName={`${detailData.purchase_order_no}.pdf`}
+                >
+                  Download PDF
+                </PDFDownloadLink>
+              </Button>
+              {hasPermission && (
+                <>
+                  <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    onClick={() =>
+                      router.push(`/purchase-orders/${params.id}/edit`)
+                    }
+                  >
+                    Edit PO
+                  </Button>
+                  <Dropdown
+                    menu={{ items: dropDownItems }}
+                    trigger={["click"]}
+                    placement="bottomRight"
+                  >
+                    <Button icon={<EllipsisOutlined />} />
+                  </Dropdown>
+                </>
+              )}
+            </Flex>
+          )}
+        </Flex>
         {/* Purchase Order Detail Tabs */}
         <Tabs
           defaultActiveKey="1"

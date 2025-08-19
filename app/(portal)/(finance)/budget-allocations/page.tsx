@@ -228,7 +228,7 @@ export default function BudgetAllocationsPage() {
   ];
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="max-w-7xl mx-auto">
       <Breadcrumbs
         items={[{ title: "Home", href: "/" }, { title: "Budget Allocations" }]}
       />

@@ -71,7 +71,7 @@ const SupplierPage = () => {
   if (error || !supplier) return null;
 
   return (
-    <section className="max-w-7xl mx-auto py-10 px-4">
+    <section className="max-w-7xl mx-auto">
       <Breadcrumbs
         items={[
           { title: "Home", href: "/" },
@@ -140,6 +140,7 @@ const SupplierPage = () => {
 
       {/* Tabs */}
       <Tabs
+        size="large"
         defaultActiveKey="details"
         items={[
           {
