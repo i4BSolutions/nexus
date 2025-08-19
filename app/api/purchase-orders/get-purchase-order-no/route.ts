@@ -1,0 +1,45 @@
+import { error, success } from "@/lib/api-response";
+import { createClient } from "@/lib/supabase/server";
+import { ApiResponse } from "@/types/shared/api-response-type";
+import { generatePoNumber } from "@/utils/generatePoNumber";
+import { NextResponse } from "next/server";
+
+export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
+  const supabase = await createClient();
+
+  const { data: latestPoData, error: dbError } = await supabase
+    .from("purchase_order")
+    .select("purchase_order_no")
+    .order("id", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (dbError) {
+    return NextResponse.json(
+      error("Failed to fetch latest purchase order number", 500),
+      {
+        status: 500,
+      }
+    );
+  }
+
+  if (!latestPoData) {
+    const defaultPoNo = "PO-2025-1000";
+
+    return NextResponse.json(
+      success(defaultPoNo, "Default PO number retrieved"),
+      {
+        status: 200,
+      }
+    );
+  }
+
+  const generatedPoNumber = generatePoNumber(latestPoData.purchase_order_no);
+
+  return NextResponse.json(
+    success(generatedPoNumber, "Latest PO number retrieved"),
+    {
+      status: 200,
+    }
+  );
+}

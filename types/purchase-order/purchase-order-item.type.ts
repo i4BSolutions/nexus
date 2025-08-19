@@ -1,0 +1,13 @@
+export interface PurchaseOrderItemInterface {
+  id: number;
+  product: number;
+  product_name: string;
+  quantity: number;
+  unit_price_local: number;
+  unit_price_usd: number;
+  sub_total_local: number;
+  sub_total_usd: number;
+  invoiced?: number;
+  available?: number;
+  is_foc?: boolean;
+}

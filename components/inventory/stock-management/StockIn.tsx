@@ -1,0 +1,452 @@
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Select,
+  Table,
+  InputNumber,
+  Typography,
+  Space,
+  Flex,
+  Divider,
+  App,
+  Empty,
+  Spin,
+  Row,
+  Col,
+  Checkbox,
+} from "antd";
+import { useEffect } from "react";
+import { DownloadOutlined, TagOutlined } from "@ant-design/icons";
+import StockInHistory from "./StockInHistory";
+import {
+  PurchaseInvoiceDto,
+  PurchaseInvoiceInterface,
+  PurchaseInvoiceResponse,
+} from "@/types/purchase-invoice/purchase-invoice.type";
+import { WarehouseInterface } from "@/types/warehouse/warehouse.type";
+import { useGetById } from "@/hooks/react-query/useGetById";
+import { StockTransactionHistory } from "@/types/stock/stock.type";
+
+const { Option } = Select;
+const { TextArea } = Input;
+
+interface StockFormProps {
+  invoices: PurchaseInvoiceDto[] | undefined;
+  warehouses: WarehouseInterface[] | undefined;
+  stockInHistories: StockTransactionHistory[] | undefined;
+  invoiceLoading?: boolean;
+  warehouseLoading?: boolean;
+  mutateStockInLoading?: boolean;
+  stockInHistoryLoading?: boolean;
+  onSubmit?: (payload: any) => void;
+}
+
+const StockInForm = ({
+  invoices,
+  warehouses,
+  stockInHistories,
+  invoiceLoading,
+  warehouseLoading,
+  stockInHistoryLoading,
+  mutateStockInLoading,
+  onSubmit,
+}: StockFormProps) => {
+  const [form] = Form.useForm();
+  const { message } = App.useApp();
+
+  const selectedInvoice = Form.useWatch("invoice", form);
+  const selectedInvoiceId = invoices?.find(
+    (inv) => inv.purchase_invoice_number === selectedInvoice
+  )?.id;
+
+  const {
+    data: invoiceDataRaw,
+    isLoading: invoiceDetailLoading,
+    error,
+  } = useGetById(
+    "purchase-invoices",
+    selectedInvoiceId as any,
+    !!selectedInvoiceId
+  );
+
+  const invoiceData = invoiceDataRaw as PurchaseInvoiceInterface;
+
+  const validInvoiceItems =
+    invoiceData?.invoice_items?.filter(
+      (item) =>
+        typeof item?.remaining_to_stock_in === "number" &&
+        item.remaining_to_stock_in > 0
+    ) || [];
+
+  useEffect(() => {
+    if (validInvoiceItems.length) {
+      form.setFieldsValue({
+        invoice_items: validInvoiceItems.map((item) => ({
+          checked: false,
+          stock_in_quantity: 1,
+          ...item,
+        })),
+      });
+    }
+  }, [invoiceData, form]);
+
+  const handleFinish = (values: any) => {
+    const selectedItems = values.invoice_items?.filter(
+      (item: any) => item.checked
+    );
+
+    if (!selectedItems || selectedItems.length === 0) {
+      message.warning("Please select at least one item to stock in.");
+      return;
+    }
+
+    const payload = {
+      invoice_items: selectedItems.map((item: any) => ({
+        product_id: item.product_id,
+        warehouse_id: warehouses?.find((w) => w.name === values.warehouse)?.id,
+        quantity: item.stock_in_quantity,
+        invoice_line_item_id: item.id,
+      })),
+    };
+
+    onSubmit?.(payload);
+    // message.success("Stock In completed successfully!");
+    form.resetFields();
+  };
+
+  return (
+    <>
+      <Card
+        styles={{
+          header: {
+            background: "linear-gradient(90deg, #F6FFED 0%, #FFFFFF 100%)",
+            borderBottom: "1px solid #73D13D",
+          },
+        }}
+        title={
+          <div className="flex items-center gap-3 py-2">
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                background: "#73D13D",
+                borderRadius: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <DownloadOutlined style={{ color: "#FFFFFF" }} />
+            </div>
+            <div className="flex flex-col">
+              <Typography.Text
+                strong
+                style={{
+                  color: "#000000D9",
+                  fontSize: "20px",
+                  fontWeight: 500,
+                }}
+              >
+                Stock In
+              </Typography.Text>
+              <Typography.Text
+                style={{
+                  color: "#00000073",
+                  fontSize: "14px",
+                  fontWeight: 400,
+                }}
+              >
+                Receive items into inventory from invoices
+              </Typography.Text>
+            </div>
+          </div>
+        }
+        variant="outlined"
+      >
+        <Form layout="vertical" form={form} style={{}} onFinish={handleFinish}>
+          <Flex style={{ gap: 12 }}>
+            <Form.Item
+              label="Invoice"
+              name="invoice"
+              style={{ width: "100%" }}
+              rules={[{ required: true, message: "Please select invoice" }]}
+            >
+              <Select
+                loading={invoiceLoading}
+                allowClear
+                placeholder="Select Invoice"
+              >
+                {invoices?.map((i) => (
+                  <Option key={i.id} value={i.purchase_invoice_number}>
+                    {i.purchase_invoice_number}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              label="Warehouse"
+              name="warehouse"
+              style={{ width: "100%" }}
+              rules={[{ required: true, message: "Please select warehouse" }]}
+            >
+              <Select
+                allowClear
+                loading={warehouseLoading}
+                placeholder="Select Warehouse"
+              >
+                {warehouses?.map((warehouse) => (
+                  <Option key={warehouse.id} value={warehouse.name}>
+                    {warehouse.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Flex>
+
+          <Card
+            styles={{
+              header: {
+                borderBottom: "none",
+              },
+            }}
+            title={
+              <div className="flex flex-col">
+                <Typography.Text
+                  strong
+                  style={{
+                    fontWeight: 500,
+                    color: "#000000D9",
+                    fontSize: "20px",
+                  }}
+                >
+                  Available Items
+                </Typography.Text>
+                <Typography.Text
+                  style={{
+                    color: "#00000073",
+                    fontWeight: 400,
+                    fontSize: "14px",
+                  }}
+                >
+                  Select quantities to add to stock
+                </Typography.Text>
+              </div>
+            }
+            style={{ marginTop: 12 }}
+          >
+            {selectedInvoice ? (
+              invoiceDetailLoading ? (
+                <div className="grid place-items-center h-[200px]">
+                  <Spin />
+                </div>
+              ) : validInvoiceItems.length > 0 ? (
+                <Form.List name="invoice_items">
+                  {(fields) => (
+                    <div
+                      style={{ border: "1px solid #e0e0e0", borderRadius: 8 }}
+                    >
+                      <Row
+                        gutter={16}
+                        style={{
+                          fontWeight: 600,
+                          padding: "12px",
+                          background: "#fafafa",
+                          borderBottom: "1px solid #e0e0e0",
+                        }}
+                        align="middle"
+                      >
+                        <Col span={2}>SELECT</Col>
+                        <Col span={4}>PRODUCT NAME</Col>
+                        <Col span={4}>PRODUCT SKU</Col>
+                        <Col span={4}>INVOICED QTY</Col>
+                        <Col span={4}>REMAINING QTY</Col>
+                        <Col span={6}>QUANTITY TO STOCK IN</Col>
+                      </Row>
+
+                      {fields.map(({ key, name, ...restField }, index) => {
+                        const item = validInvoiceItems[index];
+                        if (!item) return null;
+
+                        return (
+                          <Row
+                            key={key}
+                            gutter={16}
+                            align="middle"
+                            style={{
+                              padding: "12px 20px",
+                              borderBottom: "1px solid #f0f0f0",
+                            }}
+                          >
+                            <Col span={2}>
+                              <Form.Item
+                                {...restField}
+                                name={[name, "checked"]}
+                                valuePropName="checked"
+                                initialValue={false}
+                                style={{ marginBottom: 0 }}
+                              >
+                                <Checkbox />
+                              </Form.Item>
+                            </Col>
+                            <Col span={4}>
+                              <Typography.Text>
+                                {item.product_name}
+                              </Typography.Text>
+                            </Col>
+                            <Col span={4}>
+                              <Typography.Text>
+                                {item.product_sku}
+                              </Typography.Text>
+                            </Col>
+                            <Col span={4}>
+                              <Typography.Text>
+                                {item.total_ordered}
+                              </Typography.Text>
+                            </Col>
+                            <Col span={4}>
+                              <Typography.Text>
+                                {item.remaining_to_stock_in}
+                              </Typography.Text>
+                            </Col>
+                            <Col span={6}>
+                              <Form.Item
+                                {...restField}
+                                name={[name, "stock_in_quantity"]}
+                                initialValue={1}
+                                style={{ marginBottom: 0 }}
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: "Quantity is required.",
+                                  },
+                                  {
+                                    validator: (_, value) => {
+                                      const remaining =
+                                        item.remaining_to_stock_in ?? 1;
+                                      if (typeof value !== "number")
+                                        return Promise.resolve();
+                                      if (value <= 0) {
+                                        return Promise.reject(
+                                          new Error(
+                                            "Quantity must be greater than 0."
+                                          )
+                                        );
+                                      }
+                                      if (value > remaining) {
+                                        return Promise.reject(
+                                          new Error(
+                                            `Cannot exceed remaining quantity (${remaining})`
+                                          )
+                                        );
+                                      }
+                                      return Promise.resolve();
+                                    },
+                                  },
+                                ]}
+                              >
+                                <InputNumber style={{ width: "100%" }} />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Form.List>
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: 200,
+                  }}
+                >
+                  <Empty description="There are no items to stock in." />
+                </div>
+              )
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: 200,
+                  width: "100%",
+                }}
+              >
+                <Empty
+                  image="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
+                  styles={{ image: { height: 60 } }}
+                  description={null}
+                />
+                <Typography.Text
+                  style={{
+                    color: "#000000D9",
+                    fontSize: 14,
+                    fontWeight: 400,
+                  }}
+                >
+                  Select invoice to add items to stock.
+                </Typography.Text>
+              </div>
+            )}
+          </Card>
+
+          <Form.Item
+            label="Note (Optional)"
+            name="note"
+            style={{ marginTop: 12 }}
+          >
+            <TextArea placeholder="Enter note" />
+          </Form.Item>
+
+          <Space
+            style={{
+              display: "flex",
+              marginTop: 16,
+              justifyContent: "space-between",
+            }}
+          >
+            <Button
+              htmlType="reset"
+              onSubmit={() => form.resetFields()}
+              loading={mutateStockInLoading}
+              disabled={mutateStockInLoading}
+            >
+              Reset
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              disabled={mutateStockInLoading}
+              loading={mutateStockInLoading}
+            >
+              Complete Stock In
+            </Button>
+          </Space>
+        </Form>
+      </Card>
+
+      <Divider plain>
+        <Typography.Text
+          style={{ fontSize: "12px", fontWeight: 400, color: "#00000073" }}
+        >
+          Scroll down to see recent stock in history
+        </Typography.Text>
+      </Divider>
+
+      <StockInHistory
+        items={stockInHistories}
+        isLoading={stockInHistoryLoading}
+      />
+    </>
+  );
+};
+
+export default StockInForm;

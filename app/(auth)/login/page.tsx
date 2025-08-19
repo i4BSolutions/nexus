@@ -1,0 +1,152 @@
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
+import { GoogleOutlined, MailOutlined } from "@ant-design/icons";
+import { App, Button, Image, Input, Typography } from "antd";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { signInWithOtp } from "../actions";
+
+export default function LoginPage() {
+  const { message } = App.useApp();
+  const [email, setEmail] = useState("");
+  const router = useRouter();
+  const [otpPending, startOtpRequest] = useTransition();
+  const [googlePending, startGoogleRequest] = useTransition();
+  const emailRegex = /\.(com|org|net|edu|gov|io|co|info)$/i;
+
+  const loginHandler = async () => {
+    if (!email) return;
+    if (!navigator.onLine) {
+      message.error("You are offline! Please check your internet connection.");
+      return;
+    }
+    startOtpRequest(async () => {
+      try {
+        await signInWithOtp(email);
+        router.push("verify-otp?email=" + encodeURIComponent(email));
+      } catch (error) {
+        message.error("Account not provisioned in system!");
+        await fetch("/api/auth/login-audit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            type: "FAILED",
+            method: "OTP",
+          }),
+        });
+      }
+    });
+  };
+
+  const googleLoginHandler = async () => {
+    if (!email) return;
+    if (!navigator.onLine) {
+      message.error("You are offline! Please check your internet connection.");
+      return;
+    }
+    startGoogleRequest(async () => {
+      try {
+        const data = await fetch(
+          `/api/auth/check-user?email=${encodeURIComponent(email)}`
+        );
+        const { user_id } = await data.json();
+        if (user_id && data.status === 200) {
+          const supabase = createClient();
+          await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: `${location.origin}/api/auth/callback`,
+            },
+          });
+          await fetch("/api/auth/login-audit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              type: "SUCCESS",
+              user_id,
+              method: "Google SSO",
+            }),
+          });
+        } else if (!user_id && data.status === 200) {
+          message.error("Account not provisioned in system!");
+          await fetch("/api/auth/login-audit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              type: "FAILED",
+              method: "Google SSO",
+            }),
+          });
+        }
+      } catch (error) {
+        message.error("Please check your internet connection!");
+      }
+    });
+  };
+
+  return (
+    <section className="!h-screen bg-[url(/loginBg.jpg)] bg-cover grid place-items-center">
+      <div className="border border-[#595959] px-10 py-6 rounded-[8px] bg-[rgba(38,38,38,0.75)] backdrop-blur-sm space-y-6 text-center">
+        <Typography.Text style={{ color: "white", fontSize: 16 }}>
+          Welcome to
+        </Typography.Text>
+        <div className="flex justify-center mt-2">
+          <Image src="nexus.svg" alt="Nexus Logo" />
+        </div>
+        <div>
+          <Input
+            prefix={<MailOutlined style={{ color: "white", marginRight: 4 }} />}
+            placeholder="yourmail@domain.com"
+            style={{
+              backgroundColor: "transparent",
+              color: "white",
+            }}
+            className="white-placeholder"
+            type="email"
+            size="large"
+            onChange={(e) => setEmail(e.target.value)}
+            value={email}
+            width="100%"
+            autoFocus
+          />
+        </div>
+        <div className="w-full space-y-3">
+          <Button
+            type="primary"
+            onClick={loginHandler}
+            style={{ width: "100%" }}
+            disabled={!emailRegex.test(email)}
+            size="large"
+            loading={otpPending}
+          >
+            Sign In with OTP
+          </Button>
+          <Button
+            type="primary"
+            style={{ width: "100%" }}
+            onClick={googleLoginHandler}
+            disabled={!emailRegex.test(email)}
+            size="large"
+            loading={googlePending}
+          >
+            <GoogleOutlined />
+            Continue with Google
+          </Button>
+        </div>
+        <Typography.Text style={{ color: "white" }}>
+          AUTHORIZED PERSONNEL ONLY
+        </Typography.Text>
+      </div>
+    </section>
+  );
+}
