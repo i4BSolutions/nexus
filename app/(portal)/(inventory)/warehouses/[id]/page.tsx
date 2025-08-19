@@ -133,7 +133,7 @@ export default function WarehouseDetailsPage() {
   }, [warehouseData]);
 
   return (
-    <section className="max-w-7xl mx-auto py-10 px-4">
+    <section className="max-w-7xl mx-auto">
       {loading ? (
         <Flex justify="center" align="center" style={{ minHeight: "300px" }}>
           <Spin size="large" />

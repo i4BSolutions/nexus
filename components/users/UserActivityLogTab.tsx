@@ -11,7 +11,7 @@ export default function UserActivityLog({
   return (
     <div className="rounded-2xl border-2 border-[#F5F5F5]">
       <div
-        className="px-6 py-3 rounded-tl-2xl rounded-tr-2xl flex items-center gap-3 border-b border-[#D3ADF7]"
+        className="px-6 py-3 rounded-tl-2xl rounded-tr-2xl flex items-center gap-4 border-b border-[#D3ADF7]"
         style={{ background: "linear-gradient(90deg, #F9F0FF 0%, #FFF 100%)" }}
       >
         <div className="rounded-full bg-[#9254DE] size-8 grid place-items-center">
@@ -19,7 +19,7 @@ export default function UserActivityLog({
         </div>
         <div className="flex flex-col">
           <span className="text-xl font-medium">Activity Log</span>
-          <Typography.Text type="secondary">
+          <Typography.Text type="secondary" className="!font-semibold">
             Recent system activity for this user
           </Typography.Text>
         </div>

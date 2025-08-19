@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import dayjs from "dayjs";
 
 // Ant Design Components
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import {
   App,
   Button,
@@ -20,7 +21,6 @@ import {
   TableProps,
   Typography,
 } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
 
 import { PurchaseInvoiceInterface } from "@/types/purchase-invoice/purchase-invoice.type";
 
@@ -242,7 +242,7 @@ export default function PiEditPage() {
   ];
 
   return (
-    <section className="max-w-7xl mx-auto py-10 px-4">
+    <section className="max-w-7xl mx-auto">
       {/* Header Section */}
       <Flex align="center" gap={16} style={{ marginBottom: "16px" }}>
         <button

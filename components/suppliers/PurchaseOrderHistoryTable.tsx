@@ -1,9 +1,8 @@
 import { CalendarOutlined, ShoppingCartOutlined } from "@ant-design/icons";
-import { Table, Typography, Pagination, TableProps } from "antd";
-import { useEffect } from "react";
-import TableCardWrapper from "./TableWrapper";
-import StatusBadge from "../purchase-orders/StatusBadge";
+import { Pagination, Table, TableProps, Typography } from "antd";
 import Link from "antd/es/typography/Link";
+import StatusBadge from "../purchase-orders/StatusBadge";
+import TableCardWrapper from "./TableWrapper";
 
 interface PurchaseOrderHistoryTableProps {
   data: {
@@ -145,6 +144,7 @@ const PurchaseOrderHistoryTable = ({
       subtitle="Purchase Orders linked to this supplier"
       gradient="linear-gradient(90deg, rgba(230, 247, 255, 1) 0%, rgba(255, 255, 255, 0) 100%)"
       borderColor="#91D5FF"
+      backgroundColor="#40A9FF"
     >
       <Table
         size="middle"

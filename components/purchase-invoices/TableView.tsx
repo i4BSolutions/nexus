@@ -128,7 +128,7 @@ export default function TableView({
   ];
 
   return (
-    <section className="py-4">
+    <section className="py-6">
       <Table
         columns={columns}
         dataSource={data}

@@ -8,7 +8,7 @@ import { BudgetFormInput } from "@/schemas/budgets/budgets.schema";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Button, message, Space, Typography } from "antd";
 import { useRouter } from "next/navigation";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 const CreateBudgetPage = () => {
   const router = useRouter();
@@ -81,7 +81,7 @@ const CreateBudgetPage = () => {
   };
 
   return (
-    <section className="max-w-7xl mx-auto py-4 px-6">
+    <section className="max-w-7xl mx-auto">
       <Space
         size="small"
         style={{

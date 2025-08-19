@@ -2,8 +2,8 @@
 
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import { Card, Col, Row, Space, Table, TableProps, Typography } from "antd";
-import StatusBadge from "./StatusBadge";
 import Link from "antd/es/typography/Link";
+import StatusBadge from "./StatusBadge";
 
 const LinkedPO = ({ data }: { data: any }) => {
   const dataSource = [
@@ -83,7 +83,7 @@ const LinkedPO = ({ data }: { data: any }) => {
         },
       }}
       title={
-        <Space style={{ margin: "10px 0" }}>
+        <Space style={{ margin: "12px 0" }}>
           <Space
             style={{
               width: 32,
@@ -95,6 +95,7 @@ const LinkedPO = ({ data }: { data: any }) => {
               fontSize: 20,
               color: "white",
               background: "#40A9FF",
+              marginRight: 8,
             }}
           >
             <ShoppingCartOutlined />
@@ -111,8 +112,8 @@ const LinkedPO = ({ data }: { data: any }) => {
       }
       variant="outlined"
     >
-      <Row gutter={24} style={{ marginTop: 16 }}>
-        <Col span={24} style={{ marginTop: 16 }}>
+      <Row gutter={24} style={{ marginTop: 0 }}>
+        <Col span={24} style={{ marginTop: 0 }}>
           <Table
             columns={columns}
             dataSource={dataSource}

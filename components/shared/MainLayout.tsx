@@ -175,10 +175,18 @@ export default function MainLayout({
 
   return (
     <Layout
-      style={{ display: "flex", flexDirection: "column", height: "100vh" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+      }}
     >
       <Header
         style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1,
+          width: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -208,6 +216,9 @@ export default function MainLayout({
       >
         <Sider
           style={{
+            position: "sticky",
+            top: 84,
+            height: "calc(100vh - 110px)",
             background: colorBgContainer,
             borderRadius: 16,
             boxShadow:

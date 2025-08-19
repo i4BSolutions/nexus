@@ -114,10 +114,10 @@ export default function PiDetailsPage() {
   const isAnyLoading = isLoading || poLoading || historyLoading;
 
   return (
-    <section className="max-w-7xl mx-auto py-10 px-4">
+    <section className="max-w-7xl mx-auto">
       {isAnyLoading ? (
-        <Flex justify="center" align="center" style={{ minHeight: "300px" }}>
-          <Spin size="large" />
+        <Flex justify="center" align="center" style={{ minHeight: "500px" }}>
+          <Spin />
         </Flex>
       ) : error || poError || historyError ? (
         <Typography.Text type="danger">
@@ -227,6 +227,7 @@ export default function PiDetailsPage() {
                 children: <EditHistory data={historyData} />,
               },
             ]}
+            size="large"
           />
 
           <VoidModal

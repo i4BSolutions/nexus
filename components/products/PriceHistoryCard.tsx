@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
-import { Card, Typography, Space, Divider } from "antd";
+import { ProductPriceHistoryInterface } from "@/types/product/product.type";
 import {
   DollarCircleFilled,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
+import { Card, Divider, Space, Typography } from "antd";
 import dayjs from "dayjs";
-import { ProductPriceHistoryInterface } from "@/types/product/product.type";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -53,6 +52,7 @@ const PriceHistoryCard = ({
               justifyContent: "center",
               color: "white",
               fontSize: 18,
+              marginRight: 8,
             }}
           >
             <DollarCircleFilled />

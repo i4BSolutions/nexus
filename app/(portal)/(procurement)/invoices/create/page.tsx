@@ -206,7 +206,7 @@ export default function InvoiceCreatePage() {
   };
 
   return (
-    <section className="py-4 w-full grid place-items-center">
+    <section className="w-full grid place-items-center">
       <section className="max-w-[1140px] w-full">
         <Flex align="center" gap={20}>
           <button

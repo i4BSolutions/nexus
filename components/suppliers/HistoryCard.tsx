@@ -5,7 +5,6 @@ import {
   SupplierInvoiceHistoryResponse,
   SupplierPurchaseOrderHistoryResponse,
 } from "@/types/supplier/supplier.type";
-import { Space } from "antd";
 import { useEffect, useState } from "react";
 import InvoiceHistoryTable from "./InvoiceHistoryTable";
 import PurchaseOrderHistoryTable from "./PurchaseOrderHistoryTable";
@@ -44,7 +43,7 @@ const HistoryCard = ({ id }: { id: string }) => {
   };
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }}>
+    <div className="w-full flex flex-col gap-4">
       <PurchaseOrderHistoryTable
         data={purchaseOrderHistory ?? { dto: [] }}
         pagination={pagination}
@@ -64,7 +63,7 @@ const HistoryCard = ({ id }: { id: string }) => {
         total={invoiceTotal}
         onPageChange={handlePageChange}
       />
-    </Space>
+    </div>
   );
 };
 

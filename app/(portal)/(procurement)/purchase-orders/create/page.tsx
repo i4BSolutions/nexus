@@ -267,7 +267,7 @@ function CreatePurchaseOrderPageContent() {
 
   if (isLoadingDraft) {
     return (
-      <section className="max-w-7xl mx-auto py-4 px-6">
+      <section className="max-w-7xl mx-auto">
         <div style={{ textAlign: "center", padding: "100px 0" }}>
           <Spin size="large" />
           <Typography.Title level={4} style={{ marginTop: 16 }}>
@@ -279,7 +279,7 @@ function CreatePurchaseOrderPageContent() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto py-4 px-6">
+    <section className="max-w-7xl mx-auto">
       {/* Header */}
       <Space
         size="small"
