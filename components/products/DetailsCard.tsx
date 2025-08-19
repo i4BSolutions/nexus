@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, Col, Row, Space, Typography } from "antd";
-import { TagOutlined } from "@ant-design/icons";
 import { ProductInterface } from "@/types/product/product.type";
+import { TagOutlined } from "@ant-design/icons";
+import { Card, Col, Row, Space, Typography } from "antd";
 
 export type ProductDetailsCardProps = Omit<
   ProductInterface,
@@ -26,7 +26,7 @@ const DetailsCard = ({
         },
       }}
       title={
-        <Space style={{ margin: "10px 0" }}>
+        <Space style={{ margin: "12px 0" }}>
           <Space
             style={{
               width: 32,
@@ -38,11 +38,12 @@ const DetailsCard = ({
               fontSize: 20,
               color: "white",
               background: "#9254DE",
+              marginRight: 8,
             }}
           >
             <TagOutlined />
           </Space>
-          <Space direction="vertical" size={0}>
+          <div>
             <Typography.Title level={4} style={{ margin: 0 }}>
               Product Information
             </Typography.Title>
@@ -50,7 +51,7 @@ const DetailsCard = ({
               Last updated on{" "}
               {updated_at ? new Date(updated_at).toLocaleDateString() : "N/A"}
             </Typography.Text>
-          </Space>
+          </div>
         </Space>
       }
       variant="outlined"

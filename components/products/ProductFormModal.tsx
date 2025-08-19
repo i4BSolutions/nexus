@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  EditOutlined,
+  PlusCircleOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
   App,
   Button,
   Divider,
@@ -12,14 +18,8 @@ import {
   Space,
   Typography,
 } from "antd";
-import {
-  EditOutlined,
-  PlusCircleOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   ProductFormInput,
@@ -357,7 +357,7 @@ export default function ProductFormModal({
           />
         </Form.Item>
 
-        <Form.Item style={{ textAlign: "left", marginBottom: 0 }}>
+        <Form.Item style={{ textAlign: "left", marginBottom: 16 }}>
           <Space>
             <Button onClick={handleClose} disabled={isSubmitting || loading}>
               Cancel

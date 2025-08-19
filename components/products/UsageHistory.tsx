@@ -1,27 +1,16 @@
-import React from "react";
-import CurrentStockCard from "./CurrentStockCard";
-import LastStockMovementCard from "./LastStockMovementCard";
 import {
-  Button,
-  Card,
-  Divider,
-  Flex,
-  Space,
-  Table,
-  TableProps,
-  Tag,
-  Typography,
-} from "antd";
+  ProductPurchaseOrder,
+  ProductUsageHistory,
+} from "@/types/product/product.type";
 import {
   CalendarOutlined,
   EyeOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
-import {
-  ProductPurchaseOrder,
-  ProductUsageHistory,
-} from "@/types/product/product.type";
+import { Card, Flex, Space, Table, TableProps, Tag, Typography } from "antd";
 import dayjs from "dayjs";
+import CurrentStockCard from "./CurrentStockCard";
+import LastStockMovementCard from "./LastStockMovementCard";
 
 const UsageHistory = ({ data }: { data: ProductUsageHistory }) => {
   const { purchase_orders, last_stock_movement, minimum_stock, current_stock } =
@@ -135,7 +124,7 @@ const UsageHistory = ({ data }: { data: ProductUsageHistory }) => {
         title={
           <Space
             style={{
-              margin: "10px 0",
+              margin: "12px 0",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -154,6 +143,7 @@ const UsageHistory = ({ data }: { data: ProductUsageHistory }) => {
                   fontSize: 20,
                   color: "white",
                   background: "#40A9FF",
+                  marginRight: 8,
                 }}
               >
                 <ShoppingCartOutlined

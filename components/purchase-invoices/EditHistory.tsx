@@ -2,13 +2,13 @@
 
 import { PurchaseInvoiceHistory } from "@/types/purchase-invoice/purchase-invoice.type";
 import {
-  EditOutlined,
   CalendarOutlined,
+  DollarCircleOutlined,
+  EditOutlined,
   SwapOutlined,
   TableOutlined,
-  DollarCircleOutlined,
 } from "@ant-design/icons";
-import { Card, Col, Row, Space, Typography, Tag, Tooltip } from "antd";
+import { Card, Col, Row, Space, Typography } from "antd";
 
 const { Title, Text } = Typography;
 
@@ -114,7 +114,7 @@ const EditHistory = ({ data }: { data: PurchaseInvoiceHistory[] }) => {
         },
       }}
       title={
-        <Space style={{ margin: "10px 0" }}>
+        <Space style={{ margin: "12px 0" }}>
           <Space
             style={{
               width: 32,
@@ -125,6 +125,7 @@ const EditHistory = ({ data }: { data: PurchaseInvoiceHistory[] }) => {
               alignItems: "center",
               fontSize: 20,
               color: "white",
+              marginRight: 8,
               background: "#9254DE",
             }}
           >

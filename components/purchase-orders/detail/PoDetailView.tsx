@@ -1,7 +1,7 @@
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 import { PurchaseOrderItemInterface } from "@/types/purchase-order/purchase-order-item.type";
-import { TagOutlined } from "@ant-design/icons";
-import { Col, Flex, Row, Space, Typography } from "antd";
+import { EditOutlined } from "@ant-design/icons";
+import { Card, Col, Row, Space, Typography } from "antd";
 import dayjs from "dayjs";
 
 export default function PoDetailView({
@@ -10,41 +10,46 @@ export default function PoDetailView({
   data: PurchaseOrderDetailDto;
 }) {
   return (
-    <section className="w-full rounded-2xl border-2 border-[#F5F5F5]">
-      {/* Detail Header */}
-      <Flex
-        align="center"
-        gap={16}
-        style={{
-          padding: "16px 24px",
-          borderRadius: "16px 16px 0 0",
+    <Card
+      style={{
+        borderRadius: "16px",
+      }}
+      styles={{
+        header: {
           background: "linear-gradient(90deg, #F9F0FF 0%, #FFF 100%)",
           borderBottom: "1px solid #D3ADF7",
-        }}
-      >
-        <TagOutlined
-          style={{
-            width: 32,
-            height: 32,
-            background: "#9254DE",
-            borderRadius: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            color: "white",
-            fontSize: 20,
-          }}
-        />
-        <div>
-          <Typography.Title level={3} className="!mb-0">
-            Purchase Order Details
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Details and information about this purchase order
-          </Typography.Text>
+          borderRadius: "16px 16px 0 0",
+        },
+      }}
+      title={
+        <div style={{ margin: "12px 0" }} className="flex items-center gap-4">
+          <Space
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              fontSize: 20,
+              color: "white",
+              background: "#9254DE",
+            }}
+          >
+            <EditOutlined />
+          </Space>
+          <div>
+            <Typography.Title level={4} style={{ margin: 0 }}>
+              Purchase Order Details
+            </Typography.Title>
+            <Typography.Text type="secondary">
+              Details and information about this purchase order
+            </Typography.Text>
+          </div>
         </div>
-      </Flex>
-
+      }
+      variant="outlined"
+    >
       {/* Detail Content */}
       <div className="px-6 py-7">
         <Row gutter={32} style={{ marginBottom: 8 }}>
@@ -268,6 +273,7 @@ export default function PoDetailView({
           </Col>
         </Row>
       </div>
-    </section>
+      {/* </section> */}
+    </Card>
   );
 }

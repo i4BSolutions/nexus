@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, Col, Row, Space, Typography } from "antd";
 import { ContactsOutlined } from "@ant-design/icons";
+import { Card, Col, Row, Space, Typography } from "antd";
 
 export interface SupplierCardProps {
   contact_person: string;
@@ -26,7 +26,7 @@ const DetailsCard = ({
         },
       }}
       title={
-        <Space style={{ margin: "10px 0" }}>
+        <Space style={{ margin: "12px 0" }}>
           <Space
             style={{
               width: 32,
@@ -38,6 +38,7 @@ const DetailsCard = ({
               fontSize: 20,
               color: "white",
               background: "#9254DE",
+              marginRight: 8,
             }}
           >
             <ContactsOutlined />

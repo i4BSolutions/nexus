@@ -1,8 +1,8 @@
 import { CalendarOutlined, FileTextOutlined } from "@ant-design/icons";
-import { Table, Typography, Pagination, TableProps } from "antd";
-import TableCardWrapper from "./TableWrapper";
-import StatusBadge from "../purchase-invoices/StatusBadge";
+import { Pagination, Table, TableProps, Typography } from "antd";
 import Link from "antd/es/typography/Link";
+import StatusBadge from "../purchase-invoices/StatusBadge";
+import TableCardWrapper from "./TableWrapper";
 
 interface InvoiceHistoryTableProps {
   data: {
@@ -141,6 +141,7 @@ const InvoiceHistoryTable: React.FC<InvoiceHistoryTableProps> = ({
       subtitle="Invoices linked to this supplier"
       gradient="linear-gradient(90deg, rgba(255, 251, 230, 1) 0%, rgba(255, 255, 255, 0) 100%)"
       borderColor="#FFE58F"
+      backgroundColor="#FFC53D"
     >
       <Table
         size="middle"

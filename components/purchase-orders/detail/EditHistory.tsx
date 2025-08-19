@@ -118,7 +118,7 @@ const EditHistory = ({ data }: { data: PurchaseOrderHistory[] }) => {
         },
       }}
       title={
-        <div style={{ margin: "10px 0" }}>
+        <div style={{ margin: "12px 0" }} className="flex items-center gap-4">
           <Space
             style={{
               width: 32,

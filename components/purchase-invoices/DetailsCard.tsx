@@ -117,7 +117,7 @@ const DetailsCard = ({ data }: { data: PurchaseInvoiceInterface }) => {
         },
       }}
       title={
-        <Space style={{ margin: "10px 0" }}>
+        <Space style={{ margin: "12px 0" }}>
           <Space
             style={{
               width: 32,
@@ -129,6 +129,7 @@ const DetailsCard = ({ data }: { data: PurchaseInvoiceInterface }) => {
               fontSize: 20,
               color: "white",
               background: "#FFC53D",
+              marginRight: 8,
             }}
           >
             <FileTextOutlined />
@@ -145,7 +146,7 @@ const DetailsCard = ({ data }: { data: PurchaseInvoiceInterface }) => {
       }
       variant="outlined"
     >
-      <Row gutter={24} style={{ marginTop: 16 }}>
+      <Row gutter={24} style={{ marginTop: 0 }}>
         <Col span={12}>
           <Space direction="vertical" size={0}>
             <Typography.Text type="secondary">Invoice Date</Typography.Text>

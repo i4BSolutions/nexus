@@ -8,6 +8,7 @@ interface TableCardWrapperProps {
   children: React.ReactNode;
   gradient: string;
   borderColor: string;
+  backgroundColor: string;
 }
 
 const TableCardWrapper = ({
@@ -17,6 +18,7 @@ const TableCardWrapper = ({
   children,
   gradient,
   borderColor,
+  backgroundColor,
 }: TableCardWrapperProps) => {
   return (
     <Card
@@ -29,7 +31,7 @@ const TableCardWrapper = ({
       title={
         <Space
           style={{
-            margin: "10px 0",
+            margin: "12px 0",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -47,7 +49,8 @@ const TableCardWrapper = ({
                 alignItems: "center",
                 fontSize: 20,
                 color: "white",
-                background: borderColor,
+                background: backgroundColor,
+                marginRight: 8,
               }}
             >
               {icon}
