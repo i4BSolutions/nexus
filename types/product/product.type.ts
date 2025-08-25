@@ -31,6 +31,7 @@ export interface ProductResponse {
   counts: { total: number; lowStock: number; outOfStock: number };
 }
 
+// version 0 product price history type
 export interface ProductPriceHistoryInterface {
   id: number;
   product_id: number;
@@ -41,8 +42,32 @@ export interface ProductPriceHistoryInterface {
   created_at: string;
 }
 
+// version 0 product price history type
 export interface ProductPriceHistoryResponse {
   items: ProductPriceHistoryInterface[];
+}
+
+// version 1 product price history type
+export interface ProductHistory {
+  id: number;
+  product_id: number;
+  changed_at: string;
+  changed_by: string;
+  changed_field: string;
+  new_values: string;
+  old_values: string;
+  user_profiles: {
+    full_name: string;
+  };
+}
+
+export interface ProductHistoryPaginatedResponse {
+  items: ProductHistory[];
+  pagination: {
+    totalPages: number;
+    page: number;
+    pageSize: number;
+  };
 }
 
 export interface LastStockMovement {
