@@ -4,7 +4,7 @@ import ConfirmModal from "@/components/products/ConfirmModal";
 import CreateCategoryModal from "@/components/products/CreateCategoryModal";
 import DetailsCard from "@/components/products/DetailsCard";
 import PopConfirm from "@/components/products/PopConfirm";
-import PriceHistory from "@/components/products/PriceHistory";
+import ProductHistory from "@/components/products/ProductHistory";
 import ProductFormModal from "@/components/products/ProductFormModal";
 import UsageHistory from "@/components/products/UsageHistory";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -22,6 +22,7 @@ import { ProductFormInput } from "@/schemas/products/products.schemas";
 import { CategoryInterface } from "@/types/category/category.type";
 import {
   ProductCurrencyInterface,
+  ProductHistoryPaginatedResponse,
   ProductInterface,
   ProductPriceHistoryInterface,
   ProductUsageHistory,
@@ -31,11 +32,18 @@ import { App, Button, Space, Spin, Tabs, Tag, Typography } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { usePaginatedById } from "@/hooks/react-query/usePaginatedById";
+
 const ProductDetailPage = () => {
   const hasPermission = usePermission("can_manage_products_suppliers");
   const { id } = useParams() as { id: string };
   const router = useRouter();
   const { message } = App.useApp();
+
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 10,
+  });
 
   const [openPopConfirm, setOpenPopConfirm] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<CategoryInterface[]>(
@@ -71,13 +79,37 @@ const ProductDetailPage = () => {
 
   const { data: currencyData, status: currencyStatus } = useProductCurrencies();
 
+  // version 0 product price log
+  // const {
+  //   data: priceHistoryData,
+  //   isLoading: loadingPriceHistory,
+  //   error: productPriceHistoryError,
+  //   refetch: refetchProductPriceHistory,
+  // } = useGetProductById("get-product-price-history", id);
+  // const priceHistory = priceHistoryData as ProductPriceHistoryInterface[];
+
+  // version 1 product audit log
   const {
-    data: priceHistoryData,
-    isLoading: loadingPriceHistory,
-    error: productPriceHistoryError,
-    refetch: refetchProductPriceHistory,
-  } = useGetProductById("get-product-price-history", id);
-  const priceHistory = priceHistoryData as ProductPriceHistoryInterface[];
+    data: auditLogData,
+    isLoading: auditLogLoading,
+    error: auditLogError,
+    refetch: refetchAuditLog,
+  } = usePaginatedById<ProductHistoryPaginatedResponse>(
+    "products/get-product-log-history",
+    id,
+    pagination
+  );
+
+  const handleLogPaginationChange = (page: number, pageSize: number) => {
+    setPagination((prev) => ({
+      page,
+      pageSize: pageSize || prev.pageSize,
+    }));
+  };
+
+  useEffect(() => {
+    refetchAuditLog();
+  }, [pagination]);
 
   const { data: usageHistoryData } = useGetProductById("get-usage-history", id);
   const usageHistory = usageHistoryData as ProductUsageHistory;
@@ -116,7 +148,7 @@ const ProductDetailPage = () => {
       const { reason, ...rest } = payload;
       await updateProduct.mutateAsync({ id, data: { ...rest, reason } });
       setOpenProductFormModal(false);
-      await refetchProductPriceHistory();
+      await refetchAuditLog();
       message.success("Product updated successfully");
     } catch (error) {
       console.log(error);
@@ -223,13 +255,15 @@ const ProductDetailPage = () => {
             children: <UsageHistory data={usageHistory} />,
           },
           {
-            key: "price_history",
-            label: "Price History",
+            key: "product_log",
+            label: "Product Log",
             children: (
-              <PriceHistory
-                priceHistory={priceHistory}
-                loading={loadingPriceHistory}
-                error={productPriceHistoryError}
+              <ProductHistory
+                data={auditLogData}
+                loading={auditLogLoading}
+                error={auditLogError}
+                pagination={pagination}
+                onPaginationChange={handleLogPaginationChange}
               />
             ),
           },
@@ -279,7 +313,7 @@ const ProductDetailPage = () => {
               try {
                 await deleteProduct.mutateAsync(id);
                 setOpenConfirmModal(false);
-                refetchProductPriceHistory();
+                refetchAuditLog();
                 message.success("Product deleted successfully");
                 router.push("/products");
               } catch (error: any) {
@@ -292,7 +326,7 @@ const ProductDetailPage = () => {
                   is_active: !productDetail.is_active,
                 });
                 setOpenConfirmModal(false);
-                refetchProductPriceHistory();
+                refetchAuditLog();
                 message.success("Product deactivated successfully");
                 router.push("/products");
               } catch (error: any) {
