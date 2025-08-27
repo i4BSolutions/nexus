@@ -8,11 +8,12 @@ import { UserDetailResponse } from "@/types/user/user-detail.type";
 import getAvatarUrl from "@/utils/getAvatarUrl";
 import { EditOutlined, StopOutlined } from "@ant-design/icons";
 import { Button, Flex, Spin, Tabs, Typography } from "antd";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import UserProfileTab from "../../../../../components/users/UserProfileTab";
 
 export default function UserDetailPage() {
   const params = useParams();
+  const router = useRouter();
 
   const { data: userDetailData, isLoading } = useGetById<UserDetailResponse>(
     "users",
@@ -59,6 +60,7 @@ export default function UserDetailPage() {
           items={[
             { title: "Home", href: "/" },
             { title: "Users & Permissions", href: "/users" },
+            { title: userDetailData.full_name },
           ]}
         />
         <Flex justify="space-between" align="center" className="!mb-4">
@@ -83,7 +85,7 @@ export default function UserDetailPage() {
           <Flex align="center" gap={16}>
             <Button
               icon={<EditOutlined />}
-              onClick={() => alert("This feature is not implemented yet")}
+              onClick={() => router.push(`/users/${params.id}/edit`)}
             >
               Edit
             </Button>
