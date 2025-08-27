@@ -1,19 +1,22 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
+import { ApiResponse } from "@/types/shared/api-response-type";
 import { NextRequest, NextResponse } from "next/server";
 
 const bucket = "core-orbit";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { evidenceId: string } }
-) {
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse<ApiResponse<any>>> {
+  const { id: idStr } = await context.params;
+  const evidenceId = parseInt(idStr);
   const supabase = await createClient();
 
   const { data, error: evidenceError } = await supabase
     .from("stock_in_evidence")
     .select("file_key")
-    .eq("id", params.evidenceId)
+    .eq("id", evidenceId)
     .single();
 
   if (evidenceError || !data) {
