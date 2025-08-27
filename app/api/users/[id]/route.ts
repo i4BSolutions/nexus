@@ -80,3 +80,55 @@ export async function GET(
     }
   );
 }
+
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse<ApiResponse<UserDetailResponse | null>>> {
+  const supabase = await createClient();
+
+  const { id: idStr } = await context.params;
+
+  if (!idStr) {
+    return NextResponse.json(error("Invalid user ID", 400), {
+      status: 400,
+    });
+  }
+
+  const body = await req.json();
+
+  const updateData = {
+    ...body,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data: updatedUser, error: updateError } = await supabase
+    .from("user_profiles")
+    .update(updateData)
+    .eq("id", idStr)
+    .select(
+      `
+        full_name,
+        username,
+        email,
+        department:departments(id, name),
+        permissions,
+        created_at,
+        updated_at
+        `
+    )
+    .single<UserDetailResponse>();
+
+  if (updateError) {
+    return NextResponse.json(error(updateError.message, 400), {
+      status: 400,
+    });
+  }
+
+  return NextResponse.json(
+    success(updatedUser, "Supplier updated successfully"),
+    {
+      status: 200,
+    }
+  );
+}
