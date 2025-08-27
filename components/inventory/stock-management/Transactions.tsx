@@ -61,7 +61,6 @@ const Transactions = () => {
     page: pagination.page,
     pageSize: pagination.pageSize,
   });
-  console.log(stockTransactionsData);
 
   const {
     data: productsData,

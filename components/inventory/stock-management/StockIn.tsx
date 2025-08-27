@@ -70,7 +70,7 @@ interface StockFormProps {
 }
 
 const MAX_FILES = 10;
-const MAX_MB = 10;
+const MAX_MB = 5;
 
 const StockInForm = ({
   invoices,
@@ -90,6 +90,7 @@ const StockInForm = ({
     {}
   );
   const [activeLineKey, setActiveLineKey] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   // ---- Confirm remove ----
   const [openConfirmModal, setOpenConfirmModal] = useState(false);
@@ -147,8 +148,8 @@ const StockInForm = ({
       message.error("You can only upload JPG/PNG file!");
       return Upload.LIST_IGNORE;
     }
-    const isLt10M = (file.size ?? 0) / 1024 / 1024 < MAX_MB;
-    if (!isLt10M) {
+    const isLt5MB = (file.size ?? 0) / 1024 / 1024 < MAX_MB;
+    if (!isLt5MB) {
       message.error(`Image must be smaller than ${MAX_MB}MB!`);
       return Upload.LIST_IGNORE;
     }
@@ -183,24 +184,28 @@ const StockInForm = ({
     fileList: activeLineKey !== null ? evidenceMap[activeLineKey] ?? [] : [],
     beforeUpload,
     async onRemove(file) {
-      if (file.status === "uploading") return false;
+      if (activeLineKey === null || activeIndex === null) return false;
       const ok = await askRemove(file);
-      if (!ok || activeLineKey === null) return false;
+      if (!ok) return false;
+
       setEvidenceMap((prev) => {
         const next = { ...prev };
         next[activeLineKey] = (next[activeLineKey] ?? []).filter(
           (f) => f.uid !== file.uid
         );
         form.setFieldValue(
-          ["invoice_items", activeLineKey, "evidence_photo"],
+          ["invoice_items", activeIndex, "evidence_photo"],
           next[activeLineKey]
         );
+
+        form.validateFields([["invoice_items", activeIndex, "evidence_photo"]]);
+
         return next;
       });
       return true;
     },
     onChange({ fileList: newList }) {
-      if (activeLineKey === null) return;
+      if (activeLineKey === null || activeIndex === null) return;
       let trimmed = newList;
       if (newList.length > MAX_FILES) {
         trimmed = newList.slice(0, MAX_FILES);
@@ -209,11 +214,17 @@ const StockInForm = ({
       setEvidenceMap((prev) => {
         const next = { ...prev, [activeLineKey]: trimmed };
         form.setFieldValue(
-          ["invoice_items", activeLineKey, "evidence_photo"],
+          ["invoice_items", activeIndex, "evidence_photo"],
           trimmed
         );
+
+        form.validateFields([["invoice_items", activeIndex, "evidence_photo"]]);
+
         return next;
       });
+    },
+    onPreview() {
+      setViewerOpen(true);
     },
     listType: "picture",
     showUploadList: true,
@@ -230,12 +241,21 @@ const StockInForm = ({
     }
 
     const payload = {
-      invoice_items: selectedItems.map((item: any) => ({
-        product_id: item.product_id,
-        warehouse_id: warehouses?.find((w) => w.name === values.warehouse)?.id,
-        quantity: item.stock_in_quantity,
-        invoice_line_item_id: item.id,
-      })),
+      invoice_items: selectedItems.map((item: any) => {
+        const lineKey = String(item.id);
+        const files = (evidenceMap[lineKey] ?? [])
+          .map((f) => f.originFileObj)
+          .filter(Boolean) as File[];
+
+        return {
+          product_id: item.product_id,
+          warehouse_id: warehouses?.find((w) => w.name === values.warehouse)
+            ?.id,
+          quantity: item.stock_in_quantity,
+          invoice_line_item_id: item.id,
+          __files__: files,
+        };
+      }),
     };
 
     onSubmit?.(payload);
@@ -243,6 +263,7 @@ const StockInForm = ({
     form.resetFields();
     setEvidenceMap({});
     setActiveLineKey(null);
+    setActiveIndex(null);
   };
 
   const openViewerForRow = (lineKey: string, startIndex = 0) => {
@@ -495,133 +516,128 @@ const StockInForm = ({
                               <Form.Item
                                 {...restField}
                                 name={[name, "evidence_photo"]}
-                                style={{ display: "none" }}
+                                valuePropName="value"
+                                style={{ marginBottom: 0 }}
+                                dependencies={[
+                                  ["invoice_items", index, "checked"],
+                                ]}
                                 rules={[
                                   {
-                                    validator: (_, value) => {
+                                    validator: async (_, value) => {
                                       const checked = form.getFieldValue([
                                         "invoice_items",
                                         index,
                                         "checked",
                                       ]);
-                                      const files =
+                                      const lineKey = String(item.id);
+
+                                      const filesFromMap =
+                                        evidenceMap[lineKey] ?? [];
+                                      const filesFromField =
                                         (value as UploadFile[] | undefined) ??
-                                        evidenceMap[index] ??
                                         [];
+
+                                      const files = filesFromField.length
+                                        ? filesFromField
+                                        : filesFromMap;
+
                                       if (checked && files.length === 0) {
-                                        return Promise.reject(
-                                          new Error(
-                                            "Evidence Photo is required."
-                                          )
+                                        throw new Error(
+                                          "Evidence Photo is required."
                                         );
                                       }
-                                      return Promise.resolve();
                                     },
                                   },
                                 ]}
                               >
-                                <Input hidden />
+                                <Flex align="center" gap={8} wrap>
+                                  {(() => {
+                                    const files = evidenceMap[lineKey] ?? [];
+                                    const first = files[0];
+                                    const count = files.length;
+                                    const hasThumb = !!first;
+
+                                    return (
+                                      <>
+                                        <Flex
+                                          style={{
+                                            borderRadius: 12,
+                                            overflow: "hidden",
+                                            border: "1px solid #e5e5e5",
+                                            display: "grid",
+                                            placeItems: "center",
+                                            background: "#fafafa",
+                                            position: "relative",
+                                            cursor: "pointer",
+                                          }}
+                                          onClick={() =>
+                                            openViewerForRow(lineKey, 0)
+                                          }
+                                          title="Preview"
+                                        >
+                                          {hasThumb ? (
+                                            <img
+                                              alt="thumb"
+                                              src={
+                                                first.thumbUrl ||
+                                                (first as any).url ||
+                                                (first.originFileObj
+                                                  ? URL.createObjectURL(
+                                                      first.originFileObj as File
+                                                    )
+                                                  : undefined)
+                                              }
+                                              style={{
+                                                width: 32,
+                                                height: 32,
+                                                objectFit: "cover",
+                                              }}
+                                              onError={(e) =>
+                                                (e.currentTarget.style.display =
+                                                  "none")
+                                              }
+                                            />
+                                          ) : null}
+                                          {count > 1 && (
+                                            <div
+                                              style={{
+                                                position: "absolute",
+                                                inset: 0,
+                                                background: "rgba(0,0,0,.35)",
+                                                display: "grid",
+                                                placeItems: "center",
+                                                color: "#fff",
+                                                fontWeight: 600,
+                                                fontSize: 16,
+                                              }}
+                                            >
+                                              +{count - 1}
+                                            </div>
+                                          )}
+                                        </Flex>
+                                        <Button
+                                          icon={<UploadOutlined />}
+                                          onClick={() => {
+                                            setActiveLineKey(lineKey);
+                                            setActiveIndex(index);
+                                            setOpenUploadModal(true);
+                                            form.setFieldValue(
+                                              [
+                                                "invoice_items",
+                                                index,
+                                                "evidence_photo",
+                                              ],
+                                              evidenceMap[lineKey] ?? []
+                                            );
+                                          }}
+                                        >
+                                          {hasThumb ? "" : "Upload"}
+                                        </Button>
+                                      </>
+                                    );
+                                  })()}
+                                </Flex>
                               </Form.Item>
-
-                              <Flex align="center" gap={8} wrap>
-                                {/* Thumbnail with +count */}
-                                {(() => {
-                                  const files = evidenceMap[lineKey] ?? [];
-                                  const first = files[0];
-                                  const count = files.length;
-                                  const hasThumb = !!first;
-
-                                  return (
-                                    <>
-                                      <Flex
-                                        style={{
-                                          borderRadius: 12,
-                                          overflow: "hidden",
-                                          border: "1px solid #e5e5e5",
-                                          display: "grid",
-                                          placeItems: "center",
-                                          background: "#fafafa",
-                                          position: "relative",
-                                          cursor: "pointer",
-                                        }}
-                                        onClick={() =>
-                                          openViewerForRow(lineKey, 0)
-                                        }
-                                        title="Preview"
-                                      >
-                                        {hasThumb ? (
-                                          <img
-                                            alt="thumb"
-                                            src={
-                                              first.thumbUrl ||
-                                              (first as any).url ||
-                                              (first.originFileObj
-                                                ? URL.createObjectURL(
-                                                    first.originFileObj as File
-                                                  )
-                                                : undefined)
-                                            }
-                                            style={{
-                                              width: 32,
-                                              height: 32,
-                                              objectFit: "cover",
-                                            }}
-                                            onError={(e) =>
-                                              (e.currentTarget.style.display =
-                                                "none")
-                                            }
-                                          />
-                                        ) : null}
-                                        {count > 1 && (
-                                          <div
-                                            style={{
-                                              position: "absolute",
-                                              inset: 0,
-                                              background: "rgba(0,0,0,.35)",
-                                              display: "grid",
-                                              placeItems: "center",
-                                              color: "#fff",
-                                              fontWeight: 600,
-                                              fontSize: 16,
-                                            }}
-                                          >
-                                            +{count - 1}
-                                          </div>
-                                        )}
-                                      </Flex>
-                                      <Button
-                                        icon={<UploadOutlined />}
-                                        onClick={() => {
-                                          setActiveLineKey(lineKey);
-                                          setOpenUploadModal(true);
-                                          // seed form field for validation on first open
-                                          form.setFieldValue(
-                                            [
-                                              "invoice_items",
-                                              index,
-                                              "evidence_photo",
-                                            ],
-                                            evidenceMap[index] ?? []
-                                          );
-                                        }}
-                                      >
-                                        {hasThumb ? "" : "Upload"}
-                                      </Button>
-                                    </>
-                                  );
-                                })()}
-                              </Flex>
-
-                              {/* Validation message area (mirrors screenshot) */}
-                              <Form.ErrorList
-                                errors={
-                                  form.getFieldError([
-                                    "invoice_items",
-                                    index,
-                                    "evidence_photo",
-                                  ]) as any
-                                }
-                              />
                             </Col>
                           </Row>
                         );

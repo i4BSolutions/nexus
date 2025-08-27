@@ -2,6 +2,8 @@ import { getAuthenticatedUser } from "@/helper/getUser";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { error, success } from "@/lib/api-response";
+import { v4 as uuidv4 } from "uuid";
+import { hashFile } from "@/utils/hash";
 import { ApiResponse } from "@/types/shared/api-response-type";
 
 type InvoiceItem = {
@@ -11,14 +13,31 @@ type InvoiceItem = {
   invoice_line_item_id: number;
 };
 
+const bucket = "core-orbit";
+
 export async function POST(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse<any>>> {
   const supabase = await createClient();
   const user = await getAuthenticatedUser(supabase);
-  const body = await req.json();
 
-  const invoice_items: InvoiceItem[] = body.invoice_items;
+  const form = await req.formData();
+
+  const itemsRaw = form.get("invoice_items");
+
+  if (!itemsRaw || typeof itemsRaw !== "string") {
+    return NextResponse.json(error("No invoice items provided", 400), {
+      status: 400,
+    });
+  }
+  const invoice_items: InvoiceItem[] = JSON.parse(itemsRaw);
+  const evidenceFiles = form.getAll("evidence_photo").filter(Boolean) as File[];
+
+  if (evidenceFiles.length === 0) {
+    return NextResponse.json(error("Evidence photo is required.", 400), {
+      status: 400,
+    });
+  }
 
   if (!Array.isArray(invoice_items) || invoice_items.length === 0) {
     return NextResponse.json(error("No invoice items provided", 400), {
@@ -109,6 +128,7 @@ export async function POST(
 
   // Second pass: perform inventory updates and transaction logs
   const results: any[] = [];
+  let firstStockInId: number | null = null;
 
   for (const item of invoice_items) {
     const { product_id, warehouse_id, quantity, invoice_line_item_id } = item;
@@ -145,7 +165,7 @@ export async function POST(
     }
 
     // Log stock transaction
-    const { error: logError } = await supabase
+    const { data: tx, error: logError } = await supabase
       .from("stock_transaction")
       .insert([
         {
@@ -157,18 +177,60 @@ export async function POST(
           user_id: user.id,
           note: "Stocked in from invoice line item",
         },
-      ]);
+      ])
+      .select("id")
+      .single();
 
-    if (logError) {
+    if (logError || !tx) {
       return NextResponse.json(error("Failed to log stock-in", 500), {
         status: 500,
       });
+    }
+
+    if (firstStockInId == null) {
+      firstStockInId = Number(tx.id);
     }
 
     results.push({
       item,
       success: true,
       message: "Stock-in successful",
+    });
+  }
+
+  // Save evidence
+  const stockInId = Number(firstStockInId);
+  for (const file of evidenceFiles) {
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const hash = await hashFile(buffer);
+
+    const ext = (file.name?.split(".").pop() || "jpg").toLowerCase();
+    const fileKey = `stock-in-evidence/${stockInId}/${uuidv4()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(fileKey, buffer, { contentType: file.type, upsert: false });
+
+    if (uploadError) {
+      return NextResponse.json(
+        error(`Upload failed: ${uploadError.message}`, 500),
+        { status: 500 }
+      );
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(fileKey);
+
+    await supabase.from("stock_in_evidence").insert({
+      stock_in_id: stockInId,
+      file_url: publicUrlData.publicUrl,
+      file_key: fileKey,
+      mime_type: file.type,
+      size_bytes: file.size,
+      hash_sha256: hash,
+      uploader_user_id: user.id,
     });
   }
 
