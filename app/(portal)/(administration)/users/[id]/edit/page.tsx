@@ -73,6 +73,7 @@ export default function UserEditPage() {
     const getUserId = async () => {
       if (userDetailData) {
         const user = await getAuthenticatedUser(supabase);
+        console.log(user);
         setCurrentUser(user);
       }
     };
@@ -88,6 +89,14 @@ export default function UserEditPage() {
       message.error("Please select at least one permission for the user.");
       return;
     }
+
+    const initialPayload = {
+      email: userDetailData!.email,
+      full_name: userDetailData!.full_name,
+      username: userDetailData!.username,
+      department: userDetailData!.department.id,
+      permissions: userDetailData!.permissions,
+    };
 
     const updatePayload = {
       email: values.email,
@@ -105,7 +114,10 @@ export default function UserEditPage() {
       target_id: userDetailData!.id,
     };
     updateUser(
-      { id: params.id as string, data: { updatePayload, logPayload } },
+      {
+        id: params.id as string,
+        data: { initialPayload, updatePayload, logPayload },
+      },
       {
         onSuccess: () => {
           message.success("User updated successfully!");
