@@ -9,6 +9,7 @@ import {
   StockTransactionInterfaceResponse,
 } from "@/types/stock/stock.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import {
   CalendarOutlined,
   DownCircleOutlined,
@@ -173,7 +174,11 @@ const Transactions = () => {
         title: "QUANTITY",
         dataIndex: "quantity",
         key: "quantity",
-        render: (quantity) => <Typography.Text>{quantity}</Typography.Text>,
+        render: (quantity) => (
+          <Typography.Text>
+            {formatWithThousandSeparator(quantity)}
+          </Typography.Text>
+        ),
       },
       {
         title: "REFERENCE",
