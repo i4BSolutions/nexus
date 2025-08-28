@@ -1,5 +1,14 @@
 "use client";
 
+// React & Next
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
+
+// Ant Design
+import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
+import { App, Button, Space, Spin, Tabs, Tag, Typography } from "antd";
+
+// Components
 import ConfirmModal from "@/components/products/ConfirmModal";
 import CreateCategoryModal from "@/components/products/CreateCategoryModal";
 import DetailsCard from "@/components/products/DetailsCard";
@@ -8,6 +17,9 @@ import ProductHistory from "@/components/products/ProductHistory";
 import ProductFormModal from "@/components/products/ProductFormModal";
 import UsageHistory from "@/components/products/UsageHistory";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import DynamicPricing from "@/components/products/DynamicPricing";
+
+// Hooks
 import { useCategories } from "@/hooks/products/useCategories";
 import { useDeactivateProduct } from "@/hooks/products/useDeactivateProduct";
 import { useGetProductById } from "@/hooks/products/useGetProductById";
@@ -17,22 +29,24 @@ import { useDelete } from "@/hooks/react-query/useDelete";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { usePermission } from "@/hooks/shared/usePermission";
+import { usePaginatedById } from "@/hooks/react-query/usePaginatedById";
+import { useQuery } from "@tanstack/react-query";
+import { useGetAll } from "@/hooks/react-query/useGetAll";
+
+// Schema and Types
 import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schemas";
 import { ProductFormInput } from "@/schemas/products/products.schemas";
 import { CategoryInterface } from "@/types/category/category.type";
+import { PurchaseOrderRegionsResponse } from "@/types/purchase-order/purchase-order-region.type";
+import { PersonInterface } from "@/types/person/person.type";
 import {
   ProductCurrencyInterface,
   ProductHistoryPaginatedResponse,
   ProductInterface,
-  ProductPriceHistoryInterface,
   ProductUsageHistory,
 } from "@/types/product/product.type";
-import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
-import { App, Button, Space, Spin, Tabs, Tag, Typography } from "antd";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
-import { usePaginatedById } from "@/hooks/react-query/usePaginatedById";
+import { downloadBlob, toCSV } from "@/utils/product/exportCSV";
 
 const ProductDetailPage = () => {
   const hasPermission = usePermission("can_manage_products_suppliers");
@@ -43,6 +57,17 @@ const ProductDetailPage = () => {
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
+  });
+
+  const [dynamicPricingPagination, setDynamicPricingPagination] = useState({
+    page: 1,
+    pageSize: 10,
+  });
+
+  const [dynamicPricingFilters, setDynamicPricingFilters] = useState({
+    currency: "",
+    region: "",
+    contact_person: "",
   });
 
   const [openPopConfirm, setOpenPopConfirm] = useState(false);
@@ -156,6 +181,204 @@ const ProductDetailPage = () => {
     }
   };
 
+  const fetchProductDynamicPricing = async ({
+    queryKey,
+  }: {
+    queryKey: [
+      string,
+      {
+        page: number;
+        pageSize: number;
+        currency: string;
+        region: string;
+        contactPerson: string;
+      }
+    ];
+  }) => {
+    const [, params] = queryKey;
+    const query = new URLSearchParams({
+      page: params.page.toString(),
+      pageSize: params.pageSize.toString(),
+      currency: params.currency,
+      regionId: params.region,
+      contactPersonId: params.contactPerson,
+    }).toString();
+
+    const res = await fetch(
+      `/api/products/get-product-dynamic-pricing/${id}?${query}`,
+      {
+        method: "GET",
+      }
+    );
+    return res.json();
+  };
+
+  const {
+    data: pricingData,
+    refetch: pricingRefetch,
+    isLoading: pricingLoading,
+  } = useQuery({
+    queryKey: [
+      "products/get-product-dynamic-pricing",
+      {
+        page: dynamicPricingPagination.page,
+        pageSize: dynamicPricingPagination.pageSize,
+        currency: dynamicPricingFilters.currency,
+        region: dynamicPricingFilters.region,
+        contactPerson: dynamicPricingFilters.contact_person,
+      },
+    ],
+    queryFn: fetchProductDynamicPricing,
+  });
+
+  useEffect(() => {
+    pricingRefetch();
+  }, [dynamicPricingPagination, dynamicPricingFilters]);
+
+  const handleDynamicPricingPagination = (page: number, pageSize: number) => {
+    setDynamicPricingPagination((prev) => ({
+      page,
+      pageSize: pageSize || prev.pageSize,
+    }));
+  };
+
+  const { data: currencies } = useProductCurrencies();
+
+  const { data: regionsRaw } = useGetAll(
+    "purchase-orders/purchase-orders-regions",
+    ["regions"]
+  );
+
+  const regions = regionsRaw as PurchaseOrderRegionsResponse[];
+
+  const { data: contactPersonsRaw } = useGetAll("persons", ["contact_persons"]);
+
+  const contactPersons = contactPersonsRaw as PersonInterface[];
+
+  const filtersForUI = useMemo(
+    () => [
+      {
+        key: "currency",
+        label: "Currency",
+        placeholder: "Select Currency",
+        value: dynamicPricingFilters.currency, // 👈 bind to object state
+        options: [
+          { label: "All Currencies", value: "" },
+          ...(currencies?.map((c: any) => ({
+            label: c.currency_code,
+            value: c.currency_code, // code
+          })) || []),
+        ],
+      },
+      {
+        key: "region",
+        label: "Region",
+        placeholder: "Select Region",
+        value: dynamicPricingFilters.region, // 👈 id
+        options: [
+          { label: "All Regions", value: "" },
+          ...(regions?.map((region: any) => ({
+            label: region.name,
+            value: region.id, // id
+          })) || []),
+        ],
+      },
+      {
+        key: "contact_person",
+        label: "Contact Person",
+        placeholder: "Select Contact Person",
+        value: dynamicPricingFilters.contact_person, // 👈 id
+        options: [
+          { label: "All Contacts Person", value: "" },
+          ...(contactPersons?.map((person: any) => ({
+            label: person.name,
+            value: person.id, // id
+          })) || []),
+        ],
+      },
+    ],
+    [dynamicPricingFilters, currencies, regions, contactPersons]
+  );
+
+  const handleDynamicPricingFilterChange = (key: any) => (value: any) => {
+    setDynamicPricingFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleDynamicPricingClearFilter = () => {
+    setDynamicPricingFilters({
+      currency: "",
+      region: "",
+      contact_person: "",
+    });
+  };
+
+  const buildDynamicPricingQuery = () => {
+    const q: Record<string, string> = {};
+    if (dynamicPricingFilters.currency)
+      q.currency = dynamicPricingFilters.currency;
+    if (dynamicPricingFilters.region)
+      q.regionId = String(dynamicPricingFilters.region);
+    if (dynamicPricingFilters.contact_person)
+      q.contactPersonId = String(dynamicPricingFilters.contact_person);
+    return q;
+  };
+
+  const handleExportDynamicPricingCSV = async () => {
+    const params = buildDynamicPricingQuery();
+
+    // fetch once to get total, then paginate in chunks
+    const firstQs = new URLSearchParams({
+      page: "1",
+      pageSize: "1",
+      ...params,
+    }).toString();
+
+    const firstRes = await fetch(
+      `/api/products/get-product-dynamic-pricing/${id}?${firstQs}`
+    );
+    const firstJson = await firstRes.json();
+    const total = firstJson?.data?.pagination?.total ?? 0;
+    if (!total) {
+      downloadBlob(toCSV([]), `dynamic-pricing-${id}.csv`);
+      return;
+    }
+
+    const pageSize = 500;
+    const totalPages = Math.ceil(total / pageSize);
+
+    let allItems: any[] = [];
+    for (let page = 1; page <= totalPages; page++) {
+      const qs = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+        ...params,
+      }).toString();
+
+      const res = await fetch(
+        `/api/products/get-product-dynamic-pricing/${id}?${qs}`
+      );
+      const json = await res.json();
+      const items = json?.data?.items ?? [];
+      allItems = allItems.concat(items);
+    }
+
+    allItems.map((item) => {
+      item.unit_price_local = item.unit_price_local.toFixed(2);
+      item.exchange_rate = item.exchange_rate.toFixed(2);
+      item.unit_price_usd = item.unit_price_usd.toFixed(2);
+    });
+
+    const csv = toCSV(allItems);
+    const timestamp = new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace(/[:T]/g, "-");
+    downloadBlob(csv, `Dynamic Pricing-${id}-${timestamp}.csv`);
+  };
+
   if (isLoading || !productDetail) {
     return (
       <div className="text-center py-20">
@@ -253,6 +476,22 @@ const ProductDetailPage = () => {
             key: "usage_history",
             label: "Usage History",
             children: <UsageHistory data={usageHistory} />,
+          },
+          {
+            key: "dynamic_pricing",
+            label: "Dynamic Pricing",
+            children: (
+              <DynamicPricing
+                data={pricingData?.data}
+                filters={filtersForUI}
+                pagination={dynamicPricingPagination}
+                onPaginationChange={handleDynamicPricingPagination}
+                handleFilterChange={handleDynamicPricingFilterChange}
+                handleClearFilter={handleDynamicPricingClearFilter}
+                onExportCSV={handleExportDynamicPricingCSV}
+                loading={pricingLoading}
+              />
+            ),
           },
           {
             key: "product_log",

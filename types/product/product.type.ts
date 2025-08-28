@@ -100,3 +100,32 @@ export interface ProductUsageHistory {
   pageSize?: number;
   total?: number;
 }
+
+export interface DynamicPricingItems {
+  purchase_order_number: string;
+  order_date: string;
+  region: string;
+  contact_person: string;
+  currency_code: string;
+  unit_price_local: number;
+  exchange_rate: number;
+  unit_price_usd: number;
+}
+
+export interface ProductDynamicPricing {
+  items: DynamicPricingItems[];
+  statistics: {
+    average_price_usd: number;
+    max_price_usd: number;
+    max_price_local: string;
+    max_purchase_order_number: string;
+    min_price_usd: number;
+    min_price_local: string;
+    min_purchase_order_number: string;
+  };
+  pagination: {
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+}
