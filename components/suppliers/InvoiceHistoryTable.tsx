@@ -3,6 +3,7 @@ import { Pagination, Table, TableProps, Typography } from "antd";
 import Link from "antd/es/typography/Link";
 import StatusBadge from "../purchase-invoices/StatusBadge";
 import TableCardWrapper from "./TableWrapper";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 interface InvoiceHistoryTableProps {
   data: {
@@ -102,12 +103,12 @@ const InvoiceHistoryTable: React.FC<InvoiceHistoryTableProps> = ({
       render: (_, record) => (
         <>
           <Typography.Text>
-            {record.total_amount_local?.toLocaleString() ?? "-"}{" "}
+            {formatWithThousandSeparator(record.total_amount_local) ?? "-"}{" "}
             {record.currency_code}
           </Typography.Text>
           <div>
             <Typography.Text type="secondary">
-              (${record.total_amount_usd?.toLocaleString() ?? "-"})
+              (${formatWithThousandSeparator(record.total_amount_usd) ?? "-"})
             </Typography.Text>
           </div>
         </>
