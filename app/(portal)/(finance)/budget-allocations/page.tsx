@@ -8,6 +8,7 @@ import { usePermission } from "@/hooks/shared/usePermission";
 
 import { BudgetAllocationsInterface } from "@/types/budget-allocations/budget-allocations.type";
 import { StatItem } from "@/types/shared/stat-item.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import {
   CalendarOutlined,
   DollarCircleOutlined,
@@ -78,7 +79,9 @@ export default function BudgetAllocationsPage() {
         },
         {
           title: "Total Allocated (USD)",
-          value: budgetAllocationData.statistics.totalAllocatedUSD,
+          value: formatWithThousandSeparator(
+            budgetAllocationData.statistics.totalAllocatedUSD
+          ),
           icon: <DollarOutlined />,
           prefix: "$",
           bgColor: "#B7EB8F",
@@ -86,10 +89,13 @@ export default function BudgetAllocationsPage() {
           borderColor: "#B7EB8F",
           tooltip: "Total equivalent USD value of all allocations",
           total_approved: budgetAllocationData.statistics.totalAllocatedUSD,
+          footerContent: `Across ${budgetAllocationData.statistics.totalAllocations} allocations`,
         },
         {
           title: "Pending Allocated (USD)",
-          value: budgetAllocationData.statistics.totalPendingUSD,
+          value: formatWithThousandSeparator(
+            budgetAllocationData.statistics.totalPendingUSD
+          ),
           icon: <DollarCircleOutlined />,
           prefix: "$",
           bgColor: "#FFC53D",
@@ -97,6 +103,7 @@ export default function BudgetAllocationsPage() {
           borderColor: "#FFE58F",
           tooltip: "Total pending allocations' equivalent USD",
           total_approved: budgetAllocationData.statistics.totalPendingUSD,
+          footerContent: `Across ${budgetAllocationData.statistics.totalAllocations} allocations`,
         },
       ];
       setStatItems(stats);
@@ -167,13 +174,11 @@ export default function BudgetAllocationsPage() {
         const usd = record.allocation_amount / record.exchange_rate_usd;
         return (
           <div>
-            {record.allocation_amount.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-            })}{" "}
+            {formatWithThousandSeparator(record.allocation_amount)}{" "}
             {record.currency_code}
             <br />
             <Typography.Text type="secondary">
-              (${usd.toFixed(2)})
+              (${formatWithThousandSeparator(usd)})
             </Typography.Text>
           </div>
         );

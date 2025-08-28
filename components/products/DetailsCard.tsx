@@ -1,6 +1,7 @@
 "use client";
 
 import { ProductInterface } from "@/types/product/product.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import { TagOutlined } from "@ant-design/icons";
 import { Card, Col, Row, Space, Typography } from "antd";
 
@@ -73,7 +74,9 @@ const DetailsCard = ({
         <Col span={12} style={{ marginTop: 16 }}>
           <Space direction="vertical" size={0}>
             <Typography.Text type="secondary">Unit Price</Typography.Text>
-            <Typography.Title level={5}>{unit_price ?? "N/A"}</Typography.Title>
+            <Typography.Title level={5}>
+              {formatWithThousandSeparator(unit_price) ?? "N/A"}
+            </Typography.Title>
           </Space>
         </Col>
         <Col span={12} style={{ marginTop: 16 }}>

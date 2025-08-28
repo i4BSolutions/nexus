@@ -1,6 +1,7 @@
 "use client";
 
 import { BudgetAllocationsInterface } from "@/types/budget-allocations/budget-allocations.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import { DollarCircleOutlined } from "@ant-design/icons";
 import { Col, Flex, Row, Typography } from "antd";
 import dayjs from "dayjs";
@@ -73,13 +74,11 @@ const BudgetAllocationDetails = ({
               strong
               className="!mb-0 !text-[28px] !font-semibold"
             >
-              {data.allocation_amount.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}{" "}
+              {formatWithThousandSeparator(data.allocation_amount)}{" "}
               {data.currency_code}
             </Typography.Text>
             <Typography.Text type="secondary" className="!text-base">
-              (${usd.toFixed(2)})
+              (${formatWithThousandSeparator(usd)})
             </Typography.Text>
           </div>
         </div>

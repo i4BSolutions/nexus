@@ -26,6 +26,7 @@ import Input, { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 export default function PurchaseOrdersPage() {
   const router = useRouter();
@@ -103,7 +104,7 @@ export default function PurchaseOrdersPage() {
         },
         {
           title: "Total USD Value",
-          value: poData.statistics.total_usd_value,
+          value: formatWithThousandSeparator(poData.statistics.total_usd_value),
           icon: <DollarOutlined />,
           bgColor: "#36CFC9",
           gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFF 100%)",

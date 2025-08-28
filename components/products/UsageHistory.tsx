@@ -11,11 +11,12 @@ import { Card, Flex, Space, Table, TableProps, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import CurrentStockCard from "./CurrentStockCard";
 import LastStockMovementCard from "./LastStockMovementCard";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 const UsageHistory = ({ data }: { data: ProductUsageHistory }) => {
   const { purchase_orders, last_stock_movement, minimum_stock, current_stock } =
     data;
-  console.log(purchase_orders);
+
   const columns: TableProps<ProductPurchaseOrder>["columns"] = [
     {
       title: "PURCHASE ORDER",
@@ -68,7 +69,11 @@ const UsageHistory = ({ data }: { data: ProductUsageHistory }) => {
           borderRight: "none",
         },
       }),
-      render: (unit_price) => <Typography.Text>{unit_price}</Typography.Text>,
+      render: (unit_price) => (
+        <Typography.Text>
+          {formatWithThousandSeparator(unit_price)}
+        </Typography.Text>
+      ),
     },
     {
       title: "AMOUNT",
@@ -79,7 +84,9 @@ const UsageHistory = ({ data }: { data: ProductUsageHistory }) => {
           borderRight: "none",
         },
       }),
-      render: (amount) => <Typography.Text>{amount}</Typography.Text>,
+      render: (amount) => (
+        <Typography.Text>{formatWithThousandSeparator(amount)}</Typography.Text>
+      ),
     },
     {
       title: "STATUS",

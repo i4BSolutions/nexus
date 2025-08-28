@@ -27,6 +27,7 @@ import {
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 export default function PoCardView({
   data,
@@ -211,10 +212,11 @@ export default function PoCardView({
                     className="text-[30px] font-[500] m-0"
                     style={{ lineHeight: "32px" }}
                   >
-                    {item.amount_local.toLocaleString()} {item.currency_code}
+                    {formatWithThousandSeparator(item.amount_local)}{" "}
+                    {item.currency_code}
                   </p>
                   <Typography.Text type="secondary">
-                    (${item.amount_usd.toLocaleString()})
+                    (${formatWithThousandSeparator(item.amount_usd)})
                   </Typography.Text>
                 </div>
                 <Flex
@@ -260,7 +262,7 @@ export default function PoCardView({
                     <p className="m-0 font-medium text-base">
                       $
                       {item.invoiced_amount
-                        ? item.invoiced_amount.toLocaleString()
+                        ? formatWithThousandSeparator(item.invoiced_amount)
                         : 0}
                     </p>
                   </Col>
@@ -274,7 +276,9 @@ export default function PoCardView({
                     <p className="m-0 font-medium text-base">
                       $
                       {item.remaining_invoiced_amount
-                        ? item.remaining_invoiced_amount.toLocaleString()
+                        ? formatWithThousandSeparator(
+                            item.remaining_invoiced_amount
+                          )
                         : 0}
                     </p>
                   </Col>
@@ -294,7 +298,7 @@ export default function PoCardView({
                     <p className="m-0 font-medium text-base">
                       $
                       {item.allocated_amount
-                        ? item.allocated_amount.toLocaleString()
+                        ? formatWithThousandSeparator(item.allocated_amount)
                         : 0}
                     </p>
                   </Col>
@@ -308,7 +312,7 @@ export default function PoCardView({
                     <p className="m-0 font-medium text-base">
                       $
                       {item.remaining_allocation
-                        ? item.remaining_allocation.toLocaleString()
+                        ? formatWithThousandSeparator(item.remaining_allocation)
                         : 0}
                     </p>
                   </Col>
