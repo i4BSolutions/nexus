@@ -142,29 +142,16 @@ export default function UserCreationPage() {
         layout="vertical"
         autoComplete="off"
         onFinish={onFinish}
-        initialValues={{
-          view_purchase_orders: false,
-          manage_purchase_orders: false,
-          view_invoices: false,
-          manage_invoices: false,
-          view_products_suppliers: false,
-          manage_products_suppliers: false,
-          view_stock: false,
-          stock_in: false,
-          stock_out: false,
-          view_warehouses: false,
-          manage_warehouses: false,
-          view_budgets_allocations: false,
-          manage_budgets_allocations: false,
-          view_dashboard: false,
-          manage_users: false,
-        }}
+        initialValues={PERMISSION_KEYS.reduce((obj, key) => {
+          obj[key] = false;
+          return obj;
+        }, {} as Partial<UserFieldType>)}
         onValuesChange={(changed) => {
           const changedKey = Object.keys(changed)[0];
-          if (changedKey.startsWith("can_stock_")) {
+          if (changedKey.startsWith("can_stock_") && changed[changedKey]) {
             form.setFieldsValue({ can_view_stock: true });
           }
-          if (changedKey.startsWith("can_manage_")) {
+          if (changedKey.startsWith("can_manage_") && changed[changedKey]) {
             const correspondingViewKey = changedKey.replace(
               "can_manage_",
               "can_view_"

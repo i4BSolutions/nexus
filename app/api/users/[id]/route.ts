@@ -1,4 +1,5 @@
 import { error, success } from "@/lib/api-response";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ApiResponse } from "@/types/shared/api-response-type";
 import { UserDetailResponse } from "@/types/user/user-detail.type";
@@ -21,7 +22,7 @@ export async function GET(
   const { data, error: dbError } = await supabase
     .from("user_profiles")
     .select(
-      `
+      ` id,
         full_name,
         username,
         email,
@@ -52,6 +53,7 @@ export async function GET(
   }
 
   const userDetail: UserDetailResponse = {
+    id: data.id,
     full_name: data.full_name,
     username: data.username,
     email: data.email,
@@ -96,11 +98,22 @@ export async function PUT(
   }
 
   const body = await req.json();
-
+  console.log(body);
   const updateData = {
-    ...body,
+    ...body.updatePayload,
     updated_at: new Date().toISOString(),
   };
+
+  const { error: adminErr } = await supabaseAdmin.auth.admin.updateUserById(
+    idStr,
+    {
+      user_metadata: body.updatePayload,
+    }
+  );
+
+  if (adminErr) {
+    return NextResponse.json(error(adminErr.message, 400), { status: 400 });
+  }
 
   const { data: updatedUser, error: updateError } = await supabase
     .from("user_profiles")
@@ -125,10 +138,7 @@ export async function PUT(
     });
   }
 
-  return NextResponse.json(
-    success(updatedUser, "Supplier updated successfully"),
-    {
-      status: 200,
-    }
-  );
+  return NextResponse.json(success(updatedUser, "User updated successfully"), {
+    status: 200,
+  });
 }

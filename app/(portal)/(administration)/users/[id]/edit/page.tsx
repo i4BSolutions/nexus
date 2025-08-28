@@ -1,11 +1,14 @@
 "use client";
 
 import DepartmentCreateModal from "@/components/users/DepartmentCreateModal";
+import { getAuthenticatedUser } from "@/helper/getUser";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useGetAll } from "@/hooks/react-query/useGetAll";
 import { useGetById } from "@/hooks/react-query/useGetById";
+import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { PERMISSION_KEYS } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import { DepartmentInterface } from "@/types/departments/department.type";
 import { UserDetailResponse } from "@/types/user/user-detail.type";
 import { UserFieldType } from "@/types/user/user.type";
@@ -31,18 +34,27 @@ import {
   Select,
   Space,
   Spin,
+  Tooltip,
   Typography,
 } from "antd";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function UserEditPage() {
+  const supabase = createClient();
   const router = useRouter();
   const params = useParams();
   const { message } = App.useApp();
   const [form] = Form.useForm<UserFieldType>();
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { data: lastAdminData, isLoading: lastAdminDataLoading } =
+    useGetWithParams<{ isLastAdmin: boolean }, { userId: string }>(
+      "users/check-last-admin",
+      { userId: params.id as string }
+    );
 
   const { data: userDetailData, isLoading: isInitailDataLoading } =
     useGetById<UserDetailResponse>("users", params.id as string);
@@ -57,10 +69,27 @@ export default function UserEditPage() {
 
   const { mutateAsync: updateUser } = useUpdate("users", ["users"]);
 
+  useEffect(() => {
+    const getUserId = async () => {
+      if (userDetailData) {
+        const user = await getAuthenticatedUser(supabase);
+        setCurrentUser(user);
+      }
+    };
+    getUserId();
+  }, [params.id, userDetailData]);
+
   const onFinish = (values: UserFieldType) => {
-    console.log("Form values:", values);
-    // Handle form submission logic here
-    const payload = {
+    const hasAtLeastOnePermission = PERMISSION_KEYS.some(
+      (key) => values[key as keyof UserFieldType]
+    );
+
+    if (!hasAtLeastOnePermission) {
+      message.error("Please select at least one permission for the user.");
+      return;
+    }
+
+    const updatePayload = {
       email: values.email,
       full_name: values.full_name,
       username: "@" + values.username,
@@ -69,8 +98,14 @@ export default function UserEditPage() {
         PERMISSION_KEYS.map((key) => [key, values[key]])
       ),
     };
+
+    const logPayload = {
+      actor: currentUser.user_metadata.full_name,
+      target: userDetailData!.full_name,
+      target_id: userDetailData!.id,
+    };
     updateUser(
-      { id: params.id as string, data: payload },
+      { id: params.id as string, data: { updatePayload, logPayload } },
       {
         onSuccess: () => {
           message.success("User updated successfully!");
@@ -89,7 +124,6 @@ export default function UserEditPage() {
   };
 
   const handleDepartmentCreate = (values: { name: string }) => {
-    console.log("Creating department with values:", values);
     createDepartment(values, {
       onSuccess: () => {
         message.success("Department created successfully!");
@@ -102,7 +136,13 @@ export default function UserEditPage() {
     });
   };
 
-  if (isInitailDataLoading || !userDetailData)
+  if (
+    isInitailDataLoading ||
+    !userDetailData ||
+    lastAdminDataLoading ||
+    lastAdminData === undefined ||
+    !currentUser
+  )
     return (
       <div className="flex justify-center items-center h-[500px]">
         <Spin />
@@ -159,10 +199,10 @@ export default function UserEditPage() {
         initialValues={initialValues}
         onValuesChange={(changed) => {
           const changedKey = Object.keys(changed)[0];
-          if (changedKey.startsWith("can_stock_")) {
+          if (changedKey.startsWith("can_stock_") && changed[changedKey]) {
             form.setFieldsValue({ can_view_stock: true });
           }
-          if (changedKey.startsWith("can_manage_")) {
+          if (changedKey.startsWith("can_manage_") && changed[changedKey]) {
             const correspondingViewKey = changedKey.replace(
               "can_manage_",
               "can_view_"
@@ -312,7 +352,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">View Purchase Orders</span>
@@ -332,7 +372,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">Manage Purchase Orders</span>
@@ -371,7 +411,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">View Invoices</span>
@@ -390,7 +430,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">Manage Invoices</span>
@@ -433,7 +473,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">View Products & Suppliers</span>
@@ -452,7 +492,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">Manage Products & Suppliers</span>
@@ -493,7 +533,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">View Stock</span>
@@ -512,7 +552,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">Record Stock-In</span>
@@ -530,7 +570,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">Record Stock-Out</span>
@@ -571,7 +611,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">View Warehouses</span>
@@ -590,7 +630,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">Manage Warehouses</span>
@@ -631,7 +671,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">View Budgets & Allocations</span>
@@ -650,7 +690,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">Manage Budgets & Allocations</span>
@@ -690,7 +730,7 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox disabled={lastAdminData.isLastAdmin} />
                 </Form.Item>
                 <div className="flex flex-col">
                   <span className="text-sm">View Dashboard</span>
@@ -709,16 +749,27 @@ export default function UserEditPage() {
                     marginBottom: 0,
                   }}
                 >
-                  <Checkbox />
+                  <Checkbox
+                    disabled={
+                      currentUser.id == params.id || lastAdminData.isLastAdmin
+                    }
+                  />
                 </Form.Item>
-
-                <div className="flex flex-col">
-                  <span className="text-sm">Manage Users</span>
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    Can create, edit, and manage user accounts and their
-                    permissions
-                  </Typography.Text>
-                </div>
+                <Tooltip
+                  title={
+                    currentUser == params.id
+                      ? "Please use another Admin to change this permission"
+                      : ""
+                  }
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm">Manage Users</span>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      Can create, edit, and manage user accounts and their
+                      permissions
+                    </Typography.Text>
+                  </div>
+                </Tooltip>
               </div>
             </Col>
           </Row>
