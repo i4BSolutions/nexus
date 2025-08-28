@@ -107,19 +107,6 @@ export default function DynamicPricing({
       ),
     },
     {
-      title: "CURRENCY",
-      dataIndex: "currency_code",
-      key: "currency_code",
-      onCell: () => ({
-        style: {
-          borderRight: "none",
-        },
-      }),
-      render: (currency_code) => (
-        <Typography.Text>{currency_code}</Typography.Text>
-      ),
-    },
-    {
       title: "UNIT PRICE(LOCAL)",
       dataIndex: "unit_price_local",
       key: "unit_price_local",
@@ -131,7 +118,7 @@ export default function DynamicPricing({
       sorter: (a, b) => a.unit_price_local - b.unit_price_local,
       render: (unit_price_local, record) => (
         <Typography.Text>
-          {unit_price_local.toFixed(2).toLocaleString()} {record.currency_code}
+          {record.currency_code} {unit_price_local.toFixed(2).toLocaleString()}
         </Typography.Text>
       ),
     },
@@ -146,7 +133,8 @@ export default function DynamicPricing({
       }),
       render: (exchange_rate, record) => (
         <Typography.Text>
-          1 USD = {exchange_rate} {record.currency_code}
+          1 USD = {exchange_rate.toFixed(2).toLocaleString()}{" "}
+          {record.currency_code}
         </Typography.Text>
       ),
     },

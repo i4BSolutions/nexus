@@ -365,12 +365,18 @@ const ProductDetailPage = () => {
       allItems = allItems.concat(items);
     }
 
+    allItems.map((item) => {
+      item.unit_price_local = item.unit_price_local.toFixed(2);
+      item.exchange_rate = item.exchange_rate.toFixed(2);
+      item.unit_price_usd = item.unit_price_usd.toFixed(2);
+    });
+
     const csv = toCSV(allItems);
     const timestamp = new Date()
       .toISOString()
       .slice(0, 19)
       .replace(/[:T]/g, "-");
-    downloadBlob(csv, `dynamic-pricing-${id}-${timestamp}.csv`);
+    downloadBlob(csv, `Dynamic Pricing-${id}-${timestamp}.csv`);
   };
 
   if (isLoading || !productDetail) {
