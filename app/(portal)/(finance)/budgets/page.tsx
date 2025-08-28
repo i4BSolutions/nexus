@@ -11,6 +11,7 @@ import { useSoftDeleteBudget } from "@/hooks/budget-statistics/useSoftDeleteBudg
 import { useList } from "@/hooks/react-query/useList";
 import { usePermission } from "@/hooks/shared/usePermission";
 import { Budget, BudgetResponse } from "@/types/budgets/budgets.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import {
   DollarCircleOutlined,
   DownCircleOutlined,
@@ -55,45 +56,33 @@ export default function BudgetsPage() {
       setStatItems([
         {
           title: "Total Planned",
-          value: new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            maximumFractionDigits: 2,
-          }).format(budgets.statistics.totalPlanned),
+          value: formatWithThousandSeparator(budgets.statistics.totalPlanned),
           icon: <DollarCircleOutlined />,
           bgColor: "#36CFC9",
           gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFFFFF 100%)",
           borderColor: "#87E8DE",
-          tooltip: "Total number of budgets",
+          tooltip: "Sum of all planned budgets across all active projects",
           bottomText: `Across ${budgets.statistics.active} active budget projects`,
         },
         {
           title: "Total Allocated",
-          value: new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            maximumFractionDigits: 2,
-          }).format(budgets.statistics.totalAllocated),
+          value: formatWithThousandSeparator(budgets.statistics.totalAllocated),
           icon: <DownCircleOutlined />,
           bgColor: "#40A9FF",
           gradient: "linear-gradient(90deg, #E6F7FF 0%, #FFFFFF 100%)",
           borderColor: "#91D5FF",
-          tooltip: "Total number of budgets",
+          tooltip: "Total budget already allocated to project teams",
           showProgress: true,
           progressPercent: budgets.statistics.allocatedVsPlannedPercentage,
         },
         {
           title: "Total Invoiced",
-          value: new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            maximumFractionDigits: 2,
-          }).format(budgets.statistics.totalInvoiced),
+          value: formatWithThousandSeparator(budgets.statistics.totalInvoiced),
           icon: <UpCircleOutlined />,
           bgColor: "#9254DE",
           gradient: "linear-gradient(90deg, #F9F0FF 0%, #FFFFFF 100%)",
           borderColor: "#D3ADF7",
-          tooltip: "Total number of budgets",
+          tooltip: "Actual amount invoiced or spent across all campaigns",
           showProgress: true,
           progressPercent: budgets.statistics.invoicedVsAllocatedPercentage,
         },

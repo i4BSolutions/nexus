@@ -23,6 +23,7 @@ import Link from "antd/es/typography/Link";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 export default function CardView({
   data,
@@ -120,17 +121,18 @@ export default function CardView({
                     className="text-[30px] font-[500] m-0"
                     style={{ lineHeight: "32px" }}
                   >
-                    {item.total_amount_local.toLocaleString()}{" "}
+                    {formatWithThousandSeparator(item.total_amount_local)}{" "}
                     {item.currency_code}
                   </p>
                   <Space
                     style={{ justifyContent: "space-between", width: "100%" }}
                   >
                     <Typography.Text type="secondary">
-                      (${item.total_amount_usd.toLocaleString()})
+                      (${formatWithThousandSeparator(item.total_amount_usd)})
                     </Typography.Text>
                     <Typography.Text type="secondary">
-                      1 USD = {item.usd_exchange_rate.toLocaleString()}{" "}
+                      1 USD ={" "}
+                      {formatWithThousandSeparator(item.usd_exchange_rate)}{" "}
                       {item.currency_code}
                     </Typography.Text>
                   </Space>

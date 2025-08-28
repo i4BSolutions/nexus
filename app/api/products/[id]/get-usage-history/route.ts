@@ -147,8 +147,8 @@ export async function GET(
         purchase_order_no: po.purchase_order_no,
         supplier_name: supplierName,
         order_date: po.order_date,
-        unit_price: `${unitPrice.toFixed(2)} ${currencyCode}`,
-        amount: `${amount.toFixed(2)} ${currencyCode}`,
+        unit_price: `${unitPrice.toFixed(2)}`,
+        amount: `${amount.toFixed(2)}`,
         amount_usd:
           po.usd_exchange_rate && amount
             ? `$${(amount / parseFloat(po.usd_exchange_rate)).toFixed(2)}`

@@ -9,6 +9,7 @@ import {
   InventoryResponse,
 } from "@/types/inventory/inventory.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import { DollarCircleOutlined, TagOutlined } from "@ant-design/icons";
 import {
   App,
@@ -106,7 +107,9 @@ const Inventory = () => {
         key: "unit_price",
         render: (value) => (
           <Typography.Text>
-            {typeof value === "number" ? `${value.toLocaleString()} USD` : "-"}
+            {typeof value === "number"
+              ? `${formatWithThousandSeparator(value)} USD`
+              : "-"}
           </Typography.Text>
         ),
       },
@@ -116,7 +119,9 @@ const Inventory = () => {
         key: "total_value",
         render: (value) => (
           <Typography.Text>
-            {typeof value === "number" ? `${value.toLocaleString()} USD` : "-"}
+            {typeof value === "number"
+              ? `${formatWithThousandSeparator(value)} USD`
+              : "-"}
           </Typography.Text>
         ),
       },

@@ -20,6 +20,7 @@ import {
   ProductCurrencyInterface,
   ProductInterface,
 } from "@/types/product/product.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import {
   ExclamationCircleOutlined,
   PlusOutlined,
@@ -260,7 +261,7 @@ export default function ProductsPage() {
       title: "UNIT PRICE",
       dataIndex: "unit_price",
       render: (v: number, record: ProductInterface) =>
-        `${v} ${
+        `${formatWithThousandSeparator(v)} ${
           currencyData?.find((c) => Number(c.id) === record.currency_code_id)
             ?.currency_code ?? ""
         }`,

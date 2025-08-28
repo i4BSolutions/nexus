@@ -1,6 +1,7 @@
 "use client";
 
 import { PurchaseInvoiceInterface } from "@/types/purchase-invoice/purchase-invoice.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import { FileTextOutlined } from "@ant-design/icons";
 import { Card, Col, Row, Space, Table, TableProps, Typography } from "antd";
 
@@ -49,11 +50,11 @@ const DetailsCard = ({ data }: { data: PurchaseInvoiceInterface }) => {
       render: (_, record) => (
         <Space direction="vertical" size={0}>
           <Typography.Text>
-            {record.po_unit_price_local.toFixed(2).toLocaleString()}{" "}
+            {formatWithThousandSeparator(record.po_unit_price_local)}{" "}
             {data.purchase_order_currency_code}
           </Typography.Text>
           <Typography.Text type="secondary" style={{ fontSize: "12px" }}>
-            ({record.po_unit_price_usd.toFixed(2).toLocaleString()} USD)
+            ({formatWithThousandSeparator(record.po_unit_price_usd)} USD)
           </Typography.Text>
         </Space>
       ),
@@ -71,11 +72,11 @@ const DetailsCard = ({ data }: { data: PurchaseInvoiceInterface }) => {
       render: (_, record) => (
         <Space direction="vertical" size={0}>
           <Typography.Text>
-            {record.unit_price_local.toFixed(2).toLocaleString()}{" "}
+            {formatWithThousandSeparator(record.unit_price_local)}{" "}
             {data.currency_code}
           </Typography.Text>
           <Typography.Text type="secondary" style={{ fontSize: "12px" }}>
-            ({record.unit_price_usd.toFixed(2).toLocaleString()} USD)
+            ({formatWithThousandSeparator(record.unit_price_usd)} USD)
           </Typography.Text>
         </Space>
       ),
@@ -97,11 +98,11 @@ const DetailsCard = ({ data }: { data: PurchaseInvoiceInterface }) => {
           }}
         >
           <Typography.Text>
-            {record.sub_total_local.toFixed(2).toLocaleString()}{" "}
+            {formatWithThousandSeparator(record.sub_total_local)}{" "}
             {data.purchase_order_currency_code}
           </Typography.Text>
           <Typography.Text type="secondary" style={{ fontSize: "12px" }}>
-            ({record.sub_total_usd.toFixed(2).toLocaleString()} USD)
+            ({formatWithThousandSeparator(record.sub_total_usd)} USD)
           </Typography.Text>
         </div>
       ),
@@ -203,10 +204,17 @@ const DetailsCard = ({ data }: { data: PurchaseInvoiceInterface }) => {
                 Total Amount
               </Typography.Text>
               <Typography.Title level={3} style={{ margin: 0 }}>
-                {data ? getTotal().totalLocal : "0"} {data?.currency_code}
+                {data
+                  ? formatWithThousandSeparator(getTotal().totalLocal)
+                  : "0"}{" "}
+                {data?.currency_code}
               </Typography.Title>
               <Typography.Text type="secondary" style={{ margin: 0 }}>
-                ({data ? getTotal().totalUSD : "0.00 USD"}) USD
+                (
+                {data
+                  ? formatWithThousandSeparator(getTotal().totalUSD)
+                  : "0.00 USD"}
+                ) USD
               </Typography.Text>
             </Space>
           </div>
