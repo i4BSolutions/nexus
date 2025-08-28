@@ -39,6 +39,7 @@ import {
   PurchaseInvoiceDto,
   PurchaseInvoiceResponse,
 } from "@/types/purchase-invoice/purchase-invoice.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 export default function InvoicesPage() {
   const [statItems, setStatItems] = useState<StatItem[]>();
@@ -127,7 +128,7 @@ export default function InvoicesPage() {
         },
         {
           title: "Total USD Value",
-          value: piData.statistics.total_usd,
+          value: formatWithThousandSeparator(piData.statistics.total_usd),
           icon: <DollarOutlined />,
           bgColor: "#36CFC9",
           gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFF 100%)",

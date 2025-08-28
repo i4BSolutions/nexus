@@ -1,18 +1,10 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
-
-// Ant Design
+import { forwardRef, useEffect, useImperativeHandle } from "react";
 import { DatePicker, Form, Input, Select, Space, Typography } from "antd";
-
-// Day.js
-import dayjs from "dayjs";
-
-// React Query
+import dayjs, { Dayjs } from "dayjs";
 import { useList } from "@/hooks/react-query/useList";
 import { useQuery } from "@tanstack/react-query";
-
-// Types
 import { BudgetResponse } from "@/types/budgets/budgets.type";
 import { ProductCurrencyInterface } from "@/types/product/product.type";
 
@@ -21,7 +13,6 @@ interface StepDateCurrencyProps {
   onBack: () => void;
   formData?: any;
 }
-
 export interface StepDateCurrencyRef {
   submitForm: () => void;
   getFormData: () => any;
@@ -34,10 +25,31 @@ const fetchCurrencies = async () => {
   return json.data;
 };
 
+// --- helpers to normalize/denormalize ---
+const toFormDates = (data: any) => {
+  if (!data) return data;
+  return {
+    ...data,
+    order_date: data.order_date ? dayjs(data.order_date) : null,
+    expected_delivery_date: data.expected_delivery_date
+      ? dayjs(data.expected_delivery_date)
+      : null,
+  };
+};
+
+const toPayloadDates = (values: any) => ({
+  ...values,
+  order_date: values.order_date
+    ? (values.order_date as Dayjs).toDate().toISOString()
+    : null,
+  expected_delivery_date: values.expected_delivery_date
+    ? (values.expected_delivery_date as Dayjs).toDate().toISOString()
+    : null,
+});
+
 const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
   ({ onNext, onBack, formData }, ref) => {
     const [form] = Form.useForm();
-    const [orderDate, setOrderDate] = useState<dayjs.Dayjs | null>(null);
 
     const { data: currenciesData, isLoading: currenciesLoading } = useQuery({
       queryKey: ["currencies"],
@@ -46,22 +58,20 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
 
     const { data: budgetsData, isLoading: budgetsLoading } = useList(
       "budgets",
-      {
-        pageSize: "all" as any,
-        status: "true",
-      }
+      { pageSize: "all" as any, status: "true" }
     );
 
     useEffect(() => {
-      // Pre-populate form with existing data
+      // Normalize incoming strings -> dayjs for DatePicker fields
       if (formData) {
-        form.setFieldsValue(formData);
+        form.setFieldsValue(toFormDates(formData));
       }
     }, [formData, form]);
 
     const handleNext = () => {
       form.validateFields().then((values) => {
-        onNext(values);
+        // Convert dayjs back -> ISO strings for API / parent
+        onNext(toPayloadDates(values));
       });
     };
 
@@ -88,7 +98,7 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
               style={{ width: "100%", justifyContent: "space-between" }}
             >
               <Form.Item
-                style={{ width: "510px" }}
+                style={{ width: 510 }}
                 label={
                   <div className="flex items-center">
                     <Typography.Paragraph
@@ -109,23 +119,30 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                 rules={[{ required: true, message: "Order date is required" }]}
               >
                 <DatePicker
+                  allowClear
                   size="large"
                   style={{ width: "100%" }}
                   onChange={(date) => {
-                    setOrderDate(date);
-                    // Optionally reset expected_delivery_date if it's before new order_date
                     const expected = form.getFieldValue(
                       "expected_delivery_date"
                     );
-                    if (date && expected && expected < date) {
+                    const expectedDayjs = expected ? dayjs(expected) : null;
+
+                    // If expected < new order date, clear it
+                    if (date && expectedDayjs && expectedDayjs.isBefore(date)) {
                       form.setFieldValue("expected_delivery_date", null);
                     }
+
+                    // Revalidate expected date when order date changes
+                    form
+                      .validateFields(["expected_delivery_date"])
+                      .catch(() => {});
                   }}
                 />
               </Form.Item>
 
               <Form.Item
-                style={{ width: "510px" }}
+                style={{ width: 510 }}
                 label={
                   <div className="flex items-center">
                     <Typography.Paragraph
@@ -148,9 +165,25 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                     required: true,
                     message: "Expected delivery date is required",
                   },
+                  // Custom rule: expected >= order
+                  ({ getFieldValue }) => ({
+                    validator(_, value: Dayjs | undefined) {
+                      const order: Dayjs | undefined =
+                        getFieldValue("order_date");
+                      if (!value || !order) return Promise.resolve();
+                      if (value.isAfter(order) || value.isSame(order, "day")) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(
+                        new Error(
+                          "Expected delivery must be on or after the order date"
+                        )
+                      );
+                    },
+                  }),
                 ]}
               >
-                <DatePicker size="large" style={{ width: "100%" }} />
+                <DatePicker allowClear size="large" style={{ width: "100%" }} />
               </Form.Item>
             </Space>
 
@@ -159,7 +192,7 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
               style={{ width: "100%", justifyContent: "space-between" }}
             >
               <Form.Item
-                style={{ width: "510px" }}
+                style={{ width: 510 }}
                 label={
                   <div className="flex items-center">
                     <Typography.Paragraph
@@ -186,27 +219,25 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                   }
                   loading={budgetsLoading}
                   showSearch
-                  filterOption={(input, option) => {
-                    const label = option?.label;
-                    if (typeof label === "string") {
-                      return label.toLowerCase().includes(input.toLowerCase());
-                    }
-                    return false;
-                  }}
+                  filterOption={(input, option) =>
+                    typeof option?.label === "string" &&
+                    option.label.toLowerCase().includes(input.toLowerCase())
+                  }
                   options={
-                    (budgetsData as BudgetResponse)?.items?.map((budget) => ({
-                      value: budget.id,
-                      label: budget.budget_name,
+                    (budgetsData as BudgetResponse)?.items?.map((b) => ({
+                      value: b.id,
+                      label: b.budget_name,
                     })) || []
                   }
                 />
               </Form.Item>
+
               <Space
                 size="middle"
-                style={{ width: "510px", justifyContent: "space-between" }}
+                style={{ width: 510, justifyContent: "space-between" }}
               >
                 <Form.Item
-                  style={{ width: "231px" }}
+                  style={{ width: 231 }}
                   label={
                     <div className="flex items-center">
                       <Typography.Paragraph
@@ -235,16 +266,16 @@ const StepDateCurrency = forwardRef<StepDateCurrencyRef, StepDateCurrencyProps>(
                     }
                     loading={currenciesLoading}
                     options={currenciesData?.map(
-                      (currency: ProductCurrencyInterface) => ({
-                        value: currency.id,
-                        label: currency.currency_code,
+                      (c: ProductCurrencyInterface) => ({
+                        value: c.id,
+                        label: c.currency_code,
                       })
                     )}
                   />
                 </Form.Item>
 
                 <Form.Item
-                  style={{ width: "231px" }}
+                  style={{ width: 231 }}
                   label={
                     <div className="flex items-center">
                       <Typography.Paragraph
