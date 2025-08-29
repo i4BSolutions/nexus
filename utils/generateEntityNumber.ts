@@ -1,4 +1,4 @@
-function generateEntityNumber(
+export function generateEntityNumber(
   latestNumber: string,
   zeroCount: number = 4
 ): string {

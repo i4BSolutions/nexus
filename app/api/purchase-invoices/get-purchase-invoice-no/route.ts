@@ -1,6 +1,7 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { ApiResponse } from "@/types/shared/api-response-type";
+import { generateEntityNumber } from "@/utils/generateEntityNumber";
 import { NextResponse } from "next/server";
 
 export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
