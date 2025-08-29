@@ -33,6 +33,7 @@ export interface UserDetailResponse {
     browser: string;
     created_at: string;
   }[];
+  banned_until: string | null;
   created_at: string;
   updated_at: string;
 }

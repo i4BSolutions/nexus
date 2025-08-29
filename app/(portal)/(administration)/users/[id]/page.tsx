@@ -3,22 +3,92 @@
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import UserActivityLogTab from "@/components/users/UserActivityLogTab";
 import UserPermissionsTab from "@/components/users/UserPermissionsTab";
+import { useCreate } from "@/hooks/react-query/useCreate";
 import { useGetById } from "@/hooks/react-query/useGetById";
 import { UserDetailResponse } from "@/types/user/user-detail.type";
 import getAvatarUrl from "@/utils/getAvatarUrl";
-import { EditOutlined, StopOutlined } from "@ant-design/icons";
-import { Button, Flex, Spin, Tabs, Typography } from "antd";
+import {
+  EditOutlined,
+  MailOutlined,
+  RedoOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
+import { App, Button, Flex, Spin, Tabs, Typography } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import UserProfileTab from "../../../../../components/users/UserProfileTab";
 
 export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { message } = App.useApp();
 
   const { data: userDetailData, isLoading } = useGetById<UserDetailResponse>(
     "users",
     params.id as string
   );
+
+  const { mutateAsync: deactivateUser } = useCreate("users/deactivate-user", [
+    "users",
+    params.id as string,
+  ]);
+
+  const { mutateAsync: reactivateUser } = useCreate("users/reactivate-user", [
+    "users",
+    params.id as string,
+  ]);
+
+  const { mutateAsync: resendVerificationEmail } = useCreate(
+    "users/resend-verification"
+  );
+
+  const resendEmailHandler = () => {
+    if (!userDetailData) return;
+    resendVerificationEmail(
+      {
+        email: userDetailData.email,
+        full_name: userDetailData.full_name,
+        username: userDetailData.username,
+        department: userDetailData.department.id,
+        permissions: userDetailData.permissions,
+      },
+      {
+        onSuccess: () => {
+          message.success("Verification email resent successfully!");
+        },
+        onError: () => {
+          message.error("Failed to resend verification email");
+        },
+      }
+    );
+  };
+
+  const deactivateUserHandler = () => {
+    deactivateUser(
+      { userId: params.id as string },
+      {
+        onSuccess: () => {
+          message.success("User deactivated successfully");
+        },
+        onError: () => {
+          message.error("Failed to deactivate user");
+        },
+      }
+    );
+  };
+
+  const reactivateUserHandler = () => {
+    reactivateUser(
+      { userId: params.id as string },
+      {
+        onSuccess: () => {
+          message.success("User reactivated successfully");
+        },
+        onError: () => {
+          message.error("Failed to reactivate user");
+        },
+      }
+    );
+  };
 
   if (isLoading)
     return (
@@ -33,6 +103,49 @@ export default function UserDetailPage() {
         <p>User not found</p>
       </div>
     );
+
+  const renderActionButtons = () => {
+    if (
+      userDetailData.login_audit_log?.length &&
+      userDetailData.banned_until === null
+    ) {
+      return (
+        <Button
+          icon={<StopOutlined />}
+          color="danger"
+          variant="solid"
+          onClick={deactivateUserHandler}
+        >
+          Deactivate
+        </Button>
+      );
+    } else if (
+      userDetailData.login_audit_log?.length &&
+      userDetailData.banned_until
+    ) {
+      return (
+        <Button
+          icon={<RedoOutlined />}
+          color="primary"
+          variant="solid"
+          onClick={reactivateUserHandler}
+        >
+          Reactivate
+        </Button>
+      );
+    } else {
+      return (
+        <Button
+          icon={<MailOutlined />}
+          color="primary"
+          variant="solid"
+          onClick={resendEmailHandler}
+        >
+          Resend Verification Email
+        </Button>
+      );
+    }
+  };
 
   const tabItems = [
     {
@@ -89,14 +202,7 @@ export default function UserDetailPage() {
             >
               Edit
             </Button>
-            <Button
-              icon={<StopOutlined />}
-              color="danger"
-              variant="solid"
-              onClick={() => alert("This feature is not implemented yet")}
-            >
-              Deactivate
-            </Button>
+            {renderActionButtons()}
           </Flex>
         </Flex>
       </div>
