@@ -41,7 +41,9 @@ const DetailsCard = ({ data }: { data: PurchaseInvoiceInterface }) => {
       dataIndex: "total_ordered",
       key: "total_ordered",
       defaultSortOrder: "descend",
-      render: (total_ordered) => <span>{total_ordered}</span>,
+      render: (total_ordered) => (
+        <span>{formatWithThousandSeparator(total_ordered)}</span>
+      ),
     },
     {
       title: "PO UNIT PRICE",
@@ -63,7 +65,9 @@ const DetailsCard = ({ data }: { data: PurchaseInvoiceInterface }) => {
       title: "INV QUANTITY",
       dataIndex: "quantity",
       key: "quantity",
-      render: (quantity) => <span>{quantity}</span>,
+      render: (quantity) => (
+        <span>{formatWithThousandSeparator(quantity)}</span>
+      ),
     },
     {
       title: "INV UNIT PRICE",
