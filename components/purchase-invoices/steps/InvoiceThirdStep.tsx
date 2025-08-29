@@ -9,6 +9,7 @@ import {
   PurchaseOrderResponse,
 } from "@/types/purchase-order/purchase-order.type";
 import getCurrencyCode from "@/utils/getCurrencyCode";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import { CalendarOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { FormInstance } from "antd";
 import { Avatar, Button, Col, Flex, Form, Row, Space, Typography } from "antd";
@@ -282,7 +283,9 @@ export default function InvoiceThirdStep({
                                 marginBottom: 0,
                               }}
                             >
-                              {poDetailData.product_items[name]?.invoiced}
+                              {formatWithThousandSeparator(
+                                poDetailData.product_items[name]?.invoiced
+                              )}
                             </Typography.Text>
                           )}
                         </Col>
@@ -294,7 +297,9 @@ export default function InvoiceThirdStep({
                                 marginBottom: 0,
                               }}
                             >
-                              {poDetailData.product_items[name]?.available}
+                              {formatWithThousandSeparator(
+                                poDetailData.product_items[name]?.available
+                              )}
                             </Typography.Text>
                           )}
                         </Col>
@@ -331,26 +336,26 @@ export default function InvoiceThirdStep({
 
                         {/* INV Quantity */}
                         <Col span={3}>
-                          {
+                          {formatWithThousandSeparator(
                             form.getFieldValue("invoice_items")[name]
                               .invoice_quantity
-                          }
+                          )}
                         </Col>
 
                         {/* INV Unit Price */}
                         <Col span={3} style={{ padding: "0 12px" }}>
                           <Typography.Text strong>
-                            {
+                            {formatWithThousandSeparator(
                               form.getFieldValue("invoice_items")[name]
                                 .invoice_unit_price_local
-                            }{" "}
+                            )}{" "}
                             {getCurrencyCode(
                               form.getFieldValue("currency"),
                               currenciesData
                             )}
                           </Typography.Text>
                           <div style={{ fontSize: 12, color: "#aaa" }}>
-                            ({price_usd.toLocaleString()} USD)
+                            ({formatWithThousandSeparator(price_usd)} USD)
                           </div>
                         </Col>
 
@@ -358,14 +363,14 @@ export default function InvoiceThirdStep({
                         <Col span={3} style={{ padding: "0 12px" }}>
                           <div>
                             <Typography.Text strong>
-                              {subtotal.toLocaleString()}{" "}
+                              {formatWithThousandSeparator(subtotal)}{" "}
                               {getCurrencyCode(
                                 form.getFieldValue("currency"),
                                 currenciesData
                               )}
                             </Typography.Text>
                             <div style={{ fontSize: 12, color: "#aaa" }}>
-                              ({subtotal_usd.toLocaleString()} USD)
+                              ({formatWithThousandSeparator(subtotal_usd)} USD)
                             </div>
                           </div>
                         </Col>
@@ -381,11 +386,11 @@ export default function InvoiceThirdStep({
                       Total Amount
                     </Typography.Text>
                     <Typography.Title level={4} style={{ margin: 0 }}>
-                      {totalLocal.toLocaleString()}{" "}
+                      {formatWithThousandSeparator(totalLocal)}{" "}
                       {getCurrencyCode(currencyId, currenciesData)}
                     </Typography.Title>
                     <Typography.Text type="secondary">
-                      ({(totalUSD || 0).toLocaleString()} USD)
+                      ({formatWithThousandSeparator(totalUSD || 0)} USD)
                     </Typography.Text>
                   </Space>
                 </Col>

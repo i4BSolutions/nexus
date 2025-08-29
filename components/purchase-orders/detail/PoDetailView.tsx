@@ -182,7 +182,7 @@ export default function PoDetailView({
               >
                 <Col span={6}>{item.product_name}</Col>
 
-                <Col span={4}>{item.quantity}</Col>
+                <Col span={4}>{formatWithThousandSeparator(item.quantity)}</Col>
 
                 <Col span={7}>
                   {formatWithThousandSeparator(item.unit_price_local)}{" "}
