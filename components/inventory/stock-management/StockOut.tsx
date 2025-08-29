@@ -23,6 +23,7 @@ import {
 
 import React, { useEffect } from "react";
 import StockOutHistory from "./StockOutHistory";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -359,7 +360,9 @@ const StockOut = ({
                                   );
                                   return (
                                     <Typography.Text>
-                                      {inv?.quantity?.toLocaleString() ?? "-"}
+                                      {formatWithThousandSeparator(
+                                        inv?.quantity
+                                      ) ?? "-"}
                                     </Typography.Text>
                                   );
                                 }}

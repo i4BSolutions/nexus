@@ -99,7 +99,11 @@ const Inventory = () => {
         title: "IN-STOCK UNITS",
         dataIndex: "current_stock",
         key: "current_stock",
-        render: (value) => <Typography.Text>{value}</Typography.Text>,
+        render: (value) => (
+          <Typography.Text>
+            {formatWithThousandSeparator(value)}
+          </Typography.Text>
+        ),
       },
       {
         title: "UNIT PRICE",
@@ -140,7 +144,10 @@ const Inventory = () => {
         stats={[
           {
             title: "Total Items",
-            value: inventoryListData?.total_item_count ?? 0,
+            value:
+              formatWithThousandSeparator(
+                inventoryListData?.total_item_count
+              ) ?? 0,
             tooltip: "Total Items",
             icon: <TagOutlined />,
             bgColor: "#36CFC9",
@@ -150,7 +157,10 @@ const Inventory = () => {
           },
           {
             title: "Total Inventory Value (USD)",
-            value: inventoryListData?.total_inventory_value ?? 0,
+            value:
+              formatWithThousandSeparator(
+                inventoryListData?.total_inventory_value
+              ) ?? 0,
             tooltip: "Total Inventory Value (USD)",
             icon: <DollarCircleOutlined />,
             bgColor: "#73D13D",

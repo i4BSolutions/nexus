@@ -269,6 +269,9 @@ export default function ProductsPage() {
     {
       title: "MIN STOCK",
       dataIndex: "min_stock",
+      render: (min_stock: number) => (
+        <span>{formatWithThousandSeparator(min_stock)}</span>
+      ),
     },
     {
       title: "STATUS",

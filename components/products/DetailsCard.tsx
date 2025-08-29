@@ -84,7 +84,9 @@ const DetailsCard = ({
             <Typography.Text type="secondary">
               Minimum Stock Level
             </Typography.Text>
-            <Typography.Title level={5}>{min_stock ?? "N/A"}</Typography.Title>
+            <Typography.Title level={5}>
+              {formatWithThousandSeparator(min_stock) ?? "N/A"}
+            </Typography.Title>
           </Space>
         </Col>
       </Row>
