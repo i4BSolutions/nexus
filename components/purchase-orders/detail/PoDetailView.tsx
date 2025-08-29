@@ -1,5 +1,6 @@
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 import { PurchaseOrderItemInterface } from "@/types/purchase-order/purchase-order-item.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import { EditOutlined } from "@ant-design/icons";
 import { Card, Col, Row, Space, Typography } from "antd";
 import dayjs from "dayjs";
@@ -181,23 +182,23 @@ export default function PoDetailView({
               >
                 <Col span={6}>{item.product_name}</Col>
 
-                <Col span={4}>{item.quantity}</Col>
+                <Col span={4}>{formatWithThousandSeparator(item.quantity)}</Col>
 
                 <Col span={7}>
-                  {item.unit_price_local.toLocaleString()}{" "}
+                  {formatWithThousandSeparator(item.unit_price_local)}{" "}
                   {data.currency.currency_code}
                   <br />
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    ({item.unit_price_usd.toLocaleString()} USD)
+                    ({formatWithThousandSeparator(item.unit_price_usd)} USD)
                   </Typography.Text>
                 </Col>
 
                 <Col span={7} style={{ textAlign: "right" }}>
-                  {item.sub_total_local.toLocaleString()}{" "}
+                  {formatWithThousandSeparator(item.sub_total_local)}{" "}
                   {data.currency.currency_code}
                   <br />
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    ({item.sub_total_usd.toLocaleString()} USD)
+                    ({formatWithThousandSeparator(item.sub_total_usd)} USD)
                   </Typography.Text>
                 </Col>
               </Row>

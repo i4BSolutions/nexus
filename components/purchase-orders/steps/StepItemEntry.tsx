@@ -220,17 +220,9 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                       ? (subtotal / exchangeRate).toFixed(2)
                       : "0.00";
 
-                    // Exclude already selected products except for the current row
-                    const selectedProductIds = items
-                      .map((item: any, idx: number) =>
-                        idx !== name ? item?.product : null
-                      )
-                      .filter(Boolean);
                     const availableProducts =
-                      (productsData as any)?.items?.filter(
-                        (product: ProductInterface) =>
-                          !selectedProductIds.includes(product.id)
-                      ) || [];
+                      ((productsData as any)?.items as ProductInterface[]) ||
+                      [];
 
                     return (
                       <Row

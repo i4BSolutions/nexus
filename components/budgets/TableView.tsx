@@ -1,4 +1,5 @@
 import { Budget } from "@/types/budgets/budgets.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import { CalendarOutlined } from "@ant-design/icons";
 import {
   Button,
@@ -37,13 +38,7 @@ export default function TableView({
       sorter: (a, b) => a.planned_amount_usd - b.planned_amount_usd,
       render: (planned_amount_usd) => (
         <div>
-          <span>
-            {new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-              maximumFractionDigits: 2,
-            }).format(planned_amount_usd)}
-          </span>
+          <span>{formatWithThousandSeparator(planned_amount_usd)}</span>
         </div>
       ),
     },
@@ -55,11 +50,7 @@ export default function TableView({
         (a.allocated_amount_usd ?? 0) - (b?.allocated_amount_usd ?? 0),
       render: (allocated_amount_usd) => (
         <Typography.Text type="secondary">
-          {new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            maximumFractionDigits: 2,
-          }).format(allocated_amount_usd)}
+          {formatWithThousandSeparator(allocated_amount_usd)}
         </Typography.Text>
       ),
     },
@@ -71,11 +62,7 @@ export default function TableView({
         (a.invoiced_amount_usd ?? 0) - (b.invoiced_amount_usd ?? 0),
       render: (invoiced_amount_usd) => (
         <Typography.Text type="secondary">
-          {new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            maximumFractionDigits: 2,
-          }).format(invoiced_amount_usd)}
+          {formatWithThousandSeparator(invoiced_amount_usd)}
         </Typography.Text>
       ),
     },

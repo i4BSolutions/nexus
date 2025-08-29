@@ -23,6 +23,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useState } from "react";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 type BudgetsSectionProps = {
   data: BudgetResponse;
@@ -171,7 +172,7 @@ const BudgetCard = ({
                       color: "#000000D9",
                     }}
                   >
-                    $ {budget.planned_amount_usd.toLocaleString()}
+                    $ {formatWithThousandSeparator(budget.planned_amount_usd)}
                   </Typography.Text>
                 </div>
 
@@ -234,7 +235,8 @@ const BudgetCard = ({
                         fontWeight: 500,
                       }}
                     >
-                      $ {budget.allocated_amount_usd?.toLocaleString()}
+                      ${" "}
+                      {formatWithThousandSeparator(budget.allocated_amount_usd)}
                     </Typography.Text>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column" }}>
@@ -262,7 +264,10 @@ const BudgetCard = ({
                         fontWeight: 500,
                       }}
                     >
-                      $ {budget.allocated_variance_usd?.toLocaleString()}
+                      ${" "}
+                      {formatWithThousandSeparator(
+                        budget.allocated_variance_usd
+                      )}
                     </Typography.Text>
                   </div>
                 </div>
@@ -329,7 +334,8 @@ const BudgetCard = ({
                       />
                     </Tooltip>
                     <div style={{ fontWeight: 600 }}>
-                      $ {budget.invoiced_amount_usd?.toLocaleString()}
+                      ${" "}
+                      {formatWithThousandSeparator(budget.invoiced_amount_usd)}
                     </div>
                   </div>
                   <div>
@@ -348,7 +354,10 @@ const BudgetCard = ({
                       />
                     </Tooltip>
                     <div style={{ fontWeight: 600 }}>
-                      $ {budget.unutilized_amount_usd?.toLocaleString()}
+                      ${" "}
+                      {formatWithThousandSeparator(
+                        budget.unutilized_amount_usd
+                      )}
                     </div>
                   </div>
                 </div>
@@ -416,7 +425,8 @@ const BudgetCard = ({
                 <Typography.Text
                   style={{ fontSize: 12, fontWeight: 400, color: "#00000073" }}
                 >
-                  Total PO Value: $ {budget.total_po_value_usd}
+                  Total PO Value: ${" "}
+                  {formatWithThousandSeparator(budget.total_po_value_usd)}
                 </Typography.Text>
               </Flex>
             </Card>
