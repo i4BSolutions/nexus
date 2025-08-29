@@ -2,6 +2,7 @@ import { success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import {
   DynamicPricingItems,
+  ProductCurrencyInterface,
   ProductDynamicPricing,
 } from "@/types/product/product.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
@@ -84,38 +85,54 @@ async function fetchProductDynamicPricingData(
   if (error) throw new Error(error.message);
 
   const mappedResponse: DynamicPricingItems[] = (orderItems ?? []).map(
-    (item: any) => ({
-      purchase_order_number: item.purchase_order?.purchase_order_no,
-      order_date: item.purchase_order?.order_date,
-      region: item.purchase_order?.purchase_order_region?.name,
-      contact_person: item.purchase_order?.person?.name,
-      currency_code: item.purchase_order?.product_currency?.currency_code,
-      unit_price_local: item.unit_price_local,
-      exchange_rate: item.purchase_order?.usd_exchange_rate,
-      unit_price_usd:
-        (item.unit_price_local ?? 0) *
-        (item.purchase_order?.usd_exchange_rate ?? 0),
-    })
+    (item: any) => {
+      const qty =
+        (typeof item.quantity === "number" ? item.quantity : undefined) ??
+        (typeof item.item_quantity === "number"
+          ? item.item_quantity
+          : undefined) ??
+        0;
+
+      const exchange_rate = item.purchase_order?.usd_exchange_rate ?? 0;
+      const unit_price_local = item.unit_price_local ?? 0;
+
+      // Per-unit USD
+      const unit_price_usd = unit_price_local / exchange_rate;
+
+      return {
+        purchase_order_number: item.purchase_order?.purchase_order_no,
+        order_date: item.purchase_order?.order_date,
+        region: item.purchase_order?.purchase_order_region?.name,
+        contact_person: item.purchase_order?.person?.name,
+        currency_code: item.purchase_order?.product_currency?.currency_code,
+        unit_price_local,
+        exchange_rate,
+        unit_price_usd,
+        quantity: qty,
+      } as DynamicPricingItems;
+    }
   );
 
-  // Filter out rows with nulls
+  // Keep only rows with enough info to compute USD
   const validItems = mappedResponse.filter(
-    (item) => item.exchange_rate && item.unit_price_local && item.unit_price_usd
+    (it: any) =>
+      (it?.exchange_rate ?? 0) > 0 &&
+      (it?.unit_price_local ?? 0) > 0 &&
+      (it?.unit_price_usd ?? 0) > 0 &&
+      (it?.quantity ?? 0) > 0
   );
 
-  // Pagination in-memory; if dataset is large, switch to range() at the DB level
+  // Pagination (in-memory)
   const total = validItems.length;
   const pagedItems = validItems.slice((page - 1) * pageSize, page * pageSize);
 
-  // Statistics
-  const unitPrices = validItems.map((item) => item.unit_price_usd);
-  const average_price_usd = unitPrices.length
-    ? unitPrices.reduce((a, b) => a + b, 0) / unitPrices.length
-    : 0;
-  const max_price_usd = unitPrices.length ? Math.max(...unitPrices) : 0;
-  const min_price_usd = unitPrices.length ? Math.min(...unitPrices) : 0;
-  const maxIdx = unitPrices.indexOf(max_price_usd);
-  const minIdx = unitPrices.indexOf(min_price_usd);
+  // === Statistics ===
+  // Per-unit USD array for min/max
+  const perUnitUSD = validItems.map((it: any) => it.unit_price_usd);
+  const max_price_usd = perUnitUSD.length ? Math.max(...perUnitUSD) : 0;
+  const min_price_usd = perUnitUSD.length ? Math.min(...perUnitUSD) : 0;
+  const maxIdx = perUnitUSD.indexOf(max_price_usd);
+  const minIdx = perUnitUSD.indexOf(min_price_usd);
 
   const max_price_local =
     maxIdx >= 0
@@ -130,10 +147,29 @@ async function fetchProductDynamicPricingData(
   const min_purchase_order_number =
     minIdx >= 0 ? validItems[minIdx]?.purchase_order_number : "";
 
+  // === Weighted average per your example ===
+  const total_purchase_order_usd = validItems.reduce(
+    (sum: number, it: any) => sum + it.unit_price_usd * it.quantity,
+    0
+  );
+  const total_quantity = validItems.reduce(
+    (sum: number, it: any) => sum + it.quantity,
+    0
+  );
+
+  const average_price_usd =
+    total_quantity > 0 ? total_purchase_order_usd / total_quantity : 0;
+
+  // Persist the latest weighted average to product (USD)
+  await updateProductPrice(average_price_usd, Number(productId));
+
   return {
     items: pagedItems,
     statistics: {
+      // Weighted average per unit (USD)
       average_price_usd,
+
+      // Contextual stats (based on per-unit USD)
       max_price_usd,
       max_price_local,
       max_purchase_order_number,
@@ -147,6 +183,65 @@ async function fetchProductDynamicPricingData(
       pageSize,
     },
   };
+}
+
+async function updateProductPrice(
+  average_price_usd: number,
+  productId: number
+) {
+  const supabase = await createClient();
+
+  const { data: currencyDataRaw } = await supabase
+    .from("product_currency")
+    .select("*")
+    .eq("currency_code", "USD")
+    .single();
+
+  const currencyData = currencyDataRaw as ProductCurrencyInterface;
+
+  // Get old unit price from products table
+  const { data: oldProduct, error: oldProductError } = await supabase
+    .from("product")
+    .select("unit_price")
+    .eq("id", productId)
+    .single();
+
+  if (oldProductError) {
+    throw new Error("Failed to fetch existing product data");
+  }
+
+  if (oldProduct?.unit_price == average_price_usd) {
+    return;
+  }
+
+  // Update the product's unit price
+  const { error: updateProductError } = await supabase
+    .from("product")
+    .update({
+      currency_code_id: currencyData?.id,
+      unit_price: average_price_usd,
+    })
+    .eq("id", productId);
+
+  if (updateProductError) {
+    throw new Error("Failed to update product price");
+  }
+
+  // Insert audit log for the product price update
+  const auditLog = {
+    product_id: productId,
+    changed_field: "unit_price",
+    old_values: oldProduct?.unit_price ?? null,
+    new_values: average_price_usd,
+    is_system: true,
+  };
+  const { error: auditError } = await supabase
+    .from("product_audit_log")
+    .insert([auditLog]);
+
+  if (auditError) {
+    throw new Error("Failed to log audit entry: " + auditError.message);
+  }
 }
 
 export async function GET(

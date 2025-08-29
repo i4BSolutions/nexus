@@ -52,7 +52,8 @@ export interface ProductHistory {
   id: number;
   product_id: number;
   changed_at: string;
-  changed_by: string;
+  changed_by?: string;
+  is_system: boolean;
   changed_field: string;
   new_values: string;
   old_values: string;

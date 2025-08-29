@@ -104,9 +104,9 @@ const PriceHistoryCard = ({
                     }}
                   >
                     <div>
-                      <Text strong>Price Updated</Text>
+                      <Text strong>{change.changed_field} Updated</Text>
                       <Paragraph style={{ margin: 0 }}>
-                        Price changed from{" "}
+                        {change.changed_field} changed from{" "}
                         <Text delete>{change.old_values.toLocaleString()}</Text>{" "}
                         to{" "}
                         <Text style={{ color: "#722ED1", fontWeight: 500 }}>
@@ -127,7 +127,13 @@ const PriceHistoryCard = ({
                         />
                       )} */}
                         <Text type="secondary">
-                          Updated by {change?.user_profiles.full_name}
+                          {change.is_system ? (
+                            <span>System</span>
+                          ) : (
+                            <span>
+                              Updated by {change?.user_profiles.full_name}
+                            </span>
+                          )}
                         </Text>
                       </Space>
                     </div>
