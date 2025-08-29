@@ -49,6 +49,7 @@ export default function UserEditPage() {
 
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [disabled, setDisabled] = useState(true);
 
   const { data: lastAdminData, isLoading: lastAdminDataLoading } =
     useGetWithParams<{ isLastAdmin: boolean }, { userId: string }>(
@@ -135,6 +136,11 @@ export default function UserEditPage() {
     router.back();
   };
 
+  const handleReset = () => {
+    form.resetFields();
+    setDisabled(true);
+  };
+
   const handleDepartmentCreate = (values: { name: string }) => {
     createDepartment(values, {
       onSuccess: () => {
@@ -169,7 +175,8 @@ export default function UserEditPage() {
   } = userDetailData || {};
 
   const initialValues = {
-    ...rest,
+    full_name: rest.full_name,
+    email: rest.email,
     username: username.split("@")[1],
     department: department?.id ?? null,
     ...Object.fromEntries(
@@ -211,6 +218,17 @@ export default function UserEditPage() {
         initialValues={initialValues}
         onValuesChange={(changed) => {
           const changedKey = Object.keys(changed)[0];
+
+          if (changed) {
+            const hasValidationError = form
+              .getFieldsError()
+              .some(({ errors }) => errors.length);
+            const isValueChanged =
+              changed[changedKey] !==
+              initialValues[changedKey as keyof typeof initialValues];
+            setDisabled(hasValidationError || !isValueChanged);
+          }
+
           if (changedKey.startsWith("can_stock_") && changed[changedKey]) {
             form.setFieldsValue({ can_view_stock: true });
           }
@@ -787,10 +805,15 @@ export default function UserEditPage() {
           </Row>
         </div>
         <div className="flex w-full justify-between items-center my-6">
-          <Button type="default" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button type="primary" htmlType="submit">
+          <div className="space-x-4">
+            <Button type="default" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button type="default" onClick={handleReset}>
+              Reset Fields
+            </Button>
+          </div>
+          <Button type="primary" htmlType="submit" disabled={disabled}>
             Update User
           </Button>
         </div>
