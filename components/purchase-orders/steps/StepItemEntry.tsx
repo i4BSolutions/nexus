@@ -57,13 +57,12 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
       queryFn: fetchCurrencies,
     });
 
-    const { data: productsData, isLoading: productsLoading } = useList(
-      "products",
-      {
-        pageSize: "all" as any,
-        status: "true",
-      }
-    );
+    const { data: productsData, isLoading: productsLoading } = useList<{
+      items: ProductInterface[];
+    }>("products", {
+      pageSize: "all" as any,
+      status: "true",
+    });
 
     const forceUpdate = useForceUpdate();
 
@@ -221,8 +220,7 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                       : "0.00";
 
                     const availableProducts =
-                      ((productsData as any)?.items as ProductInterface[]) ||
-                      [];
+                      (productsData?.items as ProductInterface[]) ?? [];
 
                     return (
                       <Row
