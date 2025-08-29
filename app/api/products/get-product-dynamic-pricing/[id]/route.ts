@@ -24,6 +24,15 @@ async function fetchProductDynamicPricingData(
 ): Promise<ProductDynamicPricing> {
   const supabase = await createClient();
 
+  // Detect "no filter" state
+  const hasAnyFilter = Boolean(
+    filters?.currency ||
+      filters?.region ||
+      filters?.regionId ||
+      filters?.contactPerson ||
+      filters?.contactPersonId
+  );
+
   // Build the select with conditional !inner joins so filters actually constrain rows
   const currencyJoin = filters?.currency
     ? "product_currency:currency_id!inner(*)"
@@ -38,13 +47,7 @@ async function fetchProductDynamicPricingData(
     : "person:contact_person_id(*)";
 
   // Make purchase_order itself inner whenever *any* PO-level filter exists
-  const poJoinNeedsInner = !!(
-    filters?.currency ||
-    filters?.region ||
-    filters?.regionId ||
-    filters?.contactPerson ||
-    filters?.contactPersonId
-  );
+  const poJoinNeedsInner = hasAnyFilter;
 
   const purchaseOrderJoin = poJoinNeedsInner
     ? `purchase_order:purchase_order_id!inner(*, ${regionJoin}, ${personJoin}, ${currencyJoin})`
@@ -96,8 +99,9 @@ async function fetchProductDynamicPricingData(
       const exchange_rate = item.purchase_order?.usd_exchange_rate ?? 0;
       const unit_price_local = item.unit_price_local ?? 0;
 
-      // Per-unit USD
-      const unit_price_usd = unit_price_local / exchange_rate;
+      // Per-unit USD (e.g., 60,000 MMK / 4,500 MMK per USD = 13.33 USD per unit if qty=1)
+      const unit_price_usd =
+        exchange_rate > 0 ? unit_price_local / exchange_rate : 0;
 
       return {
         purchase_order_number: item.purchase_order?.purchase_order_no,
@@ -127,7 +131,6 @@ async function fetchProductDynamicPricingData(
   const pagedItems = validItems.slice((page - 1) * pageSize, page * pageSize);
 
   // === Statistics ===
-  // Per-unit USD array for min/max
   const perUnitUSD = validItems.map((it: any) => it.unit_price_usd);
   const max_price_usd = perUnitUSD.length ? Math.max(...perUnitUSD) : 0;
   const min_price_usd = perUnitUSD.length ? Math.min(...perUnitUSD) : 0;
@@ -136,18 +139,24 @@ async function fetchProductDynamicPricingData(
 
   const max_price_local =
     maxIdx >= 0
-      ? `${validItems[maxIdx]?.unit_price_local} ${validItems[maxIdx]?.currency_code}`
+      ? `${Number(validItems[maxIdx]?.unit_price_local).toLocaleString(
+          undefined,
+          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+        )} ${validItems[maxIdx]?.currency_code}`
       : "";
   const min_price_local =
     minIdx >= 0
-      ? `${validItems[minIdx]?.unit_price_local} ${validItems[minIdx]?.currency_code}`
+      ? `${Number(validItems[minIdx]?.unit_price_local).toLocaleString(
+          undefined,
+          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+        )} ${validItems[minIdx]?.currency_code}`
       : "";
   const max_purchase_order_number =
     maxIdx >= 0 ? validItems[maxIdx]?.purchase_order_number : "";
   const min_purchase_order_number =
     minIdx >= 0 ? validItems[minIdx]?.purchase_order_number : "";
 
-  // === Weighted average per your example ===
+  // Weighted average (quantity-weighted)
   const total_purchase_order_usd = validItems.reduce(
     (sum: number, it: any) => sum + it.unit_price_usd * it.quantity,
     0
@@ -156,20 +165,18 @@ async function fetchProductDynamicPricingData(
     (sum: number, it: any) => sum + it.quantity,
     0
   );
-
   const average_price_usd =
     total_quantity > 0 ? total_purchase_order_usd / total_quantity : 0;
 
-  // Persist the latest weighted average to product (USD)
-  await updateProductPrice(average_price_usd, Number(productId));
+  // ✅ Only update product price when there are NO filters
+  if (!hasAnyFilter && total_quantity > 0) {
+    await updateProductPrice(average_price_usd, Number(productId));
+  }
 
   return {
     items: pagedItems,
     statistics: {
-      // Weighted average per unit (USD)
       average_price_usd,
-
-      // Contextual stats (based on per-unit USD)
       max_price_usd,
       max_price_local,
       max_purchase_order_number,

@@ -107,10 +107,20 @@ const PriceHistoryCard = ({
                       <Text strong>{change.changed_field} Updated</Text>
                       <Paragraph style={{ margin: 0 }}>
                         {change.changed_field} changed from{" "}
-                        <Text delete>{change.old_values.toLocaleString()}</Text>{" "}
+                        <Text delete>
+                          {change.changed_field == "unit_price" ? (
+                            <>{Number(change.old_values).toLocaleString()}</>
+                          ) : (
+                            change.old_values.toLocaleString()
+                          )}
+                        </Text>{" "}
                         to{" "}
                         <Text style={{ color: "#722ED1", fontWeight: 500 }}>
-                          {change.new_values.toLocaleString()}
+                          {change.changed_field == "unit_price" ? (
+                            <>{Number(change.new_values).toLocaleString()}</>
+                          ) : (
+                            change.new_values.toLocaleString()
+                          )}
                         </Text>
                       </Paragraph>
                       <Space size="small" style={{ margin: "8px 0" }}>

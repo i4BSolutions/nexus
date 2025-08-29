@@ -12,6 +12,7 @@ export interface ProductInterface {
   updated_at: string;
   is_active?: boolean;
   current_stock: number;
+  product_currency?: ProductCurrencyInterface;
 }
 
 export interface ProductCurrencyInterface {

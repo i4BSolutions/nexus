@@ -118,7 +118,7 @@ export default function DynamicPricing({
       sorter: (a, b) => a.unit_price_local - b.unit_price_local,
       render: (unit_price_local, record) => (
         <Typography.Text>
-          {record.currency_code} {unit_price_local.toFixed(2).toLocaleString()}
+          {record.currency_code} {unit_price_local.toLocaleString()}
         </Typography.Text>
       ),
     },
@@ -133,8 +133,7 @@ export default function DynamicPricing({
       }),
       render: (exchange_rate, record) => (
         <Typography.Text>
-          1 USD = {exchange_rate.toFixed(2).toLocaleString()}{" "}
-          {record.currency_code}
+          1 USD = {exchange_rate.toLocaleString()} {record.currency_code}
         </Typography.Text>
       ),
     },
@@ -149,9 +148,7 @@ export default function DynamicPricing({
       }),
       sorter: (a, b) => a.unit_price_usd - b.unit_price_usd,
       render: (unit_price_usd) => (
-        <Typography.Text>
-          {unit_price_usd.toFixed(2).toLocaleString()} USD
-        </Typography.Text>
+        <Typography.Text>{unit_price_usd.toLocaleString()} USD</Typography.Text>
       ),
     },
   ];

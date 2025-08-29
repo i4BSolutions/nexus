@@ -22,7 +22,7 @@ export async function GET(
 
   const { data: product, error: dbError } = await supabase
     .from("product")
-    .select("*")
+    .select("*, product_currency:currency_code_id(currency_code)")
     .eq("id", id)
     .single();
 

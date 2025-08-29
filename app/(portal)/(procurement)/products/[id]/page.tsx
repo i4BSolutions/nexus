@@ -469,6 +469,7 @@ const ProductDetailPage = () => {
                 min_stock={productDetail.min_stock}
                 updated_at={productDetail.updated_at}
                 current_stock={productDetail.current_stock}
+                product_currency={productDetail.product_currency ?? undefined}
               />
             ),
           },
