@@ -30,6 +30,7 @@ export async function GET(
         email,
         department:departments(id, name),
         permissions,
+        banned_until,
         created_at,
         updated_at
         `
@@ -73,6 +74,7 @@ export async function GET(
       browser: log.device_info.browser,
       created_at: log.created_at,
     })),
+    banned_until: data.banned_until || null,
     created_at: data.created_at,
     updated_at: data.updated_at,
   };
