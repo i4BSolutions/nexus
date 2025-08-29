@@ -1,7 +1,7 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
 import { ApiResponse } from "@/types/shared/api-response-type";
-import { generatePoNumber } from "@/utils/generatePoNumber";
+import { generateEntityNumber } from "@/utils/generateEntityNumber";
 import { NextResponse } from "next/server";
 
 export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
@@ -24,7 +24,8 @@ export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
   }
 
   if (!latestPoData) {
-    const defaultPoNo = "PO-2025-1000";
+    const currentYear = new Date().getUTCFullYear();
+    const defaultPoNo = `PO-${currentYear}-0001`;
 
     return NextResponse.json(
       success(defaultPoNo, "Default PO number retrieved"),
@@ -34,7 +35,10 @@ export async function GET(): Promise<NextResponse<ApiResponse<string | null>>> {
     );
   }
 
-  const generatedPoNumber = generatePoNumber(latestPoData.purchase_order_no);
+  const generatedPoNumber = generateEntityNumber(
+    latestPoData.purchase_order_no,
+    4
+  );
 
   return NextResponse.json(
     success(generatedPoNumber, "Latest PO number retrieved"),

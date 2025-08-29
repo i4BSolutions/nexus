@@ -1,3 +1,4 @@
+import { getAuthenticatedUser } from "@/helper/getUser";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -40,9 +41,7 @@ export async function updateSession(request: NextRequest) {
   );
 
   // refreshing the auth token
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser(supabase);
 
   const publicUrls = [
     "/login",
@@ -64,6 +63,15 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
+    const bannedUntil = user.banned_until ? new Date(user.banned_until) : null;
+    const isBanned = !!bannedUntil && bannedUntil > new Date();
+    if (isBanned) {
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+
     const pathname = request.nextUrl.pathname;
 
     const permissions = user.user_metadata?.permissions || {};
@@ -72,7 +80,11 @@ export async function updateSession(request: NextRequest) {
       if (pathname.startsWith(route) && !permissions[permission]) {
         const url = request.nextUrl.clone();
         url.pathname = "/unauthorized";
-        return NextResponse.redirect(url);
+        const response = NextResponse.redirect(url);
+        for (const cookie of supabaseResponse.cookies.getAll()) {
+          response.cookies.set(cookie);
+        }
+        return response;
       }
     }
   }
