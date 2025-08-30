@@ -202,18 +202,10 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                   {fields.map(({ key, name, ...restField }, index) => {
                     const items = (form.getFieldValue("items") as any[]) || [];
                     const quantity = items[name]?.quantity || 0;
-                    // Find the selected product
-                    const selectedProductId = items[name]?.product;
-                    const selectedProduct = (productsData as any)?.items?.find(
-                      (p: ProductInterface) => p.id === selectedProductId
-                    );
                     const price = items[name]?.unit_price || 0;
                     const exchangeRate = formData?.exchange_rate
                       ? Number(formData.exchange_rate)
                       : 0;
-                    const priceUSD = exchangeRate
-                      ? (price / exchangeRate).toFixed(2)
-                      : "0.00";
                     const subtotal = quantity * price;
                     const subtotalUSD = exchangeRate
                       ? (subtotal / exchangeRate).toFixed(2)
