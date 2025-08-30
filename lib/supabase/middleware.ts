@@ -64,6 +64,17 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
+    const bannedUntil = user.user_metadata.banned_until
+      ? new Date(user.user_metadata.banned_until)
+      : null;
+    const isBanned = !!bannedUntil && bannedUntil > new Date();
+    if (isBanned) {
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+
     const pathname = request.nextUrl.pathname;
 
     const permissions = user.user_metadata?.permissions || {};
@@ -72,7 +83,11 @@ export async function updateSession(request: NextRequest) {
       if (pathname.startsWith(route) && !permissions[permission]) {
         const url = request.nextUrl.clone();
         url.pathname = "/unauthorized";
-        return NextResponse.redirect(url);
+        const response = NextResponse.redirect(url);
+        for (const cookie of supabaseResponse.cookies.getAll()) {
+          response.cookies.set(cookie);
+        }
+        return response;
       }
     }
   }

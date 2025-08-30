@@ -46,13 +46,15 @@ export default function DepartmentCreateModal({
               >
                 *
               </Typography.Paragraph>
-              <Typography.Text style={{ fontSize: 16 }}>Name</Typography.Text>
+              <Typography.Text style={{ fontSize: 16 }}>
+                Department Name
+              </Typography.Text>
             </div>
           }
           name="name"
           rules={[{ required: true, message: "Name is required" }]}
         >
-          <Input size="large" placeholder="Enter name" />
+          <Input size="large" placeholder="Enter department name" />
         </Form.Item>
         <div style={{ display: "flex", justifyContent: "flex-start", gap: 8 }}>
           <Button onClick={onClose}>Cancel</Button>
