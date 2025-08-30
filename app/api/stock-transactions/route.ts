@@ -59,7 +59,8 @@ export async function GET(
         ),
         warehouse:warehouse_id (
           name
-        )
+        ),
+        is_voided
       `
     )
     .order("created_at", { ascending: false });
@@ -119,6 +120,7 @@ export async function GET(
         quantity: tx.quantity,
         reference,
         note: tx.note || "-",
+        is_voided: tx.is_voided,
       };
     }
   );

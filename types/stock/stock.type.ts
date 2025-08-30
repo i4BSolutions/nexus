@@ -18,6 +18,7 @@ export interface StockTransactionInterface {
   quantity: number;
   reference: string;
   note: string | null;
+  is_voided: boolean;
 }
 
 export interface StockTransactionInterfaceResponse {

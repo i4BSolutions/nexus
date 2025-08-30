@@ -1,5 +1,6 @@
 "use client";
 
+import { useGetById } from "@/hooks/react-query/useGetById";
 import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
 import { useList } from "@/hooks/react-query/useList";
 import { ProductResponse } from "@/types/product/product.type";
@@ -12,8 +13,8 @@ import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
 import {
   CalendarOutlined,
   DownCircleOutlined,
-  TagOutlined,
   UpCircleOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import {
   App,
@@ -23,12 +24,17 @@ import {
   Flex,
   Pagination,
   Select,
+  Space,
   Tag,
   Typography,
+  Modal,
+  Spin,
 } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
+import VoidTransactionModal from "./VoidModal";
+import { VoidPreview } from "@/types/inventory/stock-transaction.type";
 
 const { RangePicker } = DatePicker;
 
@@ -44,6 +50,14 @@ const Transactions = () => {
     "All Directions" | "Stock In" | "Stock Out" | undefined
   >("All Directions");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [selectedTransactionId, setSelectedTransactionId] = useState<
+    string | null
+  >(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [voidOpen, setVoidOpen] = useState(false);
+  const [voidTx, setVoidTx] = useState<VoidPreview | null>(null);
+  const [voidLoading, setVoidLoading] = useState(false);
 
   const {
     data: stockTransactionsData,
@@ -106,6 +120,69 @@ const Transactions = () => {
     setPagination({ page, pageSize: pageSize || 10 });
   };
 
+  const handleView = (id: string) => {
+    setSelectedTransactionId(id);
+    setIsModalOpen(true);
+  };
+
+  const {
+    data: transactionDetails,
+    isLoading: transactionDetailsLoading,
+    error: transactionDetailsError,
+  } = useGetById<StockTransactionInterface>(
+    "stock-transactions",
+    selectedTransactionId && isModalOpen ? selectedTransactionId : ""
+  );
+
+  const openVoidModal = async (id: string) => {
+    try {
+      setVoidLoading(true);
+      setSelectedTransactionId(id);
+
+      const res = await fetch(`/api/stock-transactions/void-preview/${id}`, {
+        method: "GET",
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || "Failed to load void preview.");
+      }
+
+      const json = await res.json();
+      const previewData: VoidPreview = json.data;
+
+      setVoidTx(previewData);
+      setVoidOpen(true);
+    } catch (e: any) {
+      message.error(e?.message ?? "Failed to load void preview.");
+    } finally {
+      setVoidLoading(false);
+    }
+  };
+
+  const confirmVoid = async (reason: string) => {
+    setVoidLoading(true);
+    try {
+      const res = await fetch(
+        `/api/stock-transactions/${selectedTransactionId}/void`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ reason }),
+        }
+      );
+      message.success("Transaction voided.");
+      setVoidOpen(false);
+      setVoidTx(null);
+    } catch (e: any) {
+      message.error(e?.message ?? "Failed to void transaction.");
+    } finally {
+      setVoidLoading(false);
+    }
+  };
+
   const columns: ColumnsType<StockTransactionInterface> = useMemo(
     () => [
       {
@@ -124,25 +201,21 @@ const Transactions = () => {
         ),
       },
       {
-        title: "PRODUCT SKU",
-        dataIndex: "sku",
-        key: "sku",
-        sorter: (a, b) => a.sku.localeCompare(b.sku),
-        sortDirections: ["ascend", "descend"],
-        render: (sku) => (
-          <>
-            <TagOutlined style={{ marginRight: 8 }} />
-            {sku}
-          </>
-        ),
-      },
-      {
-        title: "PRODUCT NAME",
-        dataIndex: "name",
-        key: "name",
+        title: "PRODUCT",
+        dataIndex: "product",
+        key: "product",
         sorter: (a, b) => a.name.localeCompare(b.name),
         sortDirections: ["ascend", "descend"],
-        render: (name) => <Typography.Text>{name}</Typography.Text>,
+        render: (_, record) => (
+          <Space direction="vertical" size={0}>
+            <Typography.Text style={{ fontSize: "14px" }}>
+              {record.name}
+            </Typography.Text>
+            <Typography.Text type="secondary" style={{ fontSize: "12px" }}>
+              {record.sku}
+            </Typography.Text>
+          </Space>
+        ),
       },
       {
         title: "WAREHOUSE",
@@ -154,18 +227,23 @@ const Transactions = () => {
         title: "DIRECTION",
         dataIndex: "direction",
         key: "direction",
-        render: (direction) => (
-          <Tag
-            style={{ borderRadius: 10, display: "flex", gap: 4 }}
-            color={direction === "Stock In" ? "#52C41A" : "#FAAD14"}
-          >
-            {direction === "Stock In" ? (
-              <DownCircleOutlined />
-            ) : (
-              <UpCircleOutlined />
+        render: (direction, record) => (
+          <Space>
+            <Tag
+              style={{ borderRadius: 10, display: "flex", gap: 4 }}
+              color={direction === "Stock In" ? "#52C41A" : "#FAAD14"}
+            >
+              {direction === "Stock In" ? (
+                <DownCircleOutlined />
+              ) : (
+                <UpCircleOutlined />
+              )}
+              {direction}
+            </Tag>
+            {record.is_voided && (
+              <WarningOutlined style={{ color: "#FF4D4F" }} />
             )}
-            {direction}
-          </Tag>
+          </Space>
         ),
       },
       {
@@ -185,6 +263,36 @@ const Transactions = () => {
         dataIndex: "note",
         key: "note",
         render: (note) => <Typography.Text>{note}</Typography.Text>,
+      },
+      {
+        title: "Evidence",
+        dataIndex: "evidence",
+        key: "evidence",
+        render: (_) => <Typography.Text>-</Typography.Text>,
+      },
+      {
+        title: "ACTION",
+        key: "action",
+        render: (_, record) => (
+          <Space size={0}>
+            <Button
+              variant="link"
+              color="primary"
+              onClick={() => handleView(String(record.id))}
+            >
+              View
+            </Button>
+            {!record.is_voided && (
+              <Button
+                variant="link"
+                color="danger"
+                onClick={() => openVoidModal(String(record.id))}
+              >
+                Void
+              </Button>
+            )}
+          </Space>
+        ),
       },
     ],
     []
@@ -294,6 +402,62 @@ const Transactions = () => {
           )}
         />
       </div>
+
+      <VoidTransactionModal
+        open={voidOpen}
+        loading={false}
+        tx={voidTx}
+        onCancel={() => {
+          setVoidOpen(false);
+          setSelectedTransactionId(null);
+          setVoidTx(null);
+        }}
+        onConfirm={confirmVoid}
+      />
+
+      {/* Transaction Details Modal */}
+      <Modal
+        open={isModalOpen}
+        onCancel={() => {
+          setIsModalOpen(false);
+          setSelectedTransactionId(null);
+        }}
+        footer={null}
+        title="Transaction Details"
+      >
+        {transactionDetailsLoading ? (
+          <Spin />
+        ) : transactionDetailsError ? (
+          <Typography.Text type="danger">
+            Error loading details.
+          </Typography.Text>
+        ) : transactionDetails ? (
+          <div>
+            <Typography.Text strong>Date:</Typography.Text>{" "}
+            {transactionDetails.date} {transactionDetails.time}
+            <br />
+            <Typography.Text strong>Product:</Typography.Text>{" "}
+            {transactionDetails.name} ({transactionDetails.sku})
+            <br />
+            <Typography.Text strong>Warehouse:</Typography.Text>{" "}
+            {transactionDetails.warehouse}
+            <br />
+            <Typography.Text strong>Direction:</Typography.Text>{" "}
+            {transactionDetails.direction}
+            <br />
+            <Typography.Text strong>Quantity:</Typography.Text>{" "}
+            {transactionDetails.quantity}
+            <br />
+            <Typography.Text strong>Reference:</Typography.Text>{" "}
+            {transactionDetails.reference}
+            <br />
+            <Typography.Text strong>Note:</Typography.Text>{" "}
+            {transactionDetails.note}
+            <br />
+            {/* Add more fields as needed */}
+          </div>
+        ) : null}
+      </Modal>
     </>
   );
 };
