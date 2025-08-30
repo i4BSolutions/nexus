@@ -15,6 +15,7 @@ const DetailsCard = ({
   min_stock,
   unit_price,
   updated_at,
+  product_currency,
 }: ProductDetailsCardProps) => {
   return (
     <Card
@@ -73,7 +74,10 @@ const DetailsCard = ({
         <Col span={12} style={{ marginTop: 16 }}>
           <Space direction="vertical" size={0}>
             <Typography.Text type="secondary">Unit Price</Typography.Text>
-            <Typography.Title level={5}>{unit_price ?? "N/A"}</Typography.Title>
+            <Typography.Title level={5}>
+              {unit_price.toLocaleString() ?? "N/A"}{" "}
+              {product_currency?.currency_code}
+            </Typography.Title>
           </Space>
         </Col>
         <Col span={12} style={{ marginTop: 16 }}>
