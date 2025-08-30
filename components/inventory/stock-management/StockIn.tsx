@@ -223,8 +223,11 @@ const StockInForm = ({
         return next;
       });
     },
-    onPreview() {
-      setViewerOpen(true);
+    onPreview(file) {
+      if (!activeLineKey) return;
+      const files = evidenceMap[activeLineKey] ?? [];
+      const index = files.findIndex((f) => f.uid === file.uid);
+      openViewerForRow(activeLineKey, index >= 0 ? index : 0);
     },
     listType: "picture",
     showUploadList: true,
@@ -741,12 +744,6 @@ const StockInForm = ({
         footer={null}
         centered
         wrapClassName="centered-modal"
-        style={{
-          // top: 0,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
       >
         <Typography.Text
           style={{
