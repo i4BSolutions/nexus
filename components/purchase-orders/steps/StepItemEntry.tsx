@@ -214,6 +214,20 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                     const availableProducts =
                       (productsData?.items as ProductInterface[]) ?? [];
 
+                    // Debug logs for production issue
+                    if (typeof window !== "undefined") {
+                      console.log(`Row ${index} - name:`, name);
+                      console.log(`Row ${index} - items:`, items);
+                      console.log(
+                        `Row ${index} - availableProducts:`,
+                        availableProducts
+                      );
+                      console.log(
+                        `Row ${index} - selected product:`,
+                        items[name]?.product
+                      );
+                    }
+
                     return (
                       <Row
                         key={key}
