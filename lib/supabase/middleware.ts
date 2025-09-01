@@ -1,4 +1,3 @@
-import { getAuthenticatedUser } from "@/helper/getUser";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -41,7 +40,9 @@ export async function updateSession(request: NextRequest) {
   );
 
   // refreshing the auth token
-  const user = await getAuthenticatedUser(supabase);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const publicUrls = [
     "/login",
@@ -63,7 +64,9 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    const bannedUntil = user.banned_until ? new Date(user.banned_until) : null;
+    const bannedUntil = user.user_metadata.banned_until
+      ? new Date(user.user_metadata.banned_until)
+      : null;
     const isBanned = !!bannedUntil && bannedUntil > new Date();
     if (isBanned) {
       await supabase.auth.signOut();
