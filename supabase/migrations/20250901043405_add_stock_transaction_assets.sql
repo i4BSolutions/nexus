@@ -21,8 +21,6 @@ alter table "public"."stock_transaction" add column "approve_by_contact_id" bigi
 
 alter table "public"."stock_transaction" add column "evidence_photo_count" integer default 0;
 
-CREATE INDEX idx_stock_in_evidence_stock_in_id ON public.stock_in_evidence USING btree (stock_in_id);
-
 CREATE INDEX idx_stock_in_evidence_uploader ON public.stock_in_evidence USING btree (uploader_user_id);
 
 CREATE UNIQUE INDEX stock_in_evidence_pkey ON public.stock_in_evidence USING btree (id);
