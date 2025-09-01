@@ -136,14 +136,14 @@ const StockOut = ({
     }
 
     // Size checks
-    const isLt2M = file.size / 1024 / 1024 < 2;
-    const isLt5M = file.size / 1024 / 1024 < 5;
+    const isLtPhoto5M = file.size / 1024 / 1024 < 5;
+    const isLtPdf5M = file.size / 1024 / 1024 < 5;
 
-    if (isImage && !isLt2M) {
-      message.error(`${file.name} must be smaller than 2MB!`);
+    if (isImage && !isLtPhoto5M) {
+      message.error(`${file.name} must be smaller than 5MB!`);
       return Upload.LIST_IGNORE;
     }
-    if (isPdf && !isLt5M) {
+    if (isPdf && !isLtPdf5M) {
       message.error(`${file.name} must be smaller than 5MB!`);
       return Upload.LIST_IGNORE;
     }
@@ -152,25 +152,25 @@ const StockOut = ({
   };
 
   const handleUploadChange: UploadProps["onChange"] = (info) => {
-    let newFileList = [...info.fileList];
-
-    newFileList = newFileList.slice(-5);
+    let newFileList = [...info.fileList].slice(-5);
 
     newFileList = newFileList.map((file) => {
-      // If backend response includes url, use it
-      if (
-        file.response &&
-        typeof file.response === "object" &&
-        (file.response as any).url
-      ) {
-        file.url = (file.response as any).url;
+      const resp = file.response as any;
+
+      // map backend response ➜ file.url + keep storage_key for submit
+      if (resp && typeof resp === "object" && resp.data) {
+        file.url = resp.data.url || file.url;
+        (file as any).storage_key = resp.data.key;
+        (file as any).mime = resp.data.mime ?? file.type;
+        (file as any).size_bytes = resp.data.size_bytes ?? file.size ?? 0;
+        (file as any).original_filename =
+          resp.data.original_filename ?? file.name;
       }
 
-      // Otherwise, fall back to local preview
+      // fallback local blob preview (while uploading)
       if (!file.url && file.originFileObj) {
         file.url = URL.createObjectURL(file.originFileObj as RcFile);
       }
-
       return file;
     });
 
@@ -209,7 +209,7 @@ const StockOut = ({
     name: "file",
     multiple: true,
     accept: "image/jpeg,image/png",
-    action: "", // client-only, no auto upload
+    action: "/api/uploads/direct", // client-only, no auto upload
     fileList: activeLineKey !== null ? evidenceMap[activeLineKey] ?? [] : [],
     beforeUpload(file) {
       const isImg = file.type === "image/jpeg" || file.type === "image/png";
@@ -851,11 +851,17 @@ const StockOut = ({
             ]}
           >
             <Upload
-              action="" // TODO: replace with your backend
+              action="/api/uploads/direct" // TODO: replace with your backend
               fileList={fileList}
               onChange={handleUploadChange}
               beforeUpload={beforeUpload}
               multiple
+              data={(file) => ({
+                type:
+                  file.type === "application/pdf"
+                    ? "pdf"
+                    : "stock-out-evidence",
+              })}
               accept=".jpg,.png,.pdf"
               listType="picture"
               onPreview={async (file) => {
@@ -873,7 +879,6 @@ const StockOut = ({
                 }
               }}
               itemRender={(originNode, file, currFileList, actions) => {
-                console.log(file);
                 const isPdf =
                   file.type === "application/pdf" || file.name.endsWith(".pdf");
                 if (isPdf) {
