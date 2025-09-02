@@ -47,6 +47,8 @@ export async function POST(
 
   const supabase = await createClient();
 
+  const fileId = uuidv4();
+
   const ext = file.name.split(".").pop() ?? (isPdf ? "pdf" : "jpg");
   const folder =
     isPdf || type === "pdf"
@@ -54,7 +56,7 @@ export async function POST(
       : "stock-out-evidence/photos";
   const key = `${folder}/${new Date()
     .toISOString()
-    .slice(0, 10)}/${uuidv4()}.${ext}`;
+    .slice(0, 10)}/${fileId}.${ext}`;
 
   // ➜ Upload the File blob directly (no Buffer conversion)
   let uploadErr: any = null;
@@ -99,6 +101,7 @@ export async function POST(
   return NextResponse.json(
     success(
       {
+        id: fileId,
         key,
         url: signed.signedUrl, // AntD <Upload> will use this as the blue link
         original_filename: file.name,
