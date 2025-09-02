@@ -19,6 +19,7 @@ export interface StockTransactionInterface {
   reference: string;
   note: string | null;
   is_voided: boolean;
+  evidence: any[];
 }
 
 export interface StockTransactionInterfaceResponse {
