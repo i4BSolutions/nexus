@@ -31,7 +31,7 @@ CREATE INDEX stock_transaction_warehouse_id_product_id_created_at_idx ON public.
 
 -- alter table "public"."stock_in_evidence" add constraint "stock_in_evidence_pkey" PRIMARY KEY using index "stock_in_evidence_pkey";
 
-alter table "public"."stock_transaction_assets" add constraint "stock_transaction_assets_pkey" PRIMARY KEY using index "stock_transaction_assets_pkey";
+-- alter table "public"."stock_transaction_assets" add constraint "stock_transaction_assets_pkey" PRIMARY KEY using index "stock_transaction_assets_pkey";
 
 -- alter table "public"."stock_in_evidence" add constraint "stock_in_evidence_stock_in_id_fkey" FOREIGN KEY (stock_in_id) REFERENCES stock_transaction(id) ON DELETE CASCADE not valid;
 
