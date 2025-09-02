@@ -37,6 +37,8 @@ import { RcFile } from "antd/es/upload";
 import ImageViewerModal, {
   ViewerImage,
 } from "@/components/shared/ImageViewerModal";
+import { useGetAll } from "@/hooks/react-query/useGetAll";
+import { PersonInterface } from "@/types/person/person.type";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -105,6 +107,9 @@ const StockOut = ({
 
   const inventoryItems = (inventoryDataRaw as InventoryInterface[]) || [];
 
+  const { data: contactPersonsRaw } = useGetAll("persons", ["contact_persons"]);
+  const contactPersons = (contactPersonsRaw as PersonInterface[]) || [];
+
   useEffect(() => {
     setEvidenceMap({});
     setActiveLineKey(null);
@@ -126,12 +131,6 @@ const StockOut = ({
     // Only allow image or pdf
     if (!isImage && !isPdf) {
       message.error(`${file.name} is not a valid file type`);
-      return Upload.LIST_IGNORE;
-    }
-
-    // Enforce one PDF max
-    if (isPdf && fileList.some((f) => f.type === "application/pdf")) {
-      message.error("Only one PDF is allowed");
       return Upload.LIST_IGNORE;
     }
 
@@ -159,6 +158,7 @@ const StockOut = ({
 
       // map backend response ➜ file.url + keep storage_key for submit
       if (resp && typeof resp === "object" && resp.data) {
+        (file as any).id = resp.data.id;
         file.url = resp.data.url || file.url;
         (file as any).storage_key = resp.data.key;
         (file as any).mime = resp.data.mime ?? file.type;
@@ -248,15 +248,32 @@ const StockOut = ({
     onChange({ fileList: newList }) {
       if (activeLineKey === null || activeIndex === null) return;
 
+      // trim count
       let trimmed = newList;
       if (newList.length > MAX_FILES) {
         trimmed = newList.slice(0, MAX_FILES);
         message.warning(`You can upload up to ${MAX_FILES} photos.`);
       }
 
+      trimmed = trimmed.map((file) => {
+        const resp = file.response as any;
+        if (resp && typeof resp === "object" && resp.data) {
+          (file as any).id = resp.data.id;
+          file.url = resp.data.url || file.url;
+          (file as any).storage_key = resp.data.key;
+          (file as any).mime = resp.data.mime ?? file.type;
+          (file as any).size_bytes = resp.data.size_bytes ?? file.size ?? 0;
+          (file as any).original_filename =
+            resp.data.original_filename ?? file.name;
+        }
+        if (!file.url && file.originFileObj) {
+          file.url = URL.createObjectURL(file.originFileObj as RcFile);
+        }
+        return file;
+      });
+
       setEvidenceMap((prev) => {
         const next = { ...prev, [activeLineKey]: trimmed };
-        // keep form in sync + trigger row validation
         form.setFieldValue(["items", activeIndex, "evidence_photo"], trimmed);
         form.validateFields([["items", activeIndex, "evidence_photo"]]);
         return next;
@@ -279,6 +296,39 @@ const StockOut = ({
       return;
     }
 
+    const approvalFiles = fileList.filter(
+      (f) =>
+        f.type === "application/pdf" ||
+        f.type === "image/jpeg" ||
+        f.type === "image/png"
+    );
+
+    if (approvalFiles.length < 1) {
+      message.error("At least one Approval Letter (PDF/JPG/PNG) is required");
+      return;
+    }
+
+    const approvalAssets = approvalFiles.map((f) => ({
+      id: (f as any).id,
+      key: (f as any).storage_key || (f.response as any)?.data?.key,
+      mime: (f as any).mime || f.type,
+      size_bytes: (f as any).size_bytes ?? 0,
+      original_filename: (f as any).original_filename || f.name,
+      type: f.type === "application/pdf" ? "pdf" : "photo",
+    }));
+
+    const rowPhotos: UploadFile[] = Object.values(evidenceMap)
+      .flat()
+      .filter(Boolean);
+    const photoAssets = rowPhotos.map((f) => ({
+      id: (f as any).id,
+      key: (f as any).storage_key || (f.response as any)?.data?.key,
+      mime: (f as any).mime || f.type,
+      size_bytes: (f as any).size_bytes ?? 0,
+      original_filename: (f as any).original_filename || f.name,
+      type: "photo",
+    }));
+
     const payload = {
       stock_out_items: (values.items ?? [])
         .filter((i: any) => Number(i.quantity) > 0)
@@ -286,21 +336,19 @@ const StockOut = ({
           const product = inventoryItems.find(
             (inv) => inv.product.id === i.product
           );
-
           if (!product || product.quantity <= 0) return null;
 
-          const base = {
+          const base: any = {
             product_id: product.product.id,
             warehouse_id: selectedWarehouse?.id!,
             quantity: Number(i.quantity),
             reason: values.reason,
-          } as {
-            product_id: number;
-            warehouse_id: number;
-            quantity: number;
-            reason: string;
-            destination_warehouse_id?: number;
-            note?: string;
+            note: values.note || null,
+
+            approve_by_contact_id: values.approved_by,
+            approval_order_no: values.approved_order_no,
+            approval_letter_id: approvalAssets[0]?.id, // first file uuid
+            assets: [...photoAssets, ...approvalAssets],
           };
 
           if (
@@ -313,18 +361,19 @@ const StockOut = ({
             if (dest) base.destination_warehouse_id = dest.id;
           }
 
-          if (values.note) base.note = values.note;
           return base;
         })
-        .filter(Boolean), // Remove null entries
+        .filter(Boolean),
     };
 
     try {
       onSubmit?.(payload);
       message.success("Stock Out completed successfully!");
       form.resetFields();
+      setFileList([]);
+      setEvidenceMap({});
     } catch (error) {
-      console.log(error);
+      console.error(error);
       message.error("Stock Out Failed. Please try again.");
     }
   };
@@ -823,9 +872,9 @@ const StockOut = ({
               rules={[{ required: true, message: "Please select approved by" }]}
             >
               <Select allowClear placeholder="Select approved by">
-                {[1, 2, 3].map((c) => (
-                  <Option key={c} value={c}>
-                    {c}
+                {contactPersons.map((c) => (
+                  <Option key={c.id} value={c.id}>
+                    {c.name}
                   </Option>
                 ))}
               </Select>
