@@ -23,7 +23,7 @@ alter table "public"."stock_transaction" add column "evidence_photo_count" integ
 
 CREATE INDEX stock_transaction_approve_by_contact_id_idx ON public.stock_transaction USING btree (approve_by_contact_id);
 
-CREATE UNIQUE INDEX stock_transaction_assets_pkey ON public.stock_transaction_assets USING btree (id);
+-- CREATE UNIQUE INDEX stock_transaction_assets_pkey ON public.stock_transaction_assets USING btree (id);
 
 CREATE INDEX stock_transaction_assets_transaction_id_type_idx ON public.stock_transaction_assets USING btree (transaction_id, type);
 
