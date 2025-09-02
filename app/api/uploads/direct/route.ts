@@ -12,6 +12,51 @@ const BUCKET = "core-orbit";
 // extend if you later allow webp/heic
 const ALLOWED_IMAGE_MIME = new Set(["image/jpeg", "image/png"]);
 
+export async function GET(req: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { searchParams } = req.nextUrl;
+    const key = searchParams.get("key");
+
+    if (!key) {
+      return NextResponse.json(error("Missing key", 400), { status: 400 });
+    }
+
+    // Download the file as Blob
+    const { data, error: downloadErr } = await supabase.storage
+      .from(BUCKET)
+      .download(key);
+
+    if (downloadErr || !data) {
+      return NextResponse.json(
+        error(`Failed to download file: ${downloadErr?.message}`, 404),
+        { status: 404 }
+      );
+    }
+
+    // Guess Content-Type by extension
+    let contentType = "application/octet-stream";
+    if (key.endsWith(".png")) contentType = "image/png";
+    if (key.endsWith(".jpg") || key.endsWith(".jpeg"))
+      contentType = "image/jpeg";
+    if (key.endsWith(".pdf")) contentType = "application/pdf";
+
+    // Convert Blob → ReadableStream
+    const stream = data.stream();
+
+    return new NextResponse(stream, {
+      headers: {
+        "Content-Type": contentType,
+        "Content-Disposition": `inline; filename="${key.split("/").pop()}"`,
+      },
+    });
+  } catch (e: any) {
+    return NextResponse.json(error(e?.message || "Server error", 500), {
+      status: 500,
+    });
+  }
+}
+
 export async function POST(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse<any>>> {

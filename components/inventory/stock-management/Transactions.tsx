@@ -35,6 +35,7 @@ import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import VoidTransactionModal from "./VoidModal";
 import { VoidPreview } from "@/types/inventory/stock-transaction.type";
+import ImageViewerModal from "@/components/shared/ImageViewerModal";
 
 const { RangePicker } = DatePicker;
 
@@ -58,6 +59,11 @@ const Transactions = () => {
   const [voidOpen, setVoidOpen] = useState(false);
   const [voidTx, setVoidTx] = useState<VoidPreview | null>(null);
   const [voidLoading, setVoidLoading] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerImages, setViewerImages] = useState<
+    { src: string; name: string }[]
+  >([]);
+  const [viewerStart, setViewerStart] = useState(0);
 
   const {
     data: stockTransactionsData,
@@ -123,6 +129,12 @@ const Transactions = () => {
   const handleView = (id: string) => {
     setSelectedTransactionId(id);
     setIsModalOpen(true);
+  };
+
+  const openViewer = (images: any[], startIndex = 0) => {
+    setViewerImages(images.map((img) => ({ src: img.url, name: img.name })));
+    setViewerStart(startIndex);
+    setViewerOpen(true);
   };
 
   const {
@@ -268,7 +280,64 @@ const Transactions = () => {
         title: "Evidence",
         dataIndex: "evidence",
         key: "evidence",
-        render: (_) => <Typography.Text>-</Typography.Text>,
+        render: (evidence: any[]) => {
+          if (!evidence || evidence.length === 0) {
+            return <Typography.Text>-</Typography.Text>;
+          }
+
+          const first = evidence[0];
+          const count = evidence.length;
+
+          const isImage = first.mime?.startsWith("image/");
+
+          return (
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                cursor: "pointer",
+                position: "relative",
+              }}
+              onClick={() => openViewer(evidence, 0)}
+            >
+              {isImage ? (
+                <img
+                  src={first.url}
+                  alt={first.name}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 8,
+                    objectFit: "cover",
+                  }}
+                />
+              ) : (
+                <span style={{ fontSize: 12, color: "#1677ff" }}>
+                  {first.name || "File"}
+                </span>
+              )}
+
+              {count > 1 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "rgba(0,0,0,.45)",
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  +{count - 1}
+                </div>
+              )}
+            </div>
+          );
+        },
       },
       {
         title: "ACTION",
@@ -458,6 +527,15 @@ const Transactions = () => {
           </div>
         ) : null}
       </Modal>
+
+      {viewerOpen && (
+        <ImageViewerModal
+          open={viewerOpen}
+          images={viewerImages}
+          start={viewerStart}
+          onClose={() => setViewerOpen(false)}
+        />
+      )}
     </>
   );
 };
