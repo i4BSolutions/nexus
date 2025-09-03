@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "@/helper/getUser";
 import { createClient } from "@/lib/supabase/client";
 import {
   AuditOutlined,
+  ContactsOutlined,
   DollarCircleOutlined,
   HomeOutlined,
   SettingOutlined,
@@ -158,6 +159,12 @@ export default function MainLayout({
           onClick: () => router.push("/users"),
         },
       ],
+    },
+    {
+      key: "contacts",
+      label: "Contacts",
+      icon: <ContactsOutlined />,
+      onClick: () => router.push("/contacts"),
     },
   ];
 
