@@ -16,7 +16,7 @@ const MainMenuItemCard = ({
   onClick,
 }: MainMenuItemProps) => {
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" style={{ height: "100%" }}>
       <Flex justify="space-between" align="center">
         <Flex gap={12} align="center">
           {icon}
