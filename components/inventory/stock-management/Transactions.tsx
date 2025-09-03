@@ -13,6 +13,7 @@ import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
 import {
   CalendarOutlined,
   DownCircleOutlined,
+  SwapOutlined,
   UpCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
@@ -27,7 +28,6 @@ import {
   Space,
   Tag,
   Typography,
-  Modal,
   Spin,
 } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
@@ -36,6 +36,8 @@ import { useMemo, useState } from "react";
 import VoidTransactionModal from "./VoidModal";
 import { VoidPreview } from "@/types/inventory/stock-transaction.type";
 import ImageViewerModal from "@/components/shared/ImageViewerModal";
+import Modal from "@/components/shared/Modal";
+import TransferDetailsModal from "./TransferDetailsModal";
 
 const { RangePicker } = DatePicker;
 
@@ -285,10 +287,24 @@ const Transactions = () => {
             return <Typography.Text>-</Typography.Text>;
           }
 
-          const first = evidence[0];
-          const count = evidence.length;
+          const imageEvidence = evidence.filter((e) =>
+            e.mime?.startsWith("image/")
+          );
+          const first = imageEvidence[0];
+          const count = imageEvidence.length;
 
-          const isImage = first.mime?.startsWith("image/");
+          if (!first) {
+            return (
+              <a
+                href={evidence[0].url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 12, color: "#1677ff" }}
+              >
+                {evidence[0].name || "File"}
+              </a>
+            );
+          }
 
           return (
             <div
@@ -298,24 +314,18 @@ const Transactions = () => {
                 cursor: "pointer",
                 position: "relative",
               }}
-              onClick={() => openViewer(evidence, 0)}
+              onClick={() => openViewer(imageEvidence, 0)}
             >
-              {isImage ? (
-                <img
-                  src={first.url}
-                  alt={first.name}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 8,
-                    objectFit: "cover",
-                  }}
-                />
-              ) : (
-                <span style={{ fontSize: 12, color: "#1677ff" }}>
-                  {first.name || "File"}
-                </span>
-              )}
+              <img
+                src={first.url}
+                alt={first.name}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 8,
+                  objectFit: "cover",
+                }}
+              />
 
               {count > 1 && (
                 <div
@@ -478,55 +488,18 @@ const Transactions = () => {
         tx={voidTx}
         onCancel={() => {
           setVoidOpen(false);
-          setSelectedTransactionId(null);
           setVoidTx(null);
         }}
         onConfirm={confirmVoid}
       />
 
-      {/* Transaction Details Modal */}
-      <Modal
+      <TransferDetailsModal
         open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setSelectedTransactionId(null);
-        }}
-        footer={null}
-        title="Transaction Details"
-      >
-        {transactionDetailsLoading ? (
-          <Spin />
-        ) : transactionDetailsError ? (
-          <Typography.Text type="danger">
-            Error loading details.
-          </Typography.Text>
-        ) : transactionDetails ? (
-          <div>
-            <Typography.Text strong>Date:</Typography.Text>{" "}
-            {transactionDetails.date} {transactionDetails.time}
-            <br />
-            <Typography.Text strong>Product:</Typography.Text>{" "}
-            {transactionDetails.name} ({transactionDetails.sku})
-            <br />
-            <Typography.Text strong>Warehouse:</Typography.Text>{" "}
-            {transactionDetails.warehouse}
-            <br />
-            <Typography.Text strong>Direction:</Typography.Text>{" "}
-            {transactionDetails.direction}
-            <br />
-            <Typography.Text strong>Quantity:</Typography.Text>{" "}
-            {transactionDetails.quantity}
-            <br />
-            <Typography.Text strong>Reference:</Typography.Text>{" "}
-            {transactionDetails.reference}
-            <br />
-            <Typography.Text strong>Note:</Typography.Text>{" "}
-            {transactionDetails.note}
-            <br />
-            {/* Add more fields as needed */}
-          </div>
-        ) : null}
-      </Modal>
+        setOpen={setIsModalOpen}
+        data={transactionDetails}
+        isLoading={transactionDetailsLoading}
+        onVoid={() => openVoidModal(selectedTransactionId!)}
+      />
 
       {viewerOpen && (
         <ImageViewerModal

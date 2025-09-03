@@ -53,11 +53,19 @@ export async function GET(
         note,
         reason,
         invoice_line_item_id,
+        approval_order_no,
+        approve_by_contact_id,
         product:product_id (
           name,
           sku
         ),
         warehouse:warehouse_id (
+          name
+        ),
+        destination_warehouse:destination_warehouse_id (
+          name
+        ),
+        approved_by:approve_by_contact_id (
           name
         ),
         is_voided
@@ -169,6 +177,9 @@ export async function GET(
         name: tx.product?.name || "-",
         warehouse: tx.warehouse?.name || "-",
         direction: tx.type === "IN" ? "Stock In" : "Stock Out",
+        approved_by: tx.approved_by?.name || null,
+        approval_order_no: tx.approval_order_no || null,
+        destination_warehouse: tx.destination_warehouse?.name || null,
         quantity: tx.quantity,
         reference,
         note: tx.note || "-",
