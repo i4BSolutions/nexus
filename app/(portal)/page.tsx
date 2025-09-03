@@ -15,7 +15,7 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { User } from "@supabase/supabase-js";
-import { Avatar, Card, Col, Flex, Row, Spin, Typography } from "antd";
+import { Card, Col, Flex, Row, Spin, Typography } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -193,7 +193,7 @@ const MAIN_MENU_ITEMS = {
   ],
 };
 
-export default function MainMenuPage() {
+export default function HomePage() {
   const router = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState<User>();
@@ -206,7 +206,7 @@ export default function MainMenuPage() {
     getUser();
   }, []);
 
-  if (!user) return <Spin />;
+  if (!user) return <Spin fullscreen />;
 
   return (
     <section className="grid h-full">
@@ -257,6 +257,7 @@ export default function MainMenuPage() {
               alignItems: "center",
               justifyContent: "center",
               display: "flex",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
             }}
           >
             <Flex gap={12} align="center">
@@ -282,7 +283,10 @@ export default function MainMenuPage() {
           </Card>
         </div>
       </Card>
-      <Card title="Procurement" style={{ marginTop: 24 }}>
+      <Card
+        title="Procurement"
+        style={{ marginTop: 24, boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
+      >
         <Row gutter={[8, 8]}>
           {MAIN_MENU_ITEMS.procurement.map((item) => (
             <Col span={12} key={item.title}>
@@ -299,7 +303,10 @@ export default function MainMenuPage() {
         </Row>
       </Card>
 
-      <Card title="Inventory" style={{ marginTop: 24 }}>
+      <Card
+        title="Inventory"
+        style={{ marginTop: 24, boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
+      >
         <Row gutter={[8, 8]}>
           {MAIN_MENU_ITEMS.inventory.map((item) => (
             <Col span={12} key={item.title}>
@@ -316,7 +323,10 @@ export default function MainMenuPage() {
         </Row>
       </Card>
 
-      <Card title="Finance" style={{ marginTop: 24 }}>
+      <Card
+        title="Finance"
+        style={{ marginTop: 24, boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
+      >
         <Row gutter={[8, 8]}>
           {MAIN_MENU_ITEMS.finance.map((item) => (
             <Col span={12} key={item.title}>
@@ -333,7 +343,10 @@ export default function MainMenuPage() {
         </Row>
       </Card>
 
-      <Card title="Administration" style={{ marginTop: 24 }}>
+      <Card
+        title="Administration"
+        style={{ marginTop: 24, boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
+      >
         <Row gutter={[8, 8]}>
           {MAIN_MENU_ITEMS.administration.map((item) => (
             <Col span={24} key={item.title}>
