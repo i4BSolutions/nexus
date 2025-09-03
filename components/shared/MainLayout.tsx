@@ -10,10 +10,22 @@ import {
   ShoppingOutlined,
 } from "@ant-design/icons";
 import { Button, Image, Layout, Menu, MenuProps, Spin, theme } from "antd";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
 const { Header, Content, Sider } = Layout;
+
+const PARENT_KEY_MAP: Record<string, string> = {
+  "purchase-orders": "procurement",
+  invoices: "procurement",
+  products: "procurement",
+  suppliers: "procurement",
+  "stock-management": "inventory",
+  warehouses: "inventory",
+  budgets: "finance",
+  "budget-allocations": "finance",
+  users: "administration",
+};
 
 export default function MainLayout({
   children,
@@ -25,7 +37,9 @@ export default function MainLayout({
   } = theme.useToken();
 
   const router = useRouter();
+  const pathname = usePathname();
   const [userPermissions, setUserPermissions] = React.useState<any>({});
+  const [openKeys, setOpenKeys] = React.useState<string[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -34,6 +48,18 @@ export default function MainLayout({
     };
     fetchUser();
   }, []);
+
+  const pathSegments = pathname.split("/").filter(Boolean);
+  const selectedKey = pathSegments[0] || "home";
+
+  useEffect(() => {
+    const parentKey = PARENT_KEY_MAP[selectedKey];
+    if (parentKey) {
+      setOpenKeys([parentKey]);
+    } else {
+      setOpenKeys([]);
+    }
+  }, [selectedKey]);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -81,8 +107,8 @@ export default function MainLayout({
 
   const MENU_ITEMS: MenuProps["items"] = [
     {
-      key: "main-menu",
-      label: "Main Menu",
+      key: "home",
+      label: "Home",
       icon: <HomeOutlined />,
       onClick: () => router.push("/"),
     },
@@ -229,7 +255,10 @@ export default function MainLayout({
         >
           <Menu
             mode="inline"
-            defaultSelectedKeys={["main-menu"]}
+            defaultSelectedKeys={["home"]}
+            selectedKeys={[selectedKey]}
+            openKeys={openKeys}
+            onOpenChange={(keys) => setOpenKeys(keys as string[])}
             style={{ height: "100%", borderRadius: 16 }}
             items={filteredMenu}
           />
