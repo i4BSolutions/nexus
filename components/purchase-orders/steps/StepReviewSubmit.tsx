@@ -10,7 +10,7 @@ import { useList } from "@/hooks/react-query/useList";
 
 // Types
 import { Budget } from "@/types/budgets/budgets.type";
-import { PersonInterface } from "@/types/person/person.type";
+import { PersonInterface, PersonResponse } from "@/types/person/person.type";
 import {
   ProductCurrencyInterface,
   ProductInterface,
@@ -58,7 +58,15 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
       pageSize: "all" as any,
     });
 
-    const { data: personsData = [] } = useList("persons");
+    const {
+      data: personsDataRaw,
+      isLoading: personsLoading,
+      refetch: refetchPersons,
+    } = useList("persons", {
+      pageSize: "all" as any,
+    });
+
+    const personsData = personsDataRaw as PersonResponse;
 
     const getTotal = () => {
       const items = formData.items;
@@ -440,7 +448,7 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
                   Contact Person
                 </Typography.Text>
                 <div style={{ fontSize: 16, fontWeight: 600 }}>
-                  {(personsData as PersonInterface[])?.find(
+                  {(personsData?.items as PersonInterface[])?.find(
                     (p: PersonInterface) => p.id === formData?.contact_person
                   )?.name || "-"}
                 </div>
@@ -448,7 +456,7 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
               <Col span={12} style={{ marginBottom: 12 }}>
                 <Typography.Text type="secondary">Sign Person</Typography.Text>
                 <div style={{ fontSize: 16, fontWeight: 600 }}>
-                  {(personsData as PersonInterface[])?.find(
+                  {(personsData?.items as PersonInterface[])?.find(
                     (p: PersonInterface) => p.id === formData?.sign_person
                   )?.name || "-"}
                 </div>
@@ -458,7 +466,7 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
                   Authorized Sign Person
                 </Typography.Text>
                 <div style={{ fontSize: 16, fontWeight: 600 }}>
-                  {(personsData as PersonInterface[])?.find(
+                  {(personsData?.items as PersonInterface[])?.find(
                     (p: PersonInterface) =>
                       p.id === formData?.authorized_sign_person
                   )?.name || "-"}
