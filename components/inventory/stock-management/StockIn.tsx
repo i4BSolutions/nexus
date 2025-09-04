@@ -49,14 +49,17 @@ const { TextArea } = Input;
 const { Dragger } = Upload;
 
 const toViewerImages = (files: UploadFile[]): ViewerImage[] =>
-  files.map((f, i) => ({
-    src:
-      f.url ||
-      f.thumbUrl ||
-      (f.originFileObj ? URL.createObjectURL(f.originFileObj as File) : ""),
-    name: f.name,
-    key: f.uid ?? i,
-  }));
+  files.map((f, i) => {
+    const fullSrc =
+      (f.originFileObj
+        ? URL.createObjectURL(f.originFileObj as File)
+        : f.url ?? "") || "";
+    return {
+      src: fullSrc,
+      name: f.name,
+      key: f.uid ?? i,
+    };
+  });
 
 interface StockFormProps {
   invoices: PurchaseInvoiceDto[] | undefined;
@@ -228,6 +231,9 @@ const StockInForm = ({
       const files = evidenceMap[activeLineKey] ?? [];
       const index = files.findIndex((f) => f.uid === file.uid);
       openViewerForRow(activeLineKey, index >= 0 ? index : 0);
+    },
+    previewFile: async (file) => {
+      return URL.createObjectURL(file as unknown as File);
     },
     listType: "picture",
     showUploadList: true,
