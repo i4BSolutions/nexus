@@ -396,9 +396,10 @@ export async function GET(
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSizeParam = searchParams.get("pageSize") || "10";
-  const pageSize = parseInt(pageSizeParam, 10);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+  const pageSize =
+    pageSizeParam === "all" ? "all" : parseInt(pageSizeParam, 10);
+  const from = (page - 1) * (pageSize === "all" ? 0 : pageSize);
+  const to = pageSize === "all" ? undefined : from + pageSize - 1;
 
   const search = searchParams.get("q") || "";
 
@@ -450,8 +451,9 @@ export async function GET(
   const needAmountSort =
     amountSort === "amount_asc" || amountSort === "amount_desc";
 
-  if (!needAmountSort) {
-    query = query.range(from, to); // apply DB pagination only if sorting by date
+  // Only apply range if not "all"
+  if (!needAmountSort && pageSize !== "all") {
+    query = query.range(from, Number(to));
   }
 
   const {
@@ -466,6 +468,12 @@ export async function GET(
 
   if (dbError) {
     return NextResponse.json(error(dbError.message), { status: 500 });
+  }
+
+  // If pageSize is "all", slice after fetching all rows
+  let filteredInvoices = invoices;
+  if (pageSize === "all" && !needAmountSort && filteredInvoices) {
+    // No slicing needed, return all rows
   }
 
   const { data: deliveredStats, error: deliveredError } = await supabase
@@ -483,7 +491,7 @@ export async function GET(
     );
   });
 
-  let formatDto: any = invoices?.map((invoice) => {
+  let formatDto: any = filteredInvoices?.map((invoice) => {
     const totalOrderedQty = invoice.invoice_items.reduce(
       (total: number, item: any) => total + item.quantity,
       0
@@ -545,8 +553,13 @@ export async function GET(
     formatDto.sort((a: any, b: any) => b.total_amount_usd - a.total_amount_usd);
   }
 
+  // If sorting by amount, apply pagination in memory
   if (needAmountSort) {
-    formatDto = formatDto.slice(from, to + 1);
+    if (pageSize === "all") {
+      formatDto = formatDto;
+    } else {
+      formatDto = formatDto.slice(from, Number(to) + 1);
+    }
   }
 
   const statisticsData = await getStatistics({ status: status ?? undefined });
