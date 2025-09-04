@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Image, Typography, Button } from "antd";
 import {
-  LeftOutlined,
-  RightOutlined,
   SwapOutlined,
   RotateLeftOutlined,
   RotateRightOutlined,
@@ -91,6 +89,7 @@ const ImageViewerModal: React.FC<Props> = ({
         preview={{
           visible,
           current,
+          keyboard: true,
           onVisibleChange: (v) => {
             setVisible(v);
             if (!v) onClose();
