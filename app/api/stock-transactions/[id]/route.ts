@@ -28,11 +28,20 @@ export async function GET(
         note,
         reason,
         invoice_line_item_id,
+        is_voided,
+        approval_order_no,
+        approve_by_contact_id,
         product:product_id (
           name,
           sku
         ),
         warehouse:warehouse_id (
+          name
+        ),
+        destination_warehouse:destination_warehouse_id (
+          name
+        ),
+        approved_by:approve_by_contact_id (
           name
         )
       `
@@ -41,9 +50,12 @@ export async function GET(
     .single();
 
   if (fetchError) {
-    return NextResponse.json(error("Failed to fetch stock transaction"), {
-      status: 500,
-    });
+    return NextResponse.json(
+      error(fetchError.message || "Failed to fetch stock transaction"),
+      {
+        status: 500,
+      }
+    );
   }
 
   let evidence: Array<{
@@ -103,6 +115,9 @@ export async function GET(
       name: data.product?.name ?? "",
       warehouse: data.warehouse?.name ?? "",
       direction: data.type === "in" ? "Stock In" : "Stock Out",
+      approved_by: data.approved_by?.name ?? null,
+      approval_order_no: data.approval_order_no ?? null,
+      destination_warehouse: data.destination_warehouse?.name ?? null,
       quantity: data.quantity,
       reference: data.invoice_line_item_id ?? "",
       note: data.note,
