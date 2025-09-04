@@ -2,14 +2,29 @@
 
 import { getAuthenticatedUser } from "@/helper/getUser";
 import { createClient } from "@/lib/supabase/client";
+import getAvatarUrl from "@/utils/getAvatarUrl";
 import {
   AuditOutlined,
   DollarCircleOutlined,
+  DownOutlined,
   HomeOutlined,
   SettingOutlined,
   ShoppingOutlined,
 } from "@ant-design/icons";
-import { Button, Image, Layout, Menu, MenuProps, Spin, theme } from "antd";
+import { User } from "@supabase/supabase-js";
+import {
+  Button,
+  Dropdown,
+  Image,
+  Input,
+  Layout,
+  Menu,
+  MenuProps,
+  Space,
+  Spin,
+  theme,
+  Typography,
+} from "antd";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
@@ -39,12 +54,14 @@ export default function MainLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [userPermissions, setUserPermissions] = React.useState<any>({});
+  const [user, setUser] = React.useState<User>();
   const [openKeys, setOpenKeys] = React.useState<string[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
       const authenticatedUser = await getAuthenticatedUser(createClient());
       setUserPermissions(authenticatedUser.user_metadata.permissions || {});
+      setUser(authenticatedUser);
     };
     fetchUser();
   }, []);
@@ -189,6 +206,34 @@ export default function MainLayout({
 
   const filteredMenu = filterMenu(MENU_ITEMS, userPermissions) || [];
 
+  const items: MenuProps["items"] = [
+    {
+      label: (
+        <Typography.Text>{user?.user_metadata?.full_name}</Typography.Text>
+      ),
+      key: "0",
+      style: { cursor: "default" },
+    },
+    {
+      label: <Typography.Text>{user?.email}</Typography.Text>,
+      key: "1",
+      style: { cursor: "default" },
+    },
+    {
+      label: <Typography.Text>V1.0.1</Typography.Text>,
+      key: "2",
+      style: { cursor: "default" },
+    },
+    {
+      type: "divider",
+    },
+    {
+      label: "Logout",
+      key: "3",
+      onClick: handleSignOut,
+    },
+  ];
+
   if (!userPermissions || Object.keys(userPermissions).length === 0) {
     return (
       <Layout style={{ padding: "20px", background: colorBgContainer }}>
@@ -216,6 +261,8 @@ export default function MainLayout({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 8,
           background: colorBgContainer,
           borderBottom: "1px solid #F0F0F0 ",
           padding: "0 16px 0 32px",
@@ -229,9 +276,29 @@ export default function MainLayout({
           height={40}
         />
 
-        <Button type="default" onClick={handleSignOut}>
+        <Dropdown menu={{ items }} trigger={["click"]}>
+          <Typography.Text
+            style={{ cursor: "pointer" }}
+            onClick={(e) => e.preventDefault()}
+          >
+            <Space>
+              <img
+                src={getAvatarUrl(user?.user_metadata?.username)}
+                alt="avatar"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 50,
+                }}
+              />
+              {user?.user_metadata?.full_name}
+              <DownOutlined />
+            </Space>
+          </Typography.Text>
+        </Dropdown>
+        {/* <Button type="default" onClick={handleSignOut}>
           Logout
-        </Button>
+        </Button> */}
       </Header>
 
       <Layout
