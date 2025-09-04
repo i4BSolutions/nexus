@@ -21,7 +21,9 @@ const StockManagementPage = () => {
   const canStockOut = usePermission("can_stock_out");
 
   const { data: piData, isLoading: piLoading } =
-    useList<PurchaseInvoiceResponse>("purchase-invoices");
+    useList<PurchaseInvoiceResponse>("purchase-invoices", {
+      pageSize: "all" as any,
+    });
 
   const filteredInvoices = piData?.items.filter(
     (invoice) => invoice.is_voided !== true
