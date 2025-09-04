@@ -73,7 +73,7 @@ export async function POST(
   const supabase = await createClient();
   const body = await req.json();
 
-  const { name, email } = body;
+  const { name, email, rank, department } = body;
 
   if (!name) {
     return NextResponse.json(error("Name is required"), { status: 400 });
@@ -81,7 +81,14 @@ export async function POST(
 
   const { data, error: dbError } = await supabase
     .from("person")
-    .insert([{ name: name.trim(), email: email.trim() }])
+    .insert([
+      {
+        name: name.trim(),
+        email: email.trim(),
+        rank_id: rank,
+        department_id: department,
+      },
+    ])
     .select()
     .single();
 
