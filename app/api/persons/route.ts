@@ -21,7 +21,7 @@ export async function GET(
   let query = supabase
     .from("person")
     .select("*, rank:rank_id(name)", { count: "exact" })
-    .order("id", { ascending: true });
+    .order("id", { ascending: false });
 
   if (search) {
     query = query.or(
@@ -73,7 +73,7 @@ export async function POST(
   const supabase = await createClient();
   const body = await req.json();
 
-  const { name } = body;
+  const { name, email } = body;
 
   if (!name) {
     return NextResponse.json(error("Name is required"), { status: 400 });
@@ -81,7 +81,7 @@ export async function POST(
 
   const { data, error: dbError } = await supabase
     .from("person")
-    .insert([{ name }])
+    .insert([{ name: name.trim(), email: email.trim() }])
     .select()
     .single();
 
