@@ -21,9 +21,11 @@
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "next": "15.3.4",
+    "pdfjs-dist": "^5.4.149",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.58.1",
+    "react-pdf": "^10.1.0",
     "ua-parser-js": "^2.0.4",
     "uuid": "^11.1.0",
     "zod": "^3.25.67"

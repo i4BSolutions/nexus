@@ -15,10 +15,21 @@ export interface StockTransactionInterface {
   name: string;
   warehouse: string;
   direction: "Stock In" | "Stock Out";
+  approved_by: string | null;
+  approval_order_no: string | null;
+  destination_warehouse: string | null;
   quantity: number;
   reference: string;
   note: string | null;
   is_voided: boolean;
+  evidence: Array<{
+    key: string;
+    name?: string | null;
+    mime?: string | null;
+    size?: number | null;
+    type?: string | null; // "photo" | "pdf"
+    url: string;
+  }>;
 }
 
 export interface StockTransactionInterfaceResponse {
