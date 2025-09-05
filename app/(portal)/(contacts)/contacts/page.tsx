@@ -4,7 +4,7 @@ import CardView from "@/components/contact-persons/CardView";
 import ListView from "@/components/contact-persons/ListView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
-import SearchAndFilters from "@/components/shared/SearchAndFilters";
+
 import { useList } from "@/hooks/react-query/useList";
 import { usePermission } from "@/hooks/shared/usePermission";
 import { PersonResponse } from "@/types/person/person.type";

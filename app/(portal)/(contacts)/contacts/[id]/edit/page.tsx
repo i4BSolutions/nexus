@@ -21,6 +21,7 @@ import { useCreate } from "@/hooks/react-query/useCreate";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { RankInterface } from "@/types/person/rank/rank.type";
 import { DepartmentInterface } from "@/types/departments/department.type";
+import getAvatarUrl from "@/utils/getAvatarUrl";
 
 type Person = {
   id: string;
@@ -315,13 +316,13 @@ export default function ContactPersonEditPage() {
                 border: "1px dashed #D9D9D9",
               }}
             >
-              <Avatar
-                size={80}
-                icon={<UserOutlined />}
+              <img
+                src={getAvatarUrl(person?.name || "unknown")}
+                alt=""
                 style={{
-                  background: "#FFE8EC",
-                  color: "#FF6B81",
-                  flex: "0 0 auto",
+                  width: 80,
+                  height: 80,
+                  borderRadius: 50,
                 }}
               />
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>

@@ -16,6 +16,7 @@ import {
 } from "antd";
 import React from "react";
 import { useRouter } from "next/navigation";
+import getAvatarUrl from "@/utils/getAvatarUrl";
 
 export default function CardView({
   data,
@@ -80,16 +81,18 @@ export default function CardView({
                 <div
                   style={{
                     position: "absolute",
-                    left: 136,
+                    left: 126,
                     top: 10,
                     padding: 12,
                   }}
                 >
-                  <Avatar
-                    size={80}
-                    icon={<UserOutlined />}
+                  <img
+                    src={getAvatarUrl(item.name)}
+                    alt=""
                     style={{
-                      background: "#FF6B81",
+                      width: 80,
+                      height: 80,
+                      borderRadius: 50,
                     }}
                   />
                 </div>

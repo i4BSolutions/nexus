@@ -24,6 +24,7 @@ import { useList } from "@/hooks/react-query/useList";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { RankInterface } from "@/types/person/rank/rank.type";
 import { DepartmentInterface } from "@/types/departments/department.type";
+import getAvatarUrl from "@/utils/getAvatarUrl";
 
 export default function CreateContact() {
   const { message } = App.useApp();
@@ -161,13 +162,13 @@ export default function CreateContact() {
                 border: "1px dashed #D9D9D9",
               }}
             >
-              <Avatar
-                size={80}
-                icon={<UserOutlined />}
+              <img
+                src={getAvatarUrl("seed")}
+                alt=""
                 style={{
-                  background: "#FFE8EC",
-                  color: "#FF6B81",
-                  flex: "0 0 auto",
+                  width: 80,
+                  height: 80,
+                  borderRadius: 50,
                 }}
               />
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>

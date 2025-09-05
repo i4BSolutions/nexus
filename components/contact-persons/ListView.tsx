@@ -1,4 +1,5 @@
 import { PersonInterface } from "@/types/person/person.type";
+import getAvatarUrl from "@/utils/getAvatarUrl";
 import {
   EditOutlined,
   EllipsisOutlined,
@@ -82,13 +83,13 @@ export default function ListView({
                 }}
               >
                 {/* Avatar */}
-                <Avatar
-                  size={48}
-                  icon={<UserOutlined />}
+                <img
+                  src={getAvatarUrl(item.name)}
+                  alt=""
                   style={{
-                    background: "#FFE8EC",
-                    color: "#FF6B81",
-                    flex: "0 0 auto",
+                    width: 42,
+                    height: 42,
+                    borderRadius: 50,
                   }}
                 />
 

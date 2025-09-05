@@ -11,6 +11,8 @@ import ContactPersonDetailsCard from "@/components/contact-persons/details/Detai
 import { useState } from "react";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal";
 import Relationships from "@/components/contact-persons/details/Relationships";
+import { usePermission } from "@/hooks/shared/usePermission";
+import getAvatarUrl from "@/utils/getAvatarUrl";
 
 const ContactPersonDetailsPage = () => {
   const params = useParams();
@@ -19,7 +21,7 @@ const ContactPersonDetailsPage = () => {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const hasPermission = "can_view_contact_person_related_data";
+  const hasPermission = usePermission("can_view_contact_person_related_data");
 
   const {
     data: personData,
@@ -56,11 +58,19 @@ const ContactPersonDetailsPage = () => {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          marginBottom: 12,
+          marginTop: "12px",
         }}
       >
         <Space align="center">
-          <Avatar size={52} icon={<UserOutlined />} />
+          <img
+            src={getAvatarUrl(personData?.name || "unknown")}
+            alt=""
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 50,
+            }}
+          />
           <Space direction="vertical" size={0}>
             <Typography.Title level={3} style={{ marginBottom: 0 }}>
               {personData?.name}
@@ -71,38 +81,36 @@ const ContactPersonDetailsPage = () => {
           </Space>
         </Space>
 
-        {hasPermission && (
-          <Space>
-            <DeleteConfirmModal
-              open={isDeleteModalOpen}
-              title="Contact Person"
-              onCancel={() => setIsDeleteModalOpen(false)}
-              onConfirm={async () => {
-                await handleDelete();
-                setIsDeleteModalOpen(false);
-              }}
-            />
-            <Button
-              icon={<EditOutlined />}
-              onClick={() => {
-                router.push(`/contacts/${id}/edit`);
-              }}
-            >
-              Edit
-            </Button>
+        <Space>
+          <DeleteConfirmModal
+            open={isDeleteModalOpen}
+            title="Contact Person"
+            onCancel={() => setIsDeleteModalOpen(false)}
+            onConfirm={async () => {
+              await handleDelete();
+              setIsDeleteModalOpen(false);
+            }}
+          />
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => {
+              router.push(`/contacts/${id}/edit`);
+            }}
+          >
+            Edit
+          </Button>
 
-            <Button
-              icon={<StopOutlined />}
-              type="primary"
-              danger
-              onClick={() => {
-                setIsDeleteModalOpen(true);
-              }}
-            >
-              Deactivate
-            </Button>
-          </Space>
-        )}
+          <Button
+            icon={<StopOutlined />}
+            type="primary"
+            danger
+            onClick={() => {
+              setIsDeleteModalOpen(true);
+            }}
+          >
+            Deactivate
+          </Button>
+        </Space>
       </Space>
 
       {/* Tabs */}
