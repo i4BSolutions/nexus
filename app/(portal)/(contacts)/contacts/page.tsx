@@ -1,7 +1,7 @@
 "use client";
 
-import CardView from "@/components/contact-persons/details/CardView";
-import ListView from "@/components/contact-persons/details/ListView";
+import CardView from "@/components/contact-persons/CardView";
+import ListView from "@/components/contact-persons/ListView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 import SearchAndFilters from "@/components/shared/SearchAndFilters";

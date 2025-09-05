@@ -4,6 +4,7 @@ export interface PersonInterface {
   email?: string;
   department?: string;
   rank?: string;
+  status: boolean;
 }
 
 export interface PersonResponse {

@@ -1,0 +1,147 @@
+"use client";
+
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import HeaderSection from "@/components/shared/HeaderSection";
+import {
+  ArrowLeftOutlined,
+  ContactsOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  StopOutlined,
+  UserOutlined,
+  WarningOutlined,
+} from "@ant-design/icons";
+import { Avatar, Button, Space, Spin, Tabs, Typography } from "antd";
+import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useGetById } from "@/hooks/react-query/useGetById";
+import { PersonInterface } from "@/types/person/person.type";
+import ContactPersonDetailsCard from "@/components/contact-persons/details/DetailsCard";
+import { useState } from "react";
+import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal";
+import Relationships from "@/components/contact-persons/details/Relationships";
+
+const ContactPersonDetailsPage = () => {
+  const params = useParams();
+  const id = params?.id as string;
+  const router = useRouter();
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // need to fix
+  //   const hasPermission = "can_view_contact_person_related_data";
+  const hasPermission = true;
+
+  const {
+    data: personData,
+    isLoading: personLoading,
+    error: personError,
+    refetch: refetchPerson,
+  } = useGetById<PersonInterface>("persons", id, !!id);
+
+  if (personLoading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <Spin />
+      </div>
+    );
+  }
+
+  const handleDelete = async () => {
+    setIsDeleteModalOpen(false);
+    refetchPerson();
+  };
+
+  return (
+    <section className="max-w-7xl mx-auto">
+      <Breadcrumbs
+        items={[
+          { title: "Home", href: "/" },
+          { title: "Contacts", href: "/contacts" },
+        ]}
+      />
+
+      {/* Header */}
+      <Space
+        align="center"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 12,
+        }}
+      >
+        <Space align="center">
+          <Avatar size={52} icon={<UserOutlined />} />
+          <Space direction="vertical" size={0}>
+            <Typography.Title level={3} style={{ marginBottom: 0 }}>
+              {personData?.name}
+            </Typography.Title>
+            <Typography.Text type="secondary" style={{ marginBottom: 0 }}>
+              {personData?.rank}
+            </Typography.Text>
+          </Space>
+        </Space>
+
+        {hasPermission && (
+          <Space>
+            <DeleteConfirmModal
+              open={isDeleteModalOpen}
+              title="Contact Person"
+              onCancel={() => setIsDeleteModalOpen(false)}
+              onConfirm={async () => {
+                await handleDelete();
+                setIsDeleteModalOpen(false);
+              }}
+            />
+            <Button icon={<EditOutlined />} onClick={() => {}}>
+              Edit
+            </Button>
+
+            <Button
+              icon={<StopOutlined />}
+              type="primary"
+              danger
+              onClick={() => {
+                setIsDeleteModalOpen(true);
+              }}
+            >
+              Deactivate
+            </Button>
+          </Space>
+        )}
+      </Space>
+
+      {/* Tabs */}
+      <Tabs
+        size="large"
+        defaultActiveKey="details"
+        items={[
+          {
+            key: "details",
+            label: "Details",
+            children: (
+              <ContactPersonDetailsCard
+                name={personData?.name || ""}
+                email={personData?.email || ""}
+                rank={personData?.rank || ""}
+                department={personData?.department || ""}
+              />
+            ),
+          },
+          ...(hasPermission
+            ? [
+                {
+                  key: "relationships",
+                  label: "Relationships",
+                  children: <Relationships id={id} />,
+                },
+              ]
+            : []),
+        ]}
+      />
+    </section>
+  );
+};
+
+export default ContactPersonDetailsPage;
