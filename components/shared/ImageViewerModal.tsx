@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Image, Typography, Button } from "antd";
 import {
-  LeftOutlined,
-  RightOutlined,
   SwapOutlined,
   RotateLeftOutlined,
   RotateRightOutlined,
@@ -15,6 +13,8 @@ export type ViewerImage = {
   src: string;
   name?: string;
   key?: string | number;
+  mime?: string;
+  type?: string;
 };
 
 type Props = {
@@ -35,14 +35,25 @@ const ImageViewerModal: React.FC<Props> = ({
   const [visible, setVisible] = useState(open);
   const [current, setCurrent] = useState(start);
 
+  const isPdf = (e: ViewerImage) =>
+    e?.mime === "application/pdf" ||
+    e?.type === "pdf" ||
+    /\.pdf$/i.test(e?.name || "") ||
+    /\.pdf$/i.test(String(e?.key || ""));
+
+  const imageItems = useMemo(
+    () => (images || []).filter((e) => !isPdf(e)),
+    [images]
+  );
+
   useEffect(() => setVisible(open), [open]);
   useEffect(() => setCurrent(start), [start, open]);
 
   useEffect(() => {
     setCurrent((c) =>
-      images.length ? Math.min(Math.max(0, c), images.length - 1) : 0
+      imageItems.length ? Math.min(Math.max(0, c), imageItems.length - 1) : 0
     );
-  }, [images.length]);
+  }, [imageItems.length]);
 
   const getName = (idx: number) => {
     const given = images[idx]?.name;
@@ -59,7 +70,7 @@ const ImageViewerModal: React.FC<Props> = ({
   // Hidden nodes feed PreviewGroup
   const nodes = useMemo(
     () =>
-      images.map((it, i) => (
+      imageItems.map((it, i) => (
         <Image
           key={it.key ?? i}
           src={it.src}
@@ -67,8 +78,10 @@ const ImageViewerModal: React.FC<Props> = ({
           style={{ display: "none" }}
         />
       )),
-    [images]
+    [imageItems]
   );
+
+  if (!imageItems.length) return null;
 
   return (
     <>
@@ -76,6 +89,7 @@ const ImageViewerModal: React.FC<Props> = ({
         preview={{
           visible,
           current,
+          keyboard: true,
           onVisibleChange: (v) => {
             setVisible(v);
             if (!v) onClose();
