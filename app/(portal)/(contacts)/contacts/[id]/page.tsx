@@ -2,7 +2,7 @@
 
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import { EditOutlined, StopOutlined, UserOutlined } from "@ant-design/icons";
-import { Avatar, Button, Space, Spin, Tabs, Typography } from "antd";
+import { Avatar, Button, message, Space, Spin, Tabs, Typography } from "antd";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useGetById } from "@/hooks/react-query/useGetById";
@@ -13,6 +13,7 @@ import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal";
 import Relationships from "@/components/contact-persons/details/Relationships";
 import { usePermission } from "@/hooks/shared/usePermission";
 import getAvatarUrl from "@/utils/getAvatarUrl";
+import { useUpdate } from "@/hooks/react-query/useUpdate";
 
 const ContactPersonDetailsPage = () => {
   const params = useParams();
@@ -30,6 +31,8 @@ const ContactPersonDetailsPage = () => {
     refetch: refetchPerson,
   } = useGetById<PersonInterface>("persons", id, !!id);
 
+  const update = useUpdate("persons/deactivate");
+
   if (personLoading) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -39,8 +42,17 @@ const ContactPersonDetailsPage = () => {
   }
 
   const handleDelete = async () => {
-    setIsDeleteModalOpen(false);
-    refetchPerson();
+    try {
+      await update.mutateAsync({ id, data: { status: false } });
+      message.success("Contact person deactivated successfully");
+    } catch (error) {
+      message.error(
+        "Failed to deactivate contact person! There might be related data."
+      );
+    } finally {
+      setIsDeleteModalOpen(false);
+      refetchPerson();
+    }
   };
 
   return (
@@ -100,16 +112,20 @@ const ContactPersonDetailsPage = () => {
             Edit
           </Button>
 
-          <Button
-            icon={<StopOutlined />}
-            type="primary"
-            danger
-            onClick={() => {
-              setIsDeleteModalOpen(true);
-            }}
-          >
-            Deactivate
-          </Button>
+          {personData?.status !== false ? (
+            <Button
+              icon={<StopOutlined />}
+              type="primary"
+              danger
+              onClick={() => {
+                setIsDeleteModalOpen(true);
+              }}
+            >
+              Deactivate
+            </Button>
+          ) : (
+            <></>
+          )}
         </Space>
       </Space>
 
