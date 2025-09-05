@@ -1,5 +1,4 @@
-
-  create table "public"."stock_in_evidence" (
+create table "public"."stock_in_evidence" (
     "id" uuid not null default gen_random_uuid(),
     "stock_in_id" bigint not null,
     "file_url" text not null,

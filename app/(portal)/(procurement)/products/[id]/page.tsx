@@ -38,7 +38,7 @@ import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schema
 import { ProductFormInput } from "@/schemas/products/products.schemas";
 import { CategoryInterface } from "@/types/category/category.type";
 import { PurchaseOrderRegionsResponse } from "@/types/purchase-order/purchase-order-region.type";
-import { PersonInterface } from "@/types/person/person.type";
+import { PersonInterface, PersonResponse } from "@/types/person/person.type";
 import {
   ProductCurrencyInterface,
   ProductHistoryPaginatedResponse,
@@ -47,6 +47,7 @@ import {
 } from "@/types/product/product.type";
 
 import { downloadBlob, toCSV } from "@/utils/product/exportCSV";
+import { useList } from "@/hooks/react-query/useList";
 
 const ProductDetailPage = () => {
   const hasPermission = usePermission("can_manage_products_suppliers");
@@ -251,9 +252,9 @@ const ProductDetailPage = () => {
 
   const regions = regionsRaw as PurchaseOrderRegionsResponse[];
 
-  const { data: contactPersonsRaw } = useGetAll("persons", ["contact_persons"]);
-
-  const contactPersons = contactPersonsRaw as PersonInterface[];
+  const { data: contactPersons } = useList<PersonResponse>("persons", {
+    pageSize: "all" as any,
+  });
 
   const filtersForUI = useMemo(
     () => [
@@ -290,7 +291,7 @@ const ProductDetailPage = () => {
         value: dynamicPricingFilters.contact_person, // 👈 id
         options: [
           { label: "All Contacts Person", value: "" },
-          ...(contactPersons?.map((person: any) => ({
+          ...(contactPersons?.items.map((person: any) => ({
             label: person.name,
             value: person.id, // id
           })) || []),

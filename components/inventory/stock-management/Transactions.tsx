@@ -13,6 +13,7 @@ import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
 import {
   CalendarOutlined,
   DownCircleOutlined,
+  SwapOutlined,
   UpCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
@@ -27,7 +28,6 @@ import {
   Space,
   Tag,
   Typography,
-  Modal,
   Spin,
 } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
@@ -35,6 +35,9 @@ import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import VoidTransactionModal from "./VoidModal";
 import { VoidPreview } from "@/types/inventory/stock-transaction.type";
+import ImageViewerModal from "@/components/shared/ImageViewerModal";
+import Modal from "@/components/shared/Modal";
+import TransferDetailsModal from "./TransferDetailsModal";
 
 const { RangePicker } = DatePicker;
 
@@ -58,6 +61,11 @@ const Transactions = () => {
   const [voidOpen, setVoidOpen] = useState(false);
   const [voidTx, setVoidTx] = useState<VoidPreview | null>(null);
   const [voidLoading, setVoidLoading] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerImages, setViewerImages] = useState<
+    { src: string; name: string }[]
+  >([]);
+  const [viewerStart, setViewerStart] = useState(0);
 
   const {
     data: stockTransactionsData,
@@ -123,6 +131,12 @@ const Transactions = () => {
   const handleView = (id: string) => {
     setSelectedTransactionId(id);
     setIsModalOpen(true);
+  };
+
+  const openViewer = (images: any[], startIndex = 0) => {
+    setViewerImages(images.map((img) => ({ src: img.url, name: img.name })));
+    setViewerStart(startIndex);
+    setViewerOpen(true);
   };
 
   const {
@@ -268,7 +282,72 @@ const Transactions = () => {
         title: "Evidence",
         dataIndex: "evidence",
         key: "evidence",
-        render: (_) => <Typography.Text>-</Typography.Text>,
+        render: (evidence: any[]) => {
+          if (!evidence || evidence.length === 0) {
+            return <Typography.Text>-</Typography.Text>;
+          }
+
+          const imageEvidence = evidence.filter((e) =>
+            e.mime?.startsWith("image/")
+          );
+          const first = imageEvidence[0];
+          const count = imageEvidence.length;
+
+          if (!first) {
+            return (
+              <a
+                href={evidence[0].url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 12, color: "#1677ff" }}
+              >
+                {evidence[0].name || "File"}
+              </a>
+            );
+          }
+
+          return (
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                cursor: "pointer",
+                position: "relative",
+              }}
+              onClick={() => openViewer(imageEvidence, 0)}
+            >
+              <img
+                src={first.url}
+                alt={first.name}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 8,
+                  objectFit: "cover",
+                }}
+              />
+
+              {count > 1 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "rgba(0,0,0,.45)",
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: 14,
+                  }}
+                >
+                  +{count - 1}
+                </div>
+              )}
+            </div>
+          );
+        },
       },
       {
         title: "ACTION",
@@ -409,55 +488,27 @@ const Transactions = () => {
         tx={voidTx}
         onCancel={() => {
           setVoidOpen(false);
-          setSelectedTransactionId(null);
           setVoidTx(null);
         }}
         onConfirm={confirmVoid}
       />
 
-      {/* Transaction Details Modal */}
-      <Modal
+      <TransferDetailsModal
         open={isModalOpen}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setSelectedTransactionId(null);
-        }}
-        footer={null}
-        title="Transaction Details"
-      >
-        {transactionDetailsLoading ? (
-          <Spin />
-        ) : transactionDetailsError ? (
-          <Typography.Text type="danger">
-            Error loading details.
-          </Typography.Text>
-        ) : transactionDetails ? (
-          <div>
-            <Typography.Text strong>Date:</Typography.Text>{" "}
-            {transactionDetails.date} {transactionDetails.time}
-            <br />
-            <Typography.Text strong>Product:</Typography.Text>{" "}
-            {transactionDetails.name} ({transactionDetails.sku})
-            <br />
-            <Typography.Text strong>Warehouse:</Typography.Text>{" "}
-            {transactionDetails.warehouse}
-            <br />
-            <Typography.Text strong>Direction:</Typography.Text>{" "}
-            {transactionDetails.direction}
-            <br />
-            <Typography.Text strong>Quantity:</Typography.Text>{" "}
-            {transactionDetails.quantity}
-            <br />
-            <Typography.Text strong>Reference:</Typography.Text>{" "}
-            {transactionDetails.reference}
-            <br />
-            <Typography.Text strong>Note:</Typography.Text>{" "}
-            {transactionDetails.note}
-            <br />
-            {/* Add more fields as needed */}
-          </div>
-        ) : null}
-      </Modal>
+        setOpen={setIsModalOpen}
+        data={transactionDetails}
+        isLoading={transactionDetailsLoading}
+        onVoid={() => openVoidModal(selectedTransactionId!)}
+      />
+
+      {viewerOpen && (
+        <ImageViewerModal
+          open={viewerOpen}
+          images={viewerImages}
+          start={viewerStart}
+          onClose={() => setViewerOpen(false)}
+        />
+      )}
     </>
   );
 };

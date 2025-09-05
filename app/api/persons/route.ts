@@ -50,6 +50,7 @@ export async function GET(
     name: item.name,
     email: item.email,
     rank: item.rank?.name || "",
+    status: item.status,
   }));
 
   const response: PersonResponse = {
