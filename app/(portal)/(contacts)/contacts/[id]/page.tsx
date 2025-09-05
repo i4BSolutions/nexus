@@ -1,17 +1,7 @@
 "use client";
 
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import HeaderSection from "@/components/shared/HeaderSection";
-import {
-  ArrowLeftOutlined,
-  ContactsOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined,
-  StopOutlined,
-  UserOutlined,
-  WarningOutlined,
-} from "@ant-design/icons";
+import { EditOutlined, StopOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, Button, Space, Spin, Tabs, Typography } from "antd";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";

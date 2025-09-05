@@ -38,7 +38,7 @@ import ImageViewerModal, {
   ViewerImage,
 } from "@/components/shared/ImageViewerModal";
 import { useGetAll } from "@/hooks/react-query/useGetAll";
-import { PersonInterface } from "@/types/person/person.type";
+import { PersonInterface, PersonResponse } from "@/types/person/person.type";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -107,8 +107,9 @@ const StockOut = ({
 
   const inventoryItems = (inventoryDataRaw as InventoryInterface[]) || [];
 
-  const { data: contactPersonsRaw } = useGetAll("persons", ["contact_persons"]);
-  const contactPersons = (contactPersonsRaw as PersonInterface[]) || [];
+  const { data: contactPersons } = useGetAll<PersonResponse>("persons", [
+    "contact_persons",
+  ]);
 
   useEffect(() => {
     setEvidenceMap({});
@@ -872,7 +873,7 @@ const StockOut = ({
               rules={[{ required: true, message: "Please select approved by" }]}
             >
               <Select allowClear placeholder="Select approved by">
-                {contactPersons.map((c) => (
+                {contactPersons?.items.map((c) => (
                   <Option key={c.id} value={c.id}>
                     {c.name}
                   </Option>

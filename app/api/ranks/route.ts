@@ -14,7 +14,7 @@ export async function GET(
     .select("*");
 
   if (dbError) {
-    return NextResponse.json(error("Failed to fetch ranks", 500), {
+    return NextResponse.json(error(dbError.message, 500), {
       status: 500,
     });
   }
