@@ -749,7 +749,7 @@ const StockInForm = ({
         onCancel={() => setOpenUploadModal((prev) => !prev)}
         footer={null}
         centered
-        wrapClassName="centered-modal"
+        // wrapClassName="centered-modal"
       >
         <Typography.Text
           style={{
@@ -762,7 +762,7 @@ const StockInForm = ({
         >
           <span style={{ color: "red" }}>*</span> Evidence Photo
         </Typography.Text>
-        <Dragger {...props}>
+        <Dragger {...props} style={{ width: "100%", wordBreak: "break-all" }}>
           <p className="ant-upload-drag-icon">
             <UploadOutlined style={{ color: "#1890FF" }} color="#1890FF" />
           </p>
