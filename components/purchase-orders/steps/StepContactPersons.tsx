@@ -8,7 +8,7 @@ import { useCreate } from "@/hooks/react-query/useCreate";
 
 import PersonCreateModal from "@/components/purchase-orders/PersonCreateModal";
 
-import { PersonInterface } from "@/types/person/person.type";
+import { PersonInterface, PersonResponse } from "@/types/person/person.type";
 import { PlusCircleOutlined } from "@ant-design/icons";
 
 interface StepContactPersonsProps {
@@ -54,10 +54,14 @@ const StepContactPersons = forwardRef<
   };
 
   const {
-    data: personsData,
+    data: personsDataRaw,
     isLoading: personsLoading,
     refetch: refetchPersons,
-  } = useList("persons");
+  } = useList("persons", {
+    pageSize: "all" as any,
+  });
+
+  const personsData = personsDataRaw as PersonResponse;
 
   const { mutate: createPerson } = useCreate("persons");
 
@@ -68,7 +72,7 @@ const StepContactPersons = forwardRef<
 
   // Helper to filter options for each dropdown
   const getFilteredOptions = (exclude: (string | number | undefined)[]) => {
-    return (personsData as PersonInterface[] | undefined)
+    return (personsData?.items as PersonInterface[] | undefined)
       ?.filter((person) => !exclude.includes(person.id))
       .map((person) => ({
         label: person.name,

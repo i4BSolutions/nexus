@@ -1,28 +1,24 @@
 import { apiGet } from "@/lib/react-query/apiClient";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 type PaginatedQueryParams = {
   page?: number;
-  pageSize?: number;
+  pageSize?: number | "all";
 };
 
 export function usePaginatedById<T>(
   resource: string,
-  id: string,
+  id?: string | number,
   { page = 1, pageSize = 10 }: PaginatedQueryParams = {},
   enabled = true
 ) {
-  const queryParams: Record<string, string> = {
-    page: String(page),
-    pageSize: String(pageSize),
-  };
-
-  const queryString = new URLSearchParams(queryParams).toString();
+  const queryKey = [resource, id, "paginated", page, pageSize];
 
   return useQuery({
-    queryKey: [resource, id, "paginated"],
-    queryFn: () => apiGet<T>(`/api/${resource}/${id}?${queryString}`),
-    enabled,
-    placeholderData: (previousData) => previousData,
+    queryKey,
+    enabled: enabled && !!id,
+    placeholderData: keepPreviousData,
+    queryFn: () =>
+      apiGet<T>(`/api/${resource}/${id}?page=${page}&pageSize=${pageSize}`),
   });
 }

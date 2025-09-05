@@ -40,6 +40,13 @@ const customAntTheme: ThemeConfig = {
       trackBg: "#FFFFFF",
       trackPadding: 0,
     },
+    Collapse: {
+      headerPadding: 0,
+      contentPadding: 0,
+      headerBg: "#FFFFFF",
+      contentBg: "#FFFFFF",
+      borderlessContentPadding: 0,
+    },
   },
 };
 
