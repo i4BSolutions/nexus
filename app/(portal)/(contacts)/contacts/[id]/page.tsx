@@ -84,7 +84,12 @@ const ContactPersonDetailsPage = () => {
                 setIsDeleteModalOpen(false);
               }}
             />
-            <Button icon={<EditOutlined />} onClick={() => {}}>
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => {
+                router.push(`/contacts/${id}/edit`);
+              }}
+            >
               Edit
             </Button>
 

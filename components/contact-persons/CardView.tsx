@@ -50,7 +50,7 @@ export default function CardView({
               label: "Edit",
               icon: <EditOutlined />,
               onClick: () => {
-                console.log("Edit");
+                router.push(`/contacts/${item.id}/edit`);
               },
             },
           ];
