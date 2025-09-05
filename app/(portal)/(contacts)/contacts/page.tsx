@@ -12,8 +12,11 @@ import { RankInterface } from "@/types/person/rank/rank.type";
 import { ContactsOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Flex, Input, Segmented, Select } from "antd";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ContactsPage() {
+  const router = useRouter();
+
   const hasPermission = true;
 
   const [viewMode, setViewMode] = useState<"Card" | "List">("Card");
@@ -72,7 +75,7 @@ export default function ContactsPage() {
         description="Manage contacts referenced across system"
         icon={<ContactsOutlined />}
         onAddNew={() => {
-          console.log("HI");
+          router.push("/contacts/create");
         }}
         hasPermission={true}
         buttonText="New Contact"
