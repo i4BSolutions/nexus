@@ -53,7 +53,9 @@ export default function ListView({
               key: "edit",
               label: "Edit",
               icon: <EditOutlined />,
-              onClick: () => console.log("Edit"),
+              onClick: () => {
+                router.push(`/contacts/${item.id}/edit`);
+              },
             },
           ];
 
