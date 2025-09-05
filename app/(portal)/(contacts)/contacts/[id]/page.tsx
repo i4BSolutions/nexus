@@ -19,9 +19,7 @@ const ContactPersonDetailsPage = () => {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // need to fix
-  //   const hasPermission = "can_view_contact_person_related_data";
-  const hasPermission = true;
+  const hasPermission = "can_view_contact_person_related_data";
 
   const {
     data: personData,

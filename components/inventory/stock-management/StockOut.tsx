@@ -39,6 +39,7 @@ import ImageViewerModal, {
 } from "@/components/shared/ImageViewerModal";
 import { useGetAll } from "@/hooks/react-query/useGetAll";
 import { PersonInterface, PersonResponse } from "@/types/person/person.type";
+import { useList } from "@/hooks/react-query/useList";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -107,9 +108,9 @@ const StockOut = ({
 
   const inventoryItems = (inventoryDataRaw as InventoryInterface[]) || [];
 
-  const { data: contactPersons } = useGetAll<PersonResponse>("persons", [
-    "contact_persons",
-  ]);
+  const { data: contactPersons } = useList<PersonResponse>("persons", {
+    pageSize: "all" as any,
+  });
 
   useEffect(() => {
     setEvidenceMap({});

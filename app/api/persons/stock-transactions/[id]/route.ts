@@ -60,6 +60,35 @@ export async function GET(
     );
   }
 
+  const transactionIds = data.map((tx) => tx.id);
+
+  let outEvidenceMap: Record<number, any[]> = {};
+
+  if (transactionIds.length > 0) {
+    const { data: outAssets } = await supabase
+      .from("stock_transaction_assets")
+      .select(
+        "transaction_id, storage_key, original_filename, mime, size_bytes, type"
+      )
+      .in("transaction_id", transactionIds);
+
+    if (outAssets) {
+      outEvidenceMap = outAssets.reduce((acc, a) => {
+        if (!acc[a.transaction_id]) acc[a.transaction_id] = [];
+        acc[a.transaction_id].push({
+          key: a.storage_key,
+          name: a.original_filename,
+          mime: a.mime,
+          size: a.size_bytes,
+          type: a.type,
+          // always proxy through /api/uploads/direct
+          url: `/api/uploads/direct?key=${encodeURIComponent(a.storage_key)}`,
+        });
+        return acc;
+      }, {} as Record<number, any[]>);
+    }
+  }
+
   const items: RelatedTransactionItem[] =
     (data || []).map((row: any) => ({
       id: row.id,
@@ -71,7 +100,7 @@ export async function GET(
       quantity: Number(row.quantity || 0),
       reference: row.reason ?? null,
       note: row.note ?? null,
-      evidence_count: Number(row.evidence_photo_count || 0),
+      evidence: outEvidenceMap[row.id],
     })) ?? [];
 
   const response: RelatedTransactionResponse = {

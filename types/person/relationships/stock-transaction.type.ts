@@ -8,7 +8,14 @@ export interface RelatedTransactionItem {
   quantity: number;
   reference: string | null;
   note: string | null;
-  evidence_count: number;
+  evidence: Array<{
+    key: string;
+    name?: string | null;
+    mime?: string | null;
+    size?: number | null;
+    type?: string | null; // "photo" | "pdf"
+    url: string;
+  }>;
 }
 
 export interface RelatedTransactionResponse {
