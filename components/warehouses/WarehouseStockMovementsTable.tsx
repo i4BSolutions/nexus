@@ -10,6 +10,7 @@ import {
 } from "antd";
 import { CalendarOutlined, TagOutlined } from "@ant-design/icons";
 import SearchAndFilters from "@/components/shared/SearchAndFilters";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 interface Props {
   data: any[];
@@ -74,7 +75,7 @@ export default function WarehouseStockMovementsTable({
       dataIndex: "quantity",
       key: "quantity",
       align: "right",
-      render: (val) => (val != null ? val.toLocaleString() : "0"),
+      render: (val) => (val != null ? formatWithThousandSeparator(val) : "0"),
     },
     {
       title: "REFERENCE",
