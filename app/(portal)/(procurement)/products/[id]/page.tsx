@@ -464,6 +464,7 @@ const ProductDetailPage = () => {
             label: "Details",
             children: (
               <DetailsCard
+                id={Number(id)}
                 sku={productDetail.sku}
                 category={productDetail.category}
                 unit_price={productDetail.unit_price}

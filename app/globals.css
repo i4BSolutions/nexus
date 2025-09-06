@@ -28,6 +28,10 @@
   display: none !important;
 }
 
+.ant-form-item-required-mark-optional::after {
+  display: none !important;
+}
+
 .custom-carousel .slick-prev,
 .custom-carousel .slick-next {
   z-index: 1000;
