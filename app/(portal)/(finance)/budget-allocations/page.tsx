@@ -69,7 +69,9 @@ export default function BudgetAllocationsPage() {
       const stats: StatItem[] = [
         {
           title: "Total Allocations",
-          value: budgetAllocationData.statistics.totalAllocations,
+          value: formatWithThousandSeparator(
+            budgetAllocationData.statistics.totalAllocations
+          ),
           icon: <DollarCircleOutlined />,
           bgColor: "#36CFC9",
           gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFFFFF 100%)",

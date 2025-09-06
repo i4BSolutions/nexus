@@ -2,6 +2,7 @@
 
 import { BudgetAllocationsInterface } from "@/types/budget-allocations/budget-allocations.type";
 import { ProductCurrencyInterface } from "@/types/product/product.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import {
   CalendarOutlined,
   CheckCircleFilled,
@@ -256,11 +257,11 @@ const BudgetAllocationForm = ({
       dataIndex: "amount_local",
       render: (_: any, record: any) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{`${record.amount_local.toFixed(
-            2
+          <div style={{ fontWeight: 500 }}>{`${formatWithThousandSeparator(
+            record.amount_local
           )} ${record.currency_code}`}</div>
           <div style={{ fontSize: 12, color: "#8c8c8c" }}>
-            ({record.amount_usd.toFixed(2)} USD)
+            ({formatWithThousandSeparator(record.amount_usd)} USD)
           </div>
         </div>
       ),
