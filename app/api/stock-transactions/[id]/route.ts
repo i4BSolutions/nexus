@@ -114,7 +114,7 @@ export async function GET(
       sku: data.product?.sku ?? "",
       name: data.product?.name ?? "",
       warehouse: data.warehouse?.name ?? "",
-      direction: data.type === "in" ? "Stock In" : "Stock Out",
+      direction: data.type === "IN" ? "Stock In" : "Stock Out",
       approved_by: data.approved_by?.name ?? null,
       approval_order_no: data.approval_order_no ?? null,
       destination_warehouse: data.destination_warehouse?.name ?? null,
