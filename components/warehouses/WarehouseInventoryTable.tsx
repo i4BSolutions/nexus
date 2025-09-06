@@ -14,6 +14,7 @@ import SearchAndFilters from "@/components/shared/SearchAndFilters";
 import { useList } from "@/hooks/react-query/useList";
 import { ProductInterface } from "@/types/product/product.type";
 import { useState } from "react";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 interface Props {
   data: any[];
@@ -96,28 +97,29 @@ export default function WarehouseInventoryTable({
       dataIndex: "current_stock",
       key: "current_stock",
       align: "right",
-      render: (val) => (val != null ? val.toLocaleString() : "0"),
+      render: (val) => (val != null ? formatWithThousandSeparator(val) : "0"),
     },
     {
       title: "INCOMING",
       dataIndex: "incoming",
       key: "incoming",
       align: "right",
-      render: (val) => (val != null ? val.toLocaleString() : "0"),
+      render: (val) => (val != null ? formatWithThousandSeparator(val) : "0"),
     },
     {
       title: "OUTGOING",
       dataIndex: "outgoing",
       key: "outgoing",
       align: "right",
-      render: (val) => (val != null ? val.toLocaleString() : "0"),
+      render: (val) => (val != null ? formatWithThousandSeparator(val) : "0"),
     },
     {
       title: "TOTAL VALUE",
       dataIndex: "total_value",
       key: "total_value",
       align: "right",
-      render: (val) => (val != null ? `${val.toLocaleString()} USD` : "0 USD"),
+      render: (val) =>
+        val != null ? `${formatWithThousandSeparator(val)} USD` : "0 USD",
     },
   ];
 

@@ -80,7 +80,7 @@ export default function PurchaseOrdersPage() {
       setStatItems([
         {
           title: "Total POs",
-          value: poData.statistics.total,
+          value: formatWithThousandSeparator(poData.statistics.total),
           icon: <ShoppingCartOutlined />,
           bgColor: "#40A9FF",
           gradient: "linear-gradient(90deg, #E6F7FF 0%, #FFF 100%)",

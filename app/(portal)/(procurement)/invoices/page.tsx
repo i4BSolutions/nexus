@@ -118,7 +118,7 @@ export default function InvoicesPage() {
       setStatItems([
         {
           title: "Total Invoices",
-          value: piData.statistics.total_invoices,
+          value: formatWithThousandSeparator(piData.statistics.total_invoices),
           icon: <FileTextOutlined />,
           bgColor: "#FFC53D",
           gradient: "linear-gradient(90deg, #FFFBE6 0%, #FFF 100%)",
