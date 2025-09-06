@@ -333,7 +333,7 @@ export default function ProductsPage() {
         stats={[
           {
             title: "Total Products",
-            value: counts.total,
+            value: formatWithThousandSeparator(counts.total),
             icon: <TagsOutlined />,
             bgColor: "#40A9FF",
             gradient: "linear-gradient(90deg, #e6f7ff 0%, #fff 100%)",
@@ -341,7 +341,7 @@ export default function ProductsPage() {
           },
           {
             title: "Low Stock Products",
-            value: counts.lowStock,
+            value: formatWithThousandSeparator(counts.lowStock),
             icon: <ExclamationCircleOutlined />,
             bgColor: "#FFA940",
             gradient: "linear-gradient(90deg, #fffbe6 0%, #fff 100%)",
@@ -349,7 +349,7 @@ export default function ProductsPage() {
           },
           {
             title: "Out of Stock Products",
-            value: counts.outOfStock,
+            value: formatWithThousandSeparator(counts.outOfStock),
             icon: <ExclamationCircleOutlined />,
             bgColor: "#FF4D4F",
             gradient: "linear-gradient(90deg, #fff1f0 0%, #fff 100%)",

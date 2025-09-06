@@ -28,6 +28,7 @@ import { useCreate } from "@/hooks/react-query/useCreate";
 import { useList } from "@/hooks/react-query/useList";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { usePermission } from "@/hooks/shared/usePermission";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 const formatField = (value: string | null | undefined) =>
   value?.trim() ? value : "N/A";
@@ -242,7 +243,7 @@ export default function SuppliersPage() {
         stats={[
           {
             title: "Total Suppliers",
-            value: counts.total,
+            value: formatWithThousandSeparator(counts.total),
             icon: <ShopOutlined />,
             bgColor: "#40A9FF",
             gradient: "linear-gradient(90deg, #e6f7ff 0%, #fff 100%)",
@@ -250,7 +251,7 @@ export default function SuppliersPage() {
           },
           {
             title: "Active Suppliers",
-            value: counts.active,
+            value: formatWithThousandSeparator(counts.active),
             icon: <CheckCircleOutlined />,
             bgColor: "#73D13D",
             gradient: "linear-gradient(90deg, #f6ffed 0%, #fff 100%)",
@@ -258,7 +259,7 @@ export default function SuppliersPage() {
           },
           {
             title: "Inactive Suppliers",
-            value: counts.inactive,
+            value: formatWithThousandSeparator(counts.inactive),
             icon: <CloseCircleOutlined />,
             bgColor: "#D9D9D9",
             gradient: "linear-gradient(90deg, #fafafa 0%, #fff 100%)",
