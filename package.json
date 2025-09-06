@@ -12,6 +12,7 @@
     "@ant-design/icons": "~5.6.1",
     "@ant-design/nextjs-registry": "^1.0.2",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@aws-sdk/client-sesv2": "^3.882.0",
     "@hookform/resolvers": "^5.1.1",
     "@react-pdf/renderer": "^4.3.0",
     "@supabase/ssr": "^0.6.1",
