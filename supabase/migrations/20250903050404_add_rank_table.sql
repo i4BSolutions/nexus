@@ -11,8 +11,6 @@ alter table "public"."person" drop column "rank";
 
 alter table "public"."person" add column "rank_id" bigint;
 
-alter table "public"."user_profiles" drop column "banned_until";
-
 CREATE UNIQUE INDEX person_rank_pkey ON public.person_rank USING btree (id);
 
 alter table "public"."person_rank" add constraint "person_rank_pkey" PRIMARY KEY using index "person_rank_pkey";
