@@ -83,7 +83,7 @@ export async function GET(
           (a.mime_type || "").toLowerCase() === "application/pdf"
             ? "pdf"
             : "photo",
-        url: `/api/uploads/direct?key=${encodeURIComponent(a.file_key)}`,
+        url: `/api/uploads/direct?key=${a.file_key}`,
       }));
     }
   } else {
@@ -99,7 +99,7 @@ export async function GET(
         mime: a.mime,
         size: a.size_bytes,
         type: a.type,
-        url: `/api/uploads/direct?key=${encodeURIComponent(a.storage_key)}`,
+        url: `/api/uploads/direct?key=${a.storage_key}`,
       }));
     }
   }

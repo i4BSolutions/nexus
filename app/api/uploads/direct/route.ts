@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
     const { searchParams } = req.nextUrl;
-    const key = searchParams.get("key");
+    const rawKey = searchParams.get("key");
+    const key = rawKey ? decodeURIComponent(rawKey) : null;
 
     if (!key) {
       return NextResponse.json(error("Missing key", 400), { status: 400 });
