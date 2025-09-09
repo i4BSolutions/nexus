@@ -30,6 +30,7 @@ function CreatePurchaseOrderPageContent() {
   const [isLoadingDraft, setIsLoadingDraft] = useState(false);
   const currentStepRef = useRef<any>(null);
   const [showEmailModal, setEmailModal] = useState(false);
+  const [createdPoId, setCreatedPoId] = useState<any>(null);
 
   // Load draft if specified in URL
   useEffect(() => {
@@ -253,6 +254,7 @@ function CreatePurchaseOrderPageContent() {
             onNext={handleNext}
             onBack={handleBack}
             formData={formData}
+            setTestData={setCreatedPoId}
           />
         );
       default:
@@ -360,7 +362,7 @@ function CreatePurchaseOrderPageContent() {
       {/* Email Modal */}
       <PoEmailModal
         showEmailModal={showEmailModal}
-        poEmailData={formData}
+        poEmailData={createdPoId}
         setEmailModal={setEmailModal}
       />
     </section>

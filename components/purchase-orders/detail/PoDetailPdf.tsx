@@ -116,10 +116,6 @@ export default function PoDetailPDF({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* <View style={styles.orgHeader}>
-          <Image src={""} style={styles.orgLogo} />
-        </View> */}
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.iconContainer}>
             <Svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -137,7 +133,7 @@ export default function PoDetailPDF({
             </Svg>
           </View>
           <View>
-            <Text style={styles.headerTitle}>Purchase Order Details</Text>
+            <Text style={styles.headerTitle}>{data.purchase_order_no}</Text>
             <Text style={styles.headerSubtitle}>
               Details and information about this purchase order
             </Text>

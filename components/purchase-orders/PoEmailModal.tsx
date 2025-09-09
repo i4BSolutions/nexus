@@ -98,7 +98,6 @@ export default function PoEmailModal({
   };
 
   const onFinish: FormProps<EmailFieldType>["onFinish"] = (values) => {
-    console.log("Success:", values);
     sendEmail(
       {
         to: values.to,
@@ -106,9 +105,7 @@ export default function PoEmailModal({
         bcc: values.bcc || [],
         subject: values.subject,
         body: values.body,
-        // For future PDF implementation
-        // pdfFileName: `Nexus_PO_${poEmailData?.po_number || "NoNumber"}.pdf`,
-        // pdfContent: pdfBuffer.toString("base64"),
+        po_id: poEmailData?.id || "",
       },
       {
         onSuccess: () => {

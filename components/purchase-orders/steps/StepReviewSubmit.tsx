@@ -23,6 +23,7 @@ interface StepReviewSubmitProps {
   onNext: (values: any) => void;
   onBack: () => void;
   formData?: any;
+  setTestData?: (data: any) => void;
 }
 
 export interface StepReviewSubmitRef {
@@ -31,7 +32,7 @@ export interface StepReviewSubmitRef {
 }
 
 const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
-  ({ onNext, onBack, formData }, ref) => {
+  ({ onNext, onBack, formData, setTestData }, ref) => {
     const { message } = App.useApp();
 
     const [form] = Form.useForm();
@@ -128,6 +129,12 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
         }
 
         const data = await response.json();
+        console.log("Created PO:", data);
+        setTestData &&
+          setTestData({
+            id: data.data.id,
+            po_number: data.data.purchase_order_no,
+          });
         onNext(data);
       } catch (error: any) {
         message.error(error.message || "Failed to create purchase order");
