@@ -100,7 +100,7 @@ const StockManagementPage = () => {
               const msg = Array.isArray(response)
                 ? response[0]?.message
                 : "Stock In completed successfully!";
-              message.success(msg || "Stock In completed successfully!");
+              message.success(msg);
             } catch (err: any) {
               const apiMessage =
                 err?.response?.data?.message ||
