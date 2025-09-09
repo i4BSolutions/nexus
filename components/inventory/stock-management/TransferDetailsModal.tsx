@@ -300,6 +300,7 @@ const TransferDetailsModal: React.FC<TransactionDetailsModalProps> = ({
                   return (
                     <Col key={item.url}>
                       <Image
+                        unoptimized
                         src={item.url}
                         alt={item.name ? item.name : "Evidence"}
                         style={{
