@@ -219,6 +219,18 @@ export default function UserEditPage() {
         onValuesChange={(changed) => {
           const changedKey = Object.keys(changed)[0];
 
+          if (changedKey.startsWith("can_stock_") && changed[changedKey]) {
+            form.setFieldsValue({ can_view_stock: true });
+          }
+
+          if (changedKey.startsWith("can_manage_") && changed[changedKey]) {
+            const correspondingViewKey = changedKey.replace(
+              "can_manage_",
+              "can_view_"
+            );
+            form.setFieldsValue({ [correspondingViewKey]: true });
+          }
+
           if (changed) {
             const hasValidationError = form
               .getFieldsError()
@@ -227,17 +239,6 @@ export default function UserEditPage() {
               changed[changedKey] !==
               initialValues[changedKey as keyof typeof initialValues];
             setDisabled(hasValidationError || !isValueChanged);
-          }
-
-          if (changedKey.startsWith("can_stock_") && changed[changedKey]) {
-            form.setFieldsValue({ can_view_stock: true });
-          }
-          if (changedKey.startsWith("can_manage_") && changed[changedKey]) {
-            const correspondingViewKey = changedKey.replace(
-              "can_manage_",
-              "can_view_"
-            );
-            form.setFieldsValue({ [correspondingViewKey]: true });
           }
         }}
       >
