@@ -1020,7 +1020,7 @@ const StockOut = ({
         onCancel={() => setOpenUploadModal(false)}
         footer={null}
         centered
-        wrapClassName="centered-modal"
+        // wrapClassName="centered-modal"
       >
         <Typography.Text
           style={{
