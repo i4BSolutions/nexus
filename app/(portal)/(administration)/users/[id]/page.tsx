@@ -5,6 +5,7 @@ import UserActivityLogTab from "@/components/users/UserActivityLogTab";
 import UserPermissionsTab from "@/components/users/UserPermissionsTab";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useGetById } from "@/hooks/react-query/useGetById";
+import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
 import { UserDetailResponse } from "@/types/user/user-detail.type";
 import getAvatarUrl from "@/utils/getAvatarUrl";
 import {
@@ -26,6 +27,12 @@ export default function UserDetailPage() {
     "users",
     params.id as string
   );
+
+  const { data: lastAdminData, isLoading: lastAdminDataLoading } =
+    useGetWithParams<{ isLastAdmin: boolean }, { userId: string }>(
+      "users/check-last-admin",
+      { userId: params.id as string }
+    );
 
   const { mutateAsync: deactivateUser } = useCreate("users/deactivate-user", [
     "users",
@@ -97,7 +104,7 @@ export default function UserDetailPage() {
       </div>
     );
 
-  if (!userDetailData)
+  if (!userDetailData || !lastAdminData)
     return (
       <div className="flex justify-center items-center h-screen">
         <p>User not found</p>
@@ -115,6 +122,7 @@ export default function UserDetailPage() {
           color="danger"
           variant="solid"
           onClick={deactivateUserHandler}
+          disabled={lastAdminData.isLastAdmin}
         >
           Deactivate
         </Button>
