@@ -22,20 +22,25 @@ export async function POST(req: Request) {
 
   const pdfStream = await renderToBuffer(<PoDetailPDF data={po} />);
 
-  const result = await resend.emails.send({
-    from: process.env.FROM_EMAIL!,
-    to: to,
-    cc: cc,
-    bcc: bcc,
-    subject: subject,
-    text: body,
-    attachments: [
-      {
-        content: pdfStream,
-        filename: `${po.purchase_order_no}.pdf`,
-      },
-    ],
-  });
+  const result = await resend.emails.send(
+    {
+      from: process.env.FROM_EMAIL!,
+      to: to,
+      cc: cc,
+      bcc: bcc,
+      subject: subject,
+      text: body,
+      attachments: [
+        {
+          content: pdfStream,
+          filename: `${po.purchase_order_no}.pdf`,
+        },
+      ],
+    },
+    {
+      idempotencyKey: `po-detail/${po.purchase_order_no}`,
+    }
+  );
 
   if (result.error) {
     return Response.json(
