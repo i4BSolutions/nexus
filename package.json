@@ -25,6 +25,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.58.1",
+    "resend": "^6.0.3",
     "react-pdf": "^10.1.0",
     "ua-parser-js": "^2.0.4",
     "uuid": "^11.1.0",
