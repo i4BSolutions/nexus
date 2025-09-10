@@ -26,6 +26,14 @@ import Input, { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import PurchaseOrderExportCSVModal from "@/components/purchase-orders/PurchaseOrderExportCSVModal";
+import { exportPOToCsv } from "@/utils/exportPOCSV";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import isBetween from "dayjs/plugin/isBetween";
+
+dayjs.extend(isBetween);
+dayjs.extend(customParseFormat);
 
 export default function PurchaseOrdersPage() {
   const router = useRouter();
@@ -38,6 +46,7 @@ export default function PurchaseOrdersPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
   const [total, setTotal] = useState<number>(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showExportCSVModal, setShowExportCSVModal] = useState(false);
   const hasPermission = usePermission("can_manage_purchase_orders");
 
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
@@ -73,6 +82,8 @@ export default function PurchaseOrdersPage() {
         remaining_allocation: item.remaining_allocation || 0,
         allocation_percentage: item.allocation_percentage || 0.0,
         purchase_order_smart_status: item.purchase_order_smart_status,
+        region: item.region,
+        supplier: item.supplier,
       }));
       setData(data);
       setTotal(poData.total);
@@ -215,6 +226,10 @@ export default function PurchaseOrdersPage() {
           onAddNew={() => setShowCreateModal(true)}
           buttonText="New Purchase Order"
           buttonIcon={<PlusOutlined />}
+          isExport={true}
+          onExport={() => {
+            setShowExportCSVModal((prev) => !prev);
+          }}
         />
         <StatisticsCards stats={statItems} />
         <Flex justify="center" align="center" gap={12}>
@@ -301,6 +316,53 @@ export default function PurchaseOrdersPage() {
           pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
           total={total}
+        />
+      )}
+
+      {/* Export CSV Modal */}
+      {showExportCSVModal && (
+        <PurchaseOrderExportCSVModal
+          open={showExportCSVModal}
+          onClose={() => setShowExportCSVModal(false)}
+          onExport={({ filters, columns }) => {
+            if (!data) return;
+
+            let filteredData = [...data];
+
+            if (filters.dateFrom && filters.dateTo) {
+              const from = dayjs(filters.dateFrom, "YYYY-MM-DD");
+              const to = dayjs(filters.dateTo, "YYYY-MM-DD");
+
+              filteredData = filteredData.filter((item) => {
+                const d = dayjs(item.order_date, "MMM D, YYYY", true);
+                return d.isValid() && d.isBetween(from, to, "day", "[]");
+              });
+            }
+
+            if (filters.region) {
+              filteredData = filteredData.filter(
+                (item) => String(item.region) === String(filters.region)
+              );
+            }
+
+            if (filters.status) {
+              filteredData = filteredData.filter(
+                (item) => item.purchase_order_smart_status === filters.status
+              );
+            }
+
+            if (filters.currency) {
+              filteredData = filteredData.filter(
+                (item) => item.currency_code === filters.currency
+              );
+            }
+
+            exportPOToCsv(
+              filteredData,
+              columns,
+              `purchase_orders_${dayjs().format("YYYYMMDD_HH:mm:ss")}.csv`
+            );
+          }}
         />
       )}
 

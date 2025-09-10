@@ -250,6 +250,7 @@ export async function GET(
     "contact_person:contact_person_id ( id, name )",
     "purchase_order_items ( product_id, quantity, unit_price_local )",
     "supplier:supplier_id ( name )",
+    "region:region_id ( id, name )",
     "purchase_order_smart_status ( status, created_at, updated_at )",
     "budget_allocation ( id, po_id, allocation_amount, status, exchange_rate_usd )",
     "purchase_invoice ( id, purchase_order_id, status, exchange_rate_to_usd, is_voided, purchase_invoice_item ( quantity, unit_price_local ) )",
@@ -349,6 +350,7 @@ export async function GET(
       amount_local: Number(amount_local.toFixed(3)),
       amount_usd: Number(amount_usd.toFixed(3)),
       supplier: order.supplier.name,
+      region: order.region.name,
       invoiced_amount: Number(invoicedAmountUsd.toFixed(3)),
       remaining_invoiced_amount: Number(remainingInvoicedAmount.toFixed(3)),
       invoiced_percentage:
