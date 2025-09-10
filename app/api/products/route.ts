@@ -31,7 +31,7 @@ export async function GET(
   const to = pageSize === "all" ? undefined : from + pageSize - 1;
 
   try {
-    // Fetch all products for lowStock & outOfStock
+    // 1) Products
     const { data: allProductsData, error: allError } = await supabase
       .from("product")
       .select("*");
@@ -42,6 +42,7 @@ export async function GET(
       });
     }
 
+    // 2) Inventory
     const { data: inventoryData, error: inventoryError } = await supabase
       .from("inventory")
       .select("product_id, quantity");
@@ -52,6 +53,18 @@ export async function GET(
       });
     }
 
+    // 3) Aliases (expects product_alias(product_id, name, ...))
+    const { data: aliasData, error: aliasError } = await supabase
+      .from("product_alias")
+      .select("product_id, name");
+
+    if (aliasError) {
+      return NextResponse.json(error("Failed to fetch product aliases", 500), {
+        status: 500,
+      });
+    }
+
+    // Build stock map
     const stockMap = new Map<number, number>();
     for (const row of inventoryData) {
       const productId = row.product_id;
@@ -59,25 +72,37 @@ export async function GET(
       stockMap.set(productId, (stockMap.get(productId) || 0) + quantity);
     }
 
+    // Build alias map
+    const aliasMap = new Map<number, string[]>();
+    for (const a of aliasData ?? []) {
+      const arr = aliasMap.get(a.product_id) ?? [];
+      arr.push(a.name);
+      aliasMap.set(a.product_id, arr);
+    }
+
+    // Attach computed fields to products
     const allProducts = allProductsData.map((product) => ({
       ...product,
       current_stock: stockMap.get(product.id) ?? 0,
+      alias_names: aliasMap.get(product.id) ?? [],
     }));
 
-    // Compute global counts (unfiltered)
+    // Global counts
     const lowStock = allProducts.filter(
       (p) => p.current_stock <= p.min_stock && p.current_stock > 0
     ).length;
     const outOfStock = allProducts.filter((p) => p.current_stock === 0).length;
 
-    // Apply filters to compute `items` and `total`
+    // Filtering
     let filtered = [...allProducts];
 
     if (search) {
+      const s = search.toLowerCase();
       filtered = filtered.filter(
         (p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.sku.toLowerCase().includes(search.toLowerCase())
+          p.name.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s)
+        // If you also want to search aliases, uncomment below:
+        // || (p.alias_names ?? []).some(an => an.toLowerCase().includes(s))
       );
     }
 
@@ -101,8 +126,8 @@ export async function GET(
       filtered = filtered.filter((p) => p.is_active === false);
     }
 
-    // Sort
-    const [sortField = "sku", sortDirection = "desc"] = sort.split("_"); // e.g., created_at_desc
+    // Sorting
+    const [sortField = "sku", sortDirection = "desc"] = sort.split("_");
     const direction = sortDirection === "asc" ? 1 : -1;
 
     filtered.sort((a, b) => {
@@ -125,21 +150,15 @@ export async function GET(
       return String(valA).localeCompare(String(valB)) * direction;
     });
 
-    // Paginate
-    let paginated;
-    if (pageSize === "all") {
-      paginated = filtered;
-    } else {
-      paginated = filtered.slice(from, (to as number) + 1);
-    }
+    // Pagination
+    const paginated =
+      pageSize === "all" ? filtered : filtered.slice(from, (to as number) + 1);
 
-    const response = {
+    const response: ProductResponse = {
       items: paginated,
       total: allProducts.length,
       page,
       pageSize: pageSize === "all" ? filtered.length : pageSize,
-      lowStock,
-      outOfStock,
       counts: {
         total: allProducts.length,
         lowStock,

@@ -125,6 +125,7 @@ export async function GET(
     .from("stock_transaction")
     .select("invoice_line_item_id, quantity")
     .eq("type", "IN")
+    .eq("is_voided", false)
     .in(
       "invoice_line_item_id",
       piItems.map((item: any) => item.id)

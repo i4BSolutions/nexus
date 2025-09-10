@@ -260,7 +260,7 @@ export default function ProductsPage() {
       title: "UNIT PRICE",
       dataIndex: "unit_price",
       render: (v: number, record: ProductInterface) =>
-        `${v} ${
+        `${v.toLocaleString()} ${
           currencyData?.find((c) => Number(c.id) === record.currency_code_id)
             ?.currency_code ?? ""
         }`,

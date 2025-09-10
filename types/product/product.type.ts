@@ -13,6 +13,7 @@ export interface ProductInterface {
   is_active?: boolean;
   current_stock: number;
   product_currency?: ProductCurrencyInterface;
+  alias_names?: string[];
 }
 
 export interface ProductCurrencyInterface {

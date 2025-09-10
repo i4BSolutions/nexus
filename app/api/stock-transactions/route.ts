@@ -53,13 +53,22 @@ export async function GET(
         note,
         reason,
         invoice_line_item_id,
+        approval_order_no,
+        approve_by_contact_id,
         product:product_id (
           name,
           sku
         ),
         warehouse:warehouse_id (
           name
-        )
+        ),
+        destination_warehouse:destination_warehouse_id (
+          name
+        ),
+        approved_by:approve_by_contact_id (
+          name
+        ),
+        is_voided
       `
     )
     .order("created_at", { ascending: false });
@@ -75,6 +84,8 @@ export async function GET(
   if (fetchError || !rawTransactions) {
     return NextResponse.json(error("Failed to fetch transactions", 500));
   }
+
+  const transactionIds = rawTransactions.map((tx) => tx.id);
 
   // 2. Collect invoice_line_item_ids
   const invoiceLineItemIds = rawTransactions
@@ -99,7 +110,57 @@ export async function GET(
     }, {} as Record<number, string>);
   }
 
-  // 4. Format all transactions
+  // 3. Fetch OUT evidences
+  let outEvidenceMap: Record<number, any[]> = {};
+  if (transactionIds.length > 0) {
+    const { data: outAssets } = await supabase
+      .from("stock_transaction_assets")
+      .select(
+        "transaction_id, storage_key, original_filename, mime, size_bytes, type"
+      )
+      .in("transaction_id", transactionIds);
+
+    if (outAssets) {
+      outEvidenceMap = outAssets.reduce((acc, a) => {
+        if (!acc[a.transaction_id]) acc[a.transaction_id] = [];
+        acc[a.transaction_id].push({
+          key: a.storage_key,
+          name: a.original_filename,
+          mime: a.mime,
+          size: a.size_bytes,
+          type: a.type,
+          // always proxy through /api/uploads/direct
+          url: `/api/uploads/direct?key=${encodeURIComponent(a.storage_key)}`,
+        });
+        return acc;
+      }, {} as Record<number, any[]>);
+    }
+  }
+
+  // 4. Fetch IN evidences
+  let inEvidenceMap: Record<number, any[]> = {};
+  if (transactionIds.length > 0) {
+    const { data: inAssets } = await supabase
+      .from("stock_in_evidence")
+      .select("stock_in_id, file_key, mime_type, size_bytes, file_url");
+
+    if (inAssets) {
+      inEvidenceMap = inAssets.reduce((acc, a) => {
+        if (!acc[a.stock_in_id]) acc[a.stock_in_id] = [];
+        acc[a.stock_in_id].push({
+          key: a.file_key,
+          name: a.file_key.split("/").pop(),
+          mime: a.mime_type,
+          size: a.size_bytes,
+          type: "photo",
+          url: `/api/uploads/direct?key=${encodeURIComponent(a.file_key)}`,
+        });
+        return acc;
+      }, {} as Record<number, any[]>);
+    }
+  }
+
+  // 5. Format all transactions
   const formatted = rawTransactions.map(
     (tx: any): StockTransactionInterface => {
       const { date, time } = formatDateTime(tx.created_at);
@@ -116,9 +177,17 @@ export async function GET(
         name: tx.product?.name || "-",
         warehouse: tx.warehouse?.name || "-",
         direction: tx.type === "IN" ? "Stock In" : "Stock Out",
+        approved_by: tx.approved_by?.name || null,
+        approval_order_no: tx.approval_order_no || null,
+        destination_warehouse: tx.destination_warehouse?.name || null,
         quantity: tx.quantity,
         reference,
         note: tx.note || "-",
+        is_voided: tx.is_voided,
+        evidence:
+          tx.type === "IN"
+            ? inEvidenceMap[tx.id] || []
+            : outEvidenceMap[tx.id] || [],
       };
     }
   );
