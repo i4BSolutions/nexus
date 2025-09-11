@@ -33,6 +33,7 @@ import { useEffect, useState } from "react";
 import DeleteConfirmModal from "../shared/DeleteConfirmModal";
 import { useDelete } from "@/hooks/react-query/useDelete";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
 
 export type ProductDetailsCardProps = Omit<
   ProductInterface,
@@ -89,10 +90,11 @@ const DetailsCard = ({
     }
   );
 
-  const { data: aliases, refetch: refetchAliases } = useList<
-    ProductAliasInterface[]
+  const { data: aliases, refetch: refetchAliases } = useGetWithParams<
+    ProductAliasInterface[],
+    { product_id: number }
   >("products/alias", {
-    pageSize: "all" as any,
+    product_id: id,
   });
 
   useEffect(() => {
@@ -135,28 +137,30 @@ const DetailsCard = ({
     });
   };
 
-  const handleCreateAlias = (values: {
+  const handleCreateAlias = async (values: {
     name: string;
-    type_id: number;
-    language_id: number;
-    product_id: number;
+    type?: number;
+    language?: number;
   }) => {
+    const payload = {
+      name: String(values.name ?? "").trim(),
+      type_id: values.type ?? null,
+      language_id: values.language ?? null,
+      product_id: id,
+    };
     try {
-      createAlias(values, {
-        onSuccess: (data: unknown) => {
-          data as ProductAliasInterface;
-          message.success("Alias created");
-        },
-        onError: (error: any) => {
-          setErrorMessage(error.message);
-          message.error("Failed to create alias: " + error.message);
-        },
-      });
-    } catch (error) {
-      message.error("Failed to create alias!");
-    } finally {
-      refetchAliases();
+      createAlias(payload as any);
+      message.success("Alias created");
+      await refetchAliases();
       form.resetFields(["name", "type", "language"]);
+      setErrorMessage(null);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to create alias";
+      setErrorMessage(msg);
+      message.error(msg);
     }
   };
 
@@ -328,14 +332,7 @@ const DetailsCard = ({
         <Form
           form={form}
           layout="vertical"
-          onFinish={() => {
-            handleCreateAlias({
-              name: form.getFieldValue("name"),
-              type_id: form.getFieldValue("type"),
-              language_id: form.getFieldValue("language"),
-              product_id: id,
-            });
-          }}
+          onFinish={(vals) => handleCreateAlias(vals as any)}
           requiredMark="optional"
         >
           <Space direction="vertical" size={8} style={{ width: "100%" }}>
@@ -355,8 +352,8 @@ const DetailsCard = ({
                     <Typography.Paragraph
                       style={{
                         color: "red",
-                        fontSize: 20,
-                        marginTop: "6px",
+                        fontSize: 18,
+                        marginTop: "0px",
                         marginBottom: "0px",
                         marginRight: "4px",
                       }}
@@ -375,7 +372,7 @@ const DetailsCard = ({
                 <Space
                   direction="vertical"
                   size={0}
-                  style={{ width: "100%", height: 62 }}
+                  style={{ width: "100%", height: 52 }}
                 >
                   <Input
                     size="large"
@@ -392,107 +389,76 @@ const DetailsCard = ({
 
               {/* TYPE */}
               <Form.Item
-                style={{ width: "240px" }}
-                label={
-                  <div
-                    style={{
-                      width: "240px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      height: "37.42px",
-                    }}
-                  >
-                    <div className="p-0 m-0 flex items-center">
-                      <Typography.Text style={{ fontSize: 16 }}>
-                        Type
-                      </Typography.Text>
-                    </div>
-                  </div>
-                }
                 name="type"
+                style={{ width: 240 }}
+                label={
+                  <Typography.Text style={{ fontSize: 16 }}>
+                    Type
+                  </Typography.Text>
+                }
               >
-                <Space
-                  direction="vertical"
-                  size={0}
-                  style={{ width: "100%", height: 62 }}
-                >
-                  <Select
-                    size="large"
-                    placeholder="Select type (Optional)"
-                    options={[
-                      ...(types?.map((t) => ({ label: t.name, value: t.id })) ??
-                        []),
-                      {
-                        label: (
-                          <div
-                            onClick={() => {
-                              setTypeModalOpen(true);
-                            }}
-                          >
-                            <PlusCircleOutlined style={{ marginRight: 8 }} />
-                            Create New
-                          </div>
-                        ),
-                      },
-                    ]}
-                    allowClear
-                  />
-                </Space>
+                <Select
+                  size="large"
+                  placeholder="Select type (Optional)"
+                  allowClear
+                  options={(types ?? []).map((t) => ({
+                    label: t.name,
+                    value: t.id,
+                  }))}
+                  popupRender={(menu) => (
+                    <>
+                      {menu}
+                      <div style={{ padding: 8 }}>
+                        <Button
+                          type="link"
+                          block
+                          onClick={() => setTypeModalOpen(true)}
+                        >
+                          <PlusCircleOutlined style={{ marginRight: 8 }} />
+                          Create New
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                />
               </Form.Item>
 
               {/* LANGUAGE */}
               <Form.Item
-                style={{ width: "240px" }}
-                label={
-                  <div
-                    style={{
-                      width: "240px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      height: "37.42px",
-                    }}
-                  >
-                    <div className="p-0 m-0 flex items-center">
-                      <Typography.Text style={{ fontSize: 16 }}>
-                        Language
-                      </Typography.Text>
-                    </div>
-                  </div>
-                }
                 name="language"
+                style={{ width: 240 }}
+                label={
+                  <Typography.Text style={{ fontSize: 16 }}>
+                    Language
+                  </Typography.Text>
+                }
               >
-                <Space
-                  direction="vertical"
-                  size={0}
-                  style={{ width: "100%", height: 62 }}
-                >
-                  <Select
-                    size="large"
-                    placeholder="Select language"
-                    options={[
-                      ...(languages?.map((l) => ({
-                        label: l.name,
-                        value: l.id,
-                      })) ?? []),
-                      {
-                        label: (
-                          <div
-                            onClick={() => {
-                              setLangModalOpen(true);
-                            }}
-                          >
-                            <PlusCircleOutlined style={{ marginRight: 8 }} />
-                            Create New
-                          </div>
-                        ),
-                      },
-                    ]}
-                    allowClear
-                  />
-                </Space>
+                <Select
+                  size="large"
+                  placeholder="Select language (Optional)"
+                  allowClear
+                  options={(languages ?? []).map((l) => ({
+                    label: l.name,
+                    value: l.id,
+                  }))}
+                  popupRender={(menu) => (
+                    <>
+                      {menu}
+                      <div style={{ padding: 8 }}>
+                        <Button
+                          type="link"
+                          block
+                          onClick={() => setLangModalOpen(true)}
+                        >
+                          <PlusCircleOutlined style={{ marginRight: 8 }} />
+                          Create New
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                />
               </Form.Item>
+
               <Form.Item style={{ marginBottom: 0 }}>
                 <Space
                   direction="vertical"

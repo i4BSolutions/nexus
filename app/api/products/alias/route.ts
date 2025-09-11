@@ -7,10 +7,14 @@ import { ApiResponse } from "@/types/shared/api-response-type";
 import { ProductAliasInterface } from "@/types/product/alias/alias.type";
 
 // GET /api/product-alias/aliases
-export async function GET(): Promise<
+export async function GET(
+  req: NextRequest
+): Promise<
   NextResponse<ApiResponse<ProductAliasInterface[]> | ApiResponse<any>>
 > {
   const supabase = await createClient();
+  const { searchParams } = req.nextUrl;
+  const productId = parseInt(searchParams.get("product_id") || "0", 10);
 
   const { data, error: dbError } = await supabase
     .from("product_alias")
@@ -27,6 +31,7 @@ export async function GET(): Promise<
       product:product ( id, name )
     `
     )
+    .eq("product_id", productId)
     .order("created_at", { ascending: true });
 
   if (dbError) {
