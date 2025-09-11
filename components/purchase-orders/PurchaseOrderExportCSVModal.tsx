@@ -114,9 +114,10 @@ const PurchaseOrderExportCSVModal = ({
         filters: {
           dateFrom: dateFrom ? dateFrom.format("YYYY-MM-DD") : undefined,
           dateTo: dateTo ? dateTo.format("YYYY-MM-DD") : undefined,
-          region: values.region,
-          status: values.status,
-          currency: values.currency,
+          region: values.region !== "All Regions" ? values.region : undefined,
+          status: values.status !== "All Statuses" ? values.status : undefined,
+          currency:
+            values.currency !== "All Currencies" ? values.currency : undefined,
         },
         columns: selectedCols,
       });
@@ -224,7 +225,9 @@ const PurchaseOrderExportCSVModal = ({
               placeholder="Select region"
               style={{ width: "100%" }}
               loading={regionsLoading}
+              value={form.getFieldValue("region")}
             >
+              <Select.Option value="All Regions">All Regions</Select.Option>
               {regions?.map((region: any) => (
                 <Select.Option key={region.id} value={region.name}>
                   {region.name}
@@ -245,7 +248,9 @@ const PurchaseOrderExportCSVModal = ({
               allowClear
               placeholder="Select status"
               style={{ width: "100%" }}
+              value={form.getFieldValue("status")}
             >
+              <Select.Option value="All Statuses">All Statuses</Select.Option>
               <Select.Option value="Not Started">Not Started</Select.Option>
               <Select.Option value="Partially Invoiced">
                 Partially Invoiced
@@ -271,7 +276,11 @@ const PurchaseOrderExportCSVModal = ({
               placeholder="Select currency"
               style={{ width: "100%" }}
               loading={currencyLoading}
+              value={form.getFieldValue("currency")}
             >
+              <Select.Option value="All Currencies">
+                All Currencies
+              </Select.Option>
               {currencyData?.map((currency) => (
                 <Select.Option key={currency.id} value={currency.currency_code}>
                   {currency.currency_code}
