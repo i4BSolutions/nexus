@@ -75,7 +75,14 @@ const StepContactPersons = forwardRef<
     return (personsData?.items as PersonInterface[] | undefined)
       ?.filter((person) => !exclude.includes(person.id))
       .map((person) => ({
-        label: person.name,
+        label:
+          person.name +
+          " (" +
+          person.rank +
+          ") " +
+          " (" +
+          person.department +
+          ")",
         value: person.id,
       }));
   };
@@ -127,19 +134,6 @@ const StepContactPersons = forwardRef<
                   Contact Person
                 </Typography.Text>
               </div>
-              <Typography.Link
-                onClick={() => {
-                  setPersonCreateTargetField("contact_person");
-                  setIsPersonCreateModalOpen(true);
-                }}
-                style={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                  marginRight: 0,
-                }}
-              >
-                Create New
-              </Typography.Link>
             </div>
           }
           name="contact_person"
@@ -161,19 +155,6 @@ const StepContactPersons = forwardRef<
             }}
             options={[
               ...(getFilteredOptions([signPerson, authorizedSignPerson]) || []),
-              {
-                label: (
-                  <div
-                    onClick={() => {
-                      setPersonCreateTargetField("contact_person");
-                      setIsPersonCreateModalOpen(true);
-                    }}
-                  >
-                    <PlusCircleOutlined style={{ marginRight: 8 }} />
-                    Create New
-                  </div>
-                ),
-              },
             ]}
             style={{ width: "100%" }}
           />
@@ -201,15 +182,6 @@ const StepContactPersons = forwardRef<
                 Sign Person{" "}
                 <Typography.Text type="secondary">(optional)</Typography.Text>
               </Typography.Text>
-              <Typography.Link
-                onClick={() => {
-                  setPersonCreateTargetField("sign_person");
-                  setIsPersonCreateModalOpen(true);
-                }}
-                style={{ fontSize: 13 }}
-              >
-                Create New
-              </Typography.Link>
             </Space>
             <Form.Item name="sign_person">
               <Select
@@ -231,19 +203,6 @@ const StepContactPersons = forwardRef<
                     contactPerson,
                     authorizedSignPerson,
                   ]) || []),
-                  {
-                    label: (
-                      <div
-                        onClick={() => {
-                          setPersonCreateTargetField("sign_person");
-                          setIsPersonCreateModalOpen(true);
-                        }}
-                      >
-                        <PlusCircleOutlined style={{ marginRight: 8 }} />
-                        Create New
-                      </div>
-                    ),
-                  },
                 ]}
                 style={{ width: "100%" }}
               />
@@ -268,15 +227,6 @@ const StepContactPersons = forwardRef<
                 Authorized Sign Person{" "}
                 <Typography.Text type="secondary">(optional)</Typography.Text>
               </Typography.Text>
-              <Typography.Link
-                onClick={() => {
-                  setPersonCreateTargetField("authorized_sign_person");
-                  setIsPersonCreateModalOpen(true);
-                }}
-                style={{ fontSize: 13 }}
-              >
-                Create New
-              </Typography.Link>
             </Space>
             <Form.Item name="authorized_sign_person">
               <Select
@@ -297,19 +247,6 @@ const StepContactPersons = forwardRef<
                 }}
                 options={[
                   ...(getFilteredOptions([contactPerson, signPerson]) || []),
-                  {
-                    label: (
-                      <div
-                        onClick={() => {
-                          setPersonCreateTargetField("authorized_sign_person");
-                          setIsPersonCreateModalOpen(true);
-                        }}
-                      >
-                        <PlusCircleOutlined style={{ marginRight: 8 }} />
-                        Create New
-                      </div>
-                    ),
-                  },
                 ]}
                 style={{ width: "100%" }}
               />
