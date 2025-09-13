@@ -1,18 +1,9 @@
 "use client";
 
-import { useCreate } from "@/hooks/react-query/useCreate";
-import { useList } from "@/hooks/react-query/useList";
-import { AliasTypeInterface } from "@/types/product/alias/alias-type.type";
-import { ProductAliasInterface } from "@/types/product/alias/alias.type";
-import { AliasLanguageInterface } from "@/types/product/alias/language.type";
-import { ProductInterface } from "@/types/product/product.type";
-import {
-  TagOutlined,
-  LinkOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PlusCircleOutlined,
-} from "@ant-design/icons";
+// React & Next
+import { useEffect, useState } from "react";
+
+// Antd
 import {
   Card,
   Col,
@@ -28,12 +19,29 @@ import {
   Modal,
   App,
 } from "antd";
-import { useEffect, useState } from "react";
+import {
+  TagOutlined,
+  LinkOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusCircleOutlined,
+} from "@ant-design/icons";
 
-import DeleteConfirmModal from "../shared/DeleteConfirmModal";
+// Hooks
+import { useCreate } from "@/hooks/react-query/useCreate";
+import { useList } from "@/hooks/react-query/useList";
 import { useDelete } from "@/hooks/react-query/useDelete";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
+
+// Types
+import { AliasTypeInterface } from "@/types/product/alias/alias-type.type";
+import { ProductAliasInterface } from "@/types/product/alias/alias.type";
+import { AliasLanguageInterface } from "@/types/product/alias/language.type";
+import { ProductInterface } from "@/types/product/product.type";
+
+// Model
+import DeleteConfirmModal from "../shared/DeleteConfirmModal";
 
 export type ProductDetailsCardProps = Omit<
   ProductInterface,
@@ -64,9 +72,11 @@ const DetailsCard = ({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const { mutate: createAliasType } = useCreate("products/alias-types");
-  const { mutate: createAliasLanguage } = useCreate("products/alias-languages");
-  const { mutate: createAlias } = useCreate("products/alias");
+  const { mutateAsync: createAliasType } = useCreate("products/alias-types");
+  const { mutateAsync: createAliasLanguage } = useCreate(
+    "products/alias-languages"
+  );
+  const { mutateAsync: createAlias } = useCreate("products/alias");
 
   const deleteAlias = useDelete("products/alias");
 
@@ -90,12 +100,16 @@ const DetailsCard = ({
     }
   );
 
-  const { data: aliases, refetch: refetchAliases } = useGetWithParams<
-    ProductAliasInterface[],
-    { product_id: number }
-  >("products/alias", {
-    product_id: id,
-  });
+  const {
+    data: aliases,
+    isLoading: aliasLoading,
+    refetch: refetchAliases,
+  } = useGetWithParams<ProductAliasInterface[], { product_id: number }>(
+    "products/alias",
+    {
+      product_id: id,
+    }
+  );
 
   useEffect(() => {
     if (!isEditModalOpen || !selectedAliasId) return;
@@ -149,11 +163,12 @@ const DetailsCard = ({
       product_id: id,
     };
     try {
-      createAlias(payload as any);
+      await createAlias(payload as any);
       message.success("Alias created");
-      await refetchAliases();
       form.resetFields(["name", "type", "language"]);
       setErrorMessage(null);
+
+      await refetchAliases();
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ||
@@ -287,6 +302,8 @@ const DetailsCard = ({
         }
       >
         <List
+          loading={aliasLoading}
+          locale={{ emptyText: "No aliases added yet." }}
           dataSource={aliases}
           renderItem={(alias) => (
             <List.Item
@@ -372,7 +389,7 @@ const DetailsCard = ({
                 <Space
                   direction="vertical"
                   size={0}
-                  style={{ width: "100%", height: 52 }}
+                  style={{ width: "100%", height: 44 }}
                 >
                   <Input
                     size="large"
@@ -463,7 +480,7 @@ const DetailsCard = ({
                 <Space
                   direction="vertical"
                   size={0}
-                  style={{ width: "100%", height: 62 }}
+                  style={{ width: "100%", height: 56 }}
                 >
                   <Button
                     type="primary"
