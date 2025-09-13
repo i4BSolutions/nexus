@@ -26,9 +26,7 @@ export async function GET(
     .order("id", { ascending: false });
 
   if (search) {
-    query = query.or(
-      `name.ilike.%${search}%,email.ilike.%${search}%,rank:rank_id.name.ilike.%${search}%`
-    );
+    query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
   }
 
   if (rank !== "") {
@@ -42,6 +40,7 @@ export async function GET(
   const { data: items, error: dbError, count } = await query;
 
   if (dbError) {
+    console.log(dbError);
     return NextResponse.json(error("Failed to fetch contact person", 500), {
       status: 500,
     });

@@ -157,6 +157,22 @@ export default function CardView({
                     {item.email}
                   </Typography.Text>
                 </div>
+                <div
+                  style={{
+                    marginTop: 16,
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                    Department
+                  </Typography.Text>
+                  <Typography.Text style={{ fontSize: 16 }}>
+                    {item.department || "N/A"}
+                  </Typography.Text>
+                </div>
               </div>
             </div>
           );

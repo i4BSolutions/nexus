@@ -1,18 +1,27 @@
 "use client";
 
+// React and Next
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+// Components
 import CardView from "@/components/contact-persons/CardView";
 import ListView from "@/components/contact-persons/ListView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import HeaderSection from "@/components/shared/HeaderSection";
 
+// Hooks
 import { useList } from "@/hooks/react-query/useList";
 import { usePermission } from "@/hooks/shared/usePermission";
+
+// Types
 import { PersonResponse } from "@/types/person/person.type";
 import { RankInterface } from "@/types/person/rank/rank.type";
+
+// Antd
 import { ContactsOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Flex, Input, Segmented, Select } from "antd";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { SearchProps } from "antd/es/input";
 
 export default function ContactsPage() {
   const router = useRouter();
@@ -21,6 +30,7 @@ export default function ContactsPage() {
 
   const [viewMode, setViewMode] = useState<"Card" | "List">("Card");
 
+  const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
 
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
@@ -33,6 +43,7 @@ export default function ContactsPage() {
     page: pagination.page,
     pageSize: pagination.pageSize,
     status: statusFilter,
+    q: searchText,
   });
 
   if (statusFilter) {
@@ -57,6 +68,11 @@ export default function ContactsPage() {
 
   const paginationHandler = (page: number, pageSize: number) => {
     setPagination({ page, pageSize });
+  };
+
+  const onSearchHandler: SearchProps["onSearch"] = (value, _e, info) => {
+    setSearchText(value);
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   return (
@@ -92,7 +108,7 @@ export default function ContactsPage() {
         <Input.Search
           placeholder="Search By PO Number"
           allowClear
-          onSearch={() => {}}
+          onSearch={onSearchHandler}
         />
         <div className="bg-transparent w-[425px] h-7" />
         <Flex justify="center" align="center" gap={12}>

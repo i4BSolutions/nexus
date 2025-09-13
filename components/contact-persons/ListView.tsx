@@ -143,6 +143,20 @@ export default function ListView({
                       {item.email}
                     </Typography>
                   )}
+                  {item.department && (
+                    <Typography
+                      style={{
+                        fontSize: 12,
+                        color: "#9E9E9E",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                      title={item.department}
+                    >
+                      {item.department}
+                    </Typography>
+                  )}
                 </div>
 
                 {/* Right side actions */}
