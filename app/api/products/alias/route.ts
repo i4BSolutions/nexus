@@ -7,10 +7,14 @@ import { ApiResponse } from "@/types/shared/api-response-type";
 import { ProductAliasInterface } from "@/types/product/alias/alias.type";
 
 // GET /api/product-alias/aliases
-export async function GET(): Promise<
+export async function GET(
+  req: NextRequest
+): Promise<
   NextResponse<ApiResponse<ProductAliasInterface[]> | ApiResponse<any>>
 > {
   const supabase = await createClient();
+  const { searchParams } = req.nextUrl;
+  const productId = parseInt(searchParams.get("product_id") || "0", 10);
 
   const { data, error: dbError } = await supabase
     .from("product_alias")
@@ -27,6 +31,7 @@ export async function GET(): Promise<
       product:product ( id, name )
     `
     )
+    .eq("product_id", productId)
     .order("created_at", { ascending: true });
 
   if (dbError) {
@@ -59,6 +64,30 @@ export async function POST(
     if (!name || !product_id) {
       return NextResponse.json(error("Name and product_id are required", 400), {
         status: 400,
+      });
+    }
+
+    // Check for case-insensitive duplicate alias name for the same product
+    const { data: existingAlias, error: checkError } = await supabase
+      .from("product_alias")
+      .select("id")
+      .eq("product_id", product_id)
+      .ilike("name", name)
+      .maybeSingle();
+
+    if (checkError) {
+      return NextResponse.json(
+        error(
+          "Failed to check for duplicate alias: " + checkError.message,
+          500
+        ),
+        { status: 500 }
+      );
+    }
+
+    if (existingAlias) {
+      return NextResponse.json(error("Alias name already exists", 409), {
+        status: 409,
       });
     }
 

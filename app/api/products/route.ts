@@ -97,13 +97,17 @@ export async function GET(
     let filtered = [...allProducts];
 
     if (search) {
-      const s = search.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s)
-        // If you also want to search aliases, uncomment below:
-        // || (p.alias_names ?? []).some(an => an.toLowerCase().includes(s))
-      );
+      const norm = (v: string) => v?.toLowerCase().normalize("NFC") || "";
+      const s = norm(search);
+
+      filtered = filtered.filter((p) => {
+        const inName = norm(p.name).includes(s);
+        const inSku = norm(p.sku).includes(s);
+        const inAlias = (p.alias_names ?? []).some((an: string) =>
+          norm(an).includes(s)
+        );
+        return inName || inSku || inAlias;
+      });
     }
 
     if (category) {

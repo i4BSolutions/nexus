@@ -304,12 +304,12 @@ export default function ProductsPage() {
     setPagination({ page, pageSize: pageSize || 10 });
   };
 
-  if (loadingProduct || loadingSKU)
-    return (
-      <div className="text-center py-20">
-        <Spin />
-      </div>
-    );
+  // if (loadingProduct || loadingSKU)
+  //   return (
+  //     <div className="text-center py-20">
+  //       <Spin />
+  //     </div>
+  //   );
 
   return (
     <section className="max-w-7xl mx-auto">

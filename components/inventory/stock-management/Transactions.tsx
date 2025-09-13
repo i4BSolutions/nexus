@@ -187,7 +187,13 @@ const Transactions = () => {
           body: JSON.stringify({ reason }),
         }
       );
-      message.success("Transaction voided.");
+
+      if (res.status === 409) {
+        message.error("Cannot void transaction due to insufficient stock.");
+      } else {
+        message.success("Transaction voided.");
+      }
+
       setVoidOpen(false);
       setVoidTx(null);
     } catch (e: any) {

@@ -38,7 +38,7 @@ import { CreateCategoryFormSchema } from "@/schemas/categories/categories.schema
 import { ProductFormInput } from "@/schemas/products/products.schemas";
 import { CategoryInterface } from "@/types/category/category.type";
 import { PurchaseOrderRegionsResponse } from "@/types/purchase-order/purchase-order-region.type";
-import { PersonInterface, PersonResponse } from "@/types/person/person.type";
+import { PersonResponse } from "@/types/person/person.type";
 import {
   ProductCurrencyInterface,
   ProductHistoryPaginatedResponse,

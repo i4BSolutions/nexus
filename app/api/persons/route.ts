@@ -20,7 +20,9 @@ export async function GET(
 
   let query = supabase
     .from("person")
-    .select("*, rank:rank_id(name)", { count: "exact" })
+    .select("*, rank:rank_id(name), department:department_id(name)", {
+      count: "exact",
+    })
     .order("id", { ascending: false });
 
   if (search) {
@@ -49,7 +51,8 @@ export async function GET(
     id: item.id,
     name: item.name,
     email: item.email,
-    rank: item.rank?.name || "",
+    rank: item.rank?.name || "N/A",
+    department: item.department?.name || "N/A",
     status: item.status,
   }));
 
