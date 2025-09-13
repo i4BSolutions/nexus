@@ -19,7 +19,7 @@ export function exportPOToCsv<T extends Record<string, any>>(
         let val = row[c.key] ?? "";
 
         // Format dates consistently
-        if (c.key === "order_date" || c.key === "expected_delivery_date") {
+        if (c.key === "order_date") {
           val = dayjs(val, ["MMM D, YYYY", "YYYY-MM-DD"]).isValid()
             ? dayjs(val, ["MMM D, YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD")
             : val;

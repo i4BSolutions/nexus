@@ -334,7 +334,7 @@ export default function PurchaseOrdersPage() {
               const to = dayjs(filters.dateTo, "YYYY-MM-DD");
 
               filteredData = filteredData.filter((item) => {
-                const d = dayjs(item.order_date, "MMM D, YYYY", true);
+                const d = dayjs(item.order_date, ["YYYY-MM-DD", "MMM D, YYYY"]);
                 return d.isValid() && d.isBetween(from, to, "day", "[]");
               });
             }

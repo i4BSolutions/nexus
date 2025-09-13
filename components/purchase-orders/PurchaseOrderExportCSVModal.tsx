@@ -49,6 +49,7 @@ const AVAILABLE_COLUMNS: ExportColumn[] = [
   { key: "expected_delivery_date", label: "Expected Delivery Date" },
   { key: "amount_local", label: "Amount (Local)" },
   { key: "amount_usd", label: "Amount (USD)" },
+  { key: "usd_exchange_rate", label: "Exchange Rate" },
   { key: "region", label: "Region" },
   { key: "supplier", label: "Supplier" },
   { key: "currency_code", label: "Currency" },
@@ -154,9 +155,13 @@ const PurchaseOrderExportCSVModal = ({
       title={null}
       footer={null}
       closeIcon={false}
-      width={800}
+      width="100%"
+      style={{ maxWidth: 800, margin: "0 auto" }}
       styles={{
-        body: { padding: 0 },
+        body: {
+          padding: 0,
+          overflowY: "hidden",
+        },
         content: { padding: 0 },
       }}
     >
@@ -201,7 +206,7 @@ const PurchaseOrderExportCSVModal = ({
         <Flex gap={12}>
           <Form.Item
             label="Order Date"
-            name="orderDate"
+            name="period"
             style={{ width: "100%" }}
             rules={[
               { required: true, message: "Please set order date range." },
@@ -381,7 +386,7 @@ function SortableItem({
         ref={setNodeRef}
         style={style}
         {...attributes}
-        className="flex items-center justify-between py-2 px-2 bg-white"
+        className="flex items-center justify-between py-1 px-2 bg-white"
       >
         <Checkbox required checked={checked} onChange={onToggle}>
           {label}
