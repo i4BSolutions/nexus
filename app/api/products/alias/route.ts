@@ -67,6 +67,30 @@ export async function POST(
       });
     }
 
+    // Check for case-insensitive duplicate alias name for the same product
+    const { data: existingAlias, error: checkError } = await supabase
+      .from("product_alias")
+      .select("id")
+      .eq("product_id", product_id)
+      .ilike("name", name)
+      .maybeSingle();
+
+    if (checkError) {
+      return NextResponse.json(
+        error(
+          "Failed to check for duplicate alias: " + checkError.message,
+          500
+        ),
+        { status: 500 }
+      );
+    }
+
+    if (existingAlias) {
+      return NextResponse.json(error("Alias name already exists", 409), {
+        status: 409,
+      });
+    }
+
     const { data, error: dbError } = await supabase
       .from("product_alias")
       .insert([{ name, type_id, language_id, product_id }])
