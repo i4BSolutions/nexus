@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import RelatedPurchaseOrdersTable from "./RelatedPurchaseOrdersTable";
-import { Pagination, Space, Table, TableProps, Typography } from "antd";
+import { Pagination, Space, Table, TableProps, Tag, Typography } from "antd";
 import { usePaginatedById } from "@/hooks/react-query/usePaginatedById";
 import {
   RelatedTransactionItem,
   RelatedTransactionResponse,
 } from "@/types/person/relationships/stock-transaction.type";
 import ImageViewerModal from "@/components/shared/ImageViewerModal";
+import { DownCircleOutlined, UpCircleOutlined } from "@ant-design/icons";
 
 const RelatedTransactionsTable: React.FC<{ id: string }> = ({ id }) => {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
@@ -78,7 +79,13 @@ const RelatedTransactionsTable: React.FC<{ id: string }> = ({ id }) => {
       key: "direction",
       render: (direction) => (
         <Space size={8}>
-          <span>{direction}</span>
+          <Tag
+            style={{ borderRadius: 10, display: "flex", gap: 4 }}
+            color={direction === "IN" ? "#52C41A" : "#FAAD14"}
+          >
+            {direction === "IN" ? <DownCircleOutlined /> : <UpCircleOutlined />}
+            {direction === "IN" ? "STOCK IN" : "STOCK OUT"}
+          </Tag>
         </Space>
       ),
     },
