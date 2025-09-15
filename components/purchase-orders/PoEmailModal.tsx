@@ -49,6 +49,7 @@ export default function PoEmailModal({
   const { message } = App.useApp();
   const router = useRouter();
   const [userOptions, setUserOptions] = useState<UserOptionType[]>([]);
+  const [isFailed, setIsFailed] = useState(false);
 
   const { data: users } = useGetAll<UsersResponse>("/users", ["users"]);
   const { mutate: sendEmail } = useCreate("/purchase-orders/send-email");
@@ -116,6 +117,7 @@ export default function PoEmailModal({
         onError: (error) => {
           console.error("Error sending email:", error);
           message.error("Failed to send email. Please try again.");
+          setIsFailed(true);
         },
       }
     );
@@ -324,9 +326,15 @@ export default function PoEmailModal({
           </Form.Item>
 
           <div className="w-full flex justify-between mt-4">
-            <Button onClick={() => setEmailModal(false)}>Skip for now</Button>
+            <Button
+              onClick={() => router.push("/purchase-orders")}
+              disabled={!isFailed}
+            >
+              Skip for now
+            </Button>
+
             <Button type="primary" icon={<SendOutlined />} htmlType="submit">
-              Send Now
+              Send {isFailed ? "Again" : "Now"}
             </Button>
           </div>
         </Form>
