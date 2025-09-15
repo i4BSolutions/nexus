@@ -26,7 +26,7 @@ type StockTransaction = {
     sku: string;
   };
   reason: string;
-  invoice_number: string;
+  invoice_number: string | null;
 };
 
 // Helper function to format date/time
@@ -55,7 +55,7 @@ export async function GET(
   const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
   const search = searchParams.get("search")?.toLowerCase() || "";
 
-  // 1. Fetch warehouse basic info
+  // 1. Warehouse basic info
   const { data: warehouse, error: warehouseError } = await supabase
     .from("warehouse")
     .select("*")
@@ -68,7 +68,7 @@ export async function GET(
     });
   }
 
-  // 2. Fetch current inventory in this warehouse
+  // 2. Current inventory for this warehouse
   const { data: rawInventory, error: inventoryError } = await supabase
     .from("inventory")
     .select(
@@ -86,6 +86,12 @@ export async function GET(
     )
     .eq("warehouse_id", id);
 
+  if (inventoryError) {
+    return NextResponse.json(error("Failed to fetch inventory", 500), {
+      status: 500,
+    });
+  }
+
   const inventory: InventoryWithProduct[] = (rawInventory || []).map(
     (inv: any) => ({
       id: inv.id,
@@ -94,44 +100,96 @@ export async function GET(
     })
   );
 
-  if (inventoryError) {
-    return NextResponse.json(error("Failed to fetch inventory", 500), {
+  // If no inventory lines, skip the rest of heavy loading
+  if (!inventory || inventory.length === 0) {
+    return NextResponse.json(
+      success(
+        {
+          warehouse: {
+            id: warehouse.id,
+            name: warehouse.name,
+            location: warehouse.location,
+            capacity: warehouse.capacity,
+          },
+          currency: "USD",
+          total_item_count: 0,
+          total_stock_value: 0,
+          stock_in: 0,
+          stock_out: 0,
+          inventory: tab === "inventory" ? [] : [],
+          stock_movement_logs: tab === "stock_movements" ? [] : [],
+          inventory_total: 0,
+          stock_movement_total: 0,
+        },
+        "Warehouse details fetched successfully"
+      ),
+      { status: 200 }
+    );
+  }
+
+  // 3. Build WAC **in USD** per product (rate-aware, no N+1)
+  const productIds = inventory.map((inv) => inv.product.id);
+
+  // Need purchase invoice exchange rate alongside each line item
+  const { data: invoiceItems, error: priceError } = await supabase
+    .from("purchase_invoice_item")
+    .select(
+      `
+      product_id,
+      unit_price_local,
+      quantity,
+      purchase_invoice:purchase_invoice_id (
+        exchange_rate_to_usd
+      )
+    `
+    )
+    .in("product_id", productIds);
+
+  if (priceError) {
+    return NextResponse.json(error("Failed to fetch unit prices", 500), {
       status: 500,
     });
   }
 
-  // 3. Fetch unit prices from invoice line items to calculate total value
-  const productIds = inventory.map((inv) => inv.product.id);
-  const { data: invoiceItems } = await supabase
-    .from("purchase_invoice_item")
-    .select("product_id, unit_price_local, quantity")
-    .in("product_id", productIds);
-
-  const totalCostMap: Record<number, number> = {};
+  // Compute WAC_USD(product)
+  const totalCostUsdMap: Record<number, number> = {};
   const totalQtyMap: Record<number, number> = {};
-  const wacMap: Record<number, number> = {};
 
-  for (const item of invoiceItems || []) {
-    const productId = item.product_id;
-    const unitPrice = item.unit_price_local;
-    const qty = item.quantity;
-    // Exclude FOC items (unit price is 0)
-    if (unitPrice === 0) continue;
+  for (const line of invoiceItems || []) {
+    const productId = line.product_id as number;
+    const unitPriceLocal = Number(line.unit_price_local);
+    const qty = Number(line.quantity);
+    const exrate = Number((line as any).purchase_invoice?.exchange_rate_to_usd);
 
-    totalCostMap[productId] = (totalCostMap[productId] || 0) + unitPrice * qty;
+    if (unitPriceLocal === 0 || qty <= 0) continue; // skip FOC or non-positive
+
+    // Convert to USD using the invoice's exchange rate
+    // USD = local / exchange_rate_to_usd (per your formula)
+    const unitPriceUsd = unitPriceLocal / exrate;
+
+    totalCostUsdMap[productId] =
+      (totalCostUsdMap[productId] || 0) + unitPriceUsd * qty;
     totalQtyMap[productId] = (totalQtyMap[productId] || 0) + qty;
   }
 
-  for (const productId in totalCostMap) {
-    const totalQty = totalQtyMap[productId];
-    wacMap[+productId] = totalQty > 0 ? totalCostMap[productId] / totalQty : 0;
+  const wacUsdMap: Record<number, number> = {};
+  for (const pid of Object.keys(totalCostUsdMap)) {
+    const nPid = Number(pid);
+    const tQty = totalQtyMap[nPid] || 0;
+    wacUsdMap[nPid] = tQty > 0 ? totalCostUsdMap[nPid] / tQty : 0;
   }
 
-  // Fetch incoming and outgoing stock per product in this warehouse
+  // 4. IN/OUT totals per product (for extra columns)
   const { data: transactionSums, error: txError } = await supabase
     .from("stock_transaction")
     .select("product_id, type, quantity")
     .eq("warehouse_id", id);
+
+  if (txError) {
+    return NextResponse.json(error("Failed to fetch stock transactions", 500), {
+      status: 500,
+    });
+  }
 
   const incomingMap: Record<number, number> = {};
   const outgoingMap: Record<number, number> = {};
@@ -146,8 +204,9 @@ export async function GET(
     }
   });
 
+  // Build row items using WAC_USD
   const inventoryDetails = inventory.map((inv) => {
-    const unitPrice = wacMap[inv.product.id] || 0;
+    const unit_price_wac_usd = wacUsdMap[inv.product.id] || 0;
     const incoming = incomingMap[inv.product.id] || 0;
     const outgoing = outgoingMap[inv.product.id] || 0;
 
@@ -159,7 +218,8 @@ export async function GET(
       current_stock: inv.quantity,
       incoming,
       outgoing,
-      total_value: unitPrice * inv.quantity,
+      unit_price_wac_usd: Number(unit_price_wac_usd.toFixed(4)),
+      total_value: Number((unit_price_wac_usd * inv.quantity).toFixed(2)), // USD
     };
   });
 
@@ -168,24 +228,32 @@ export async function GET(
     0
   );
 
+  // Search + paginate inventory rows
   let inventoryDetailsFiltered = inventoryDetails;
-
   if (search) {
     inventoryDetailsFiltered = inventoryDetailsFiltered.filter((item) =>
       `${item.name} ${item.sku} ${item.category}`.toLowerCase().includes(search)
     );
   }
-
   const inventoryPage = inventoryDetailsFiltered.slice(
     (page - 1) * pageSize,
     page * pageSize
   );
 
-  // 4. Fetch stock movements (IN/OUT summary)
-  const { data: stockMovements } = await supabase
+  // 5. Stock movements summary (IN / OUT)
+  const { data: stockMovements, error: sumErr } = await supabase
     .from("stock_transaction")
     .select("type, quantity")
     .eq("warehouse_id", id);
+
+  if (sumErr) {
+    return NextResponse.json(
+      error("Failed to fetch stock movement summary", 500),
+      {
+        status: 500,
+      }
+    );
+  }
 
   const totalIn =
     stockMovements
@@ -196,7 +264,7 @@ export async function GET(
       ?.filter((tx) => tx.type === "OUT")
       .reduce((sum, tx) => sum + tx.quantity, 0) || 0;
 
-  // 5. Fetch recent stock movement log
+  // 6. Recent stock movement logs (with invoice number)
   const { data: rawMovements, error: movementError } = await supabase
     .from("stock_transaction")
     .select(
@@ -221,6 +289,15 @@ export async function GET(
     .eq("warehouse_id", id)
     .order("created_at", { ascending: false })
     .limit(20);
+
+  if (movementError) {
+    return NextResponse.json(
+      error("Failed to fetch stock movement logs", 500),
+      {
+        status: 500,
+      }
+    );
+  }
 
   const movements: StockTransaction[] = (rawMovements || []).map((m: any) => ({
     id: m.id,
@@ -250,13 +327,11 @@ export async function GET(
   });
 
   let stockMovementLogsFiltered = stockMovementLogs;
-
   if (search) {
     stockMovementLogsFiltered = stockMovementLogsFiltered.filter((m) =>
       `${m.name} ${m.sku}`.toLowerCase().includes(search)
     );
   }
-
   const movementPage = stockMovementLogsFiltered.slice(
     (page - 1) * pageSize,
     page * pageSize
@@ -274,8 +349,9 @@ export async function GET(
           location: warehouse.location,
           capacity: warehouse.capacity,
         },
+        currency: "USD",
         total_item_count: totalItemCount,
-        total_stock_value: totalStockValue,
+        total_stock_value: Number(totalStockValue.toFixed(2)),
         stock_in: totalIn,
         stock_out: totalOut,
         inventory: tab === "inventory" ? inventoryPage : [],
