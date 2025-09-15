@@ -43,6 +43,7 @@ const SupplierModal: React.FC<SupplierModalProps> = ({
 
   const { data: personData } = useList<PersonResponse>("persons", {
     pageSize: "all" as any,
+    status: "true",
   });
 
   useEffect(() => {

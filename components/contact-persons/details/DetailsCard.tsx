@@ -63,19 +63,25 @@ const ContactPersonDetailsCard = ({
         <Col span={12}>
           <Space direction="vertical" size={0}>
             <Typography.Text type="secondary">Email</Typography.Text>
-            <Typography.Title level={5}>{email}</Typography.Title>
+            <Typography.Title level={5}>
+              {email === "" ? "N/A" : email}
+            </Typography.Title>
           </Space>
         </Col>
         <Col span={12} style={{ marginTop: 16 }}>
           <Space direction="vertical" size={0}>
             <Typography.Text type="secondary">Phone</Typography.Text>
-            <Typography.Title level={5}>{rank ?? "N/A"}</Typography.Title>
+            <Typography.Title level={5}>
+              {rank === "" ? "N/A" : rank}
+            </Typography.Title>
           </Space>
         </Col>
         <Col span={12} style={{ marginTop: 16 }}>
           <Space direction="vertical" size={0}>
             <Typography.Text type="secondary">Address</Typography.Text>
-            <Typography.Title level={5}>{department ?? "N/A"}</Typography.Title>
+            <Typography.Title level={5}>
+              {department === "" ? "N/A" : department}
+            </Typography.Title>
           </Space>
         </Col>
       </Row>

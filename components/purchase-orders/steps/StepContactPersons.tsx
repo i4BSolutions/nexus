@@ -59,6 +59,7 @@ const StepContactPersons = forwardRef<
     refetch: refetchPersons,
   } = useList("persons", {
     pageSize: "all" as any,
+    status: "true",
   });
 
   const personsData = personsDataRaw as PersonResponse;

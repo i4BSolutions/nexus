@@ -1,19 +1,43 @@
 "use client";
 
-import Breadcrumbs from "@/components/shared/Breadcrumbs";
-import { EditOutlined, StopOutlined, UserOutlined } from "@ant-design/icons";
-import { Avatar, Button, message, Space, Spin, Tabs, Typography } from "antd";
+// React & Next
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useGetById } from "@/hooks/react-query/useGetById";
-import { PersonInterface } from "@/types/person/person.type";
+
+// Ant Design
+import {
+  CloseCircleOutlined,
+  EditOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
+import {
+  Alert,
+  Button,
+  message,
+  Space,
+  Spin,
+  Tabs,
+  Tag,
+  Typography,
+} from "antd";
+
+// Components
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import ContactPersonDetailsCard from "@/components/contact-persons/details/DetailsCard";
-import { useState } from "react";
 import DeleteConfirmModal from "@/components/shared/DeleteConfirmModal";
 import Relationships from "@/components/contact-persons/details/Relationships";
-import { usePermission } from "@/hooks/shared/usePermission";
-import getAvatarUrl from "@/utils/getAvatarUrl";
+
+// Hooks
+import { useGetById } from "@/hooks/react-query/useGetById";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
+import { usePermission } from "@/hooks/shared/usePermission";
+
+// Types
+import { PersonInterface } from "@/types/person/person.type";
+
+// Utils
+import getAvatarUrl from "@/utils/getAvatarUrl";
 
 const ContactPersonDetailsPage = () => {
   const params = useParams();
@@ -88,14 +112,22 @@ const ContactPersonDetailsPage = () => {
             <Typography.Title level={3} style={{ marginBottom: 0 }}>
               {personData?.name}
             </Typography.Title>
-            <Typography.Text type="secondary" style={{ marginBottom: 0 }}>
-              {personData?.rank}
-            </Typography.Text>
+            <Space>
+              <Typography.Text type="secondary" style={{ marginBottom: 0 }}>
+                {personData?.rank || "No Rank"}
+              </Typography.Text>
+              {personData?.status === false && (
+                <Tag color="red" style={{ marginTop: 0 }}>
+                  Deactivated
+                </Tag>
+              )}
+            </Space>
           </Space>
         </Space>
 
         <Space>
           <DeleteConfirmModal
+            btnText="Deactivate"
             open={isDeleteModalOpen}
             title="Contact Person"
             onCancel={() => setIsDeleteModalOpen(false)}
@@ -129,6 +161,16 @@ const ContactPersonDetailsPage = () => {
           )}
         </Space>
       </Space>
+
+      {personData?.status === false && (
+        <Alert
+          message="This contact person has been deactivated."
+          description="The contact person is no longer active and won’t be processed."
+          type="error"
+          icon={<CloseCircleOutlined />}
+          showIcon
+        />
+      )}
 
       {/* Tabs */}
       <Tabs

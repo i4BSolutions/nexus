@@ -12,11 +12,12 @@ export async function GET(
   const { searchParams } = new URL(req.url);
 
   const search = searchParams.get("q")?.trim() || "";
-  const rank = searchParams.get("status")?.trim() || "";
+  const rank = searchParams.get("rank")?.trim() || "";
   const page = Number(searchParams.get("page")) || 1;
   const pageSizeParam = searchParams.get("pageSize") || "10";
   const pageSize =
     pageSizeParam === "all" ? "all" : parseInt(pageSizeParam, 10);
+  const statusParam = searchParams.get("status");
 
   let query = supabase
     .from("person")
@@ -24,6 +25,11 @@ export async function GET(
       count: "exact",
     })
     .order("id", { ascending: false });
+
+  // Filter by status
+  if (statusParam === "true" || statusParam === "false") {
+    query = query.eq("status", statusParam === "true");
+  }
 
   if (search) {
     query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);

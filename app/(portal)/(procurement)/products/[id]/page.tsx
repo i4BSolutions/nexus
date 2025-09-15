@@ -254,6 +254,7 @@ const ProductDetailPage = () => {
 
   const { data: contactPersons } = useList<PersonResponse>("persons", {
     pageSize: "all" as any,
+    status: "true",
   });
 
   const filtersForUI = useMemo(

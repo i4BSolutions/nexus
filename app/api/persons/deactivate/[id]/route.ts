@@ -3,24 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { error, success } from "@/lib/api-response";
 import { ApiResponse } from "@/types/shared/api-response-type";
 import { getAuthenticatedUser } from "@/helper/getUser";
+import { PersonInterface } from "@/types/person/person.type";
 
-type PersonRow = {
-  id: number;
-  name: string | null;
-  email: string | null;
-  status: boolean;
-};
-
-type DeactivateResult = {
-  person: PersonRow;
-  relatedCounts: {
-    purchase_orders: number;
-    suppliers: number;
-    transactions: number;
-  };
-};
-
-// Write person audit log entries
 async function createPersonAuditLogEntries(
   supabase: any,
   userId: string,
@@ -42,15 +26,17 @@ async function createPersonAuditLogEntries(
     }));
 
   if (entries.length > 0) {
-    const { error } = await supabase.from("person_audit_log").insert(entries);
-    if (error) console.error("Failed to log person audit entries:", error);
+    const { error: logErr } = await supabase
+      .from("person_audit_log")
+      .insert(entries);
+    if (logErr) console.error("Failed to log person audit entries:", logErr);
   }
 }
 
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
-): Promise<NextResponse<ApiResponse<DeactivateResult> | ApiResponse<null>>> {
+): Promise<NextResponse<ApiResponse<PersonInterface> | ApiResponse<null>>> {
   const supabase = await createClient();
   const { id } = await context.params;
 
@@ -59,17 +45,15 @@ export async function PUT(
   }
 
   const user = await getAuthenticatedUser(supabase);
-
   if (!user) {
     return NextResponse.json(error("Unauthorized", 401), { status: 401 });
   }
 
-  // Load current person
   const { data: person, error: loadErr } = await supabase
     .from("person")
     .select("id,name,email,status")
     .eq("id", id)
-    .maybeSingle<PersonRow>();
+    .maybeSingle<PersonInterface>();
 
   if (loadErr) {
     return NextResponse.json(
@@ -86,8 +70,10 @@ export async function PUT(
     return NextResponse.json(
       success(
         {
-          person,
-          relatedCounts: { purchase_orders: 0, suppliers: 0, transactions: 0 },
+          id: person.id,
+          name: person.name,
+          email: person.email,
+          status: person.status,
         },
         "Person is already inactive"
       ),
@@ -95,58 +81,13 @@ export async function PUT(
     );
   }
 
-  // Count related rows in parallel
-  const poQ = supabase
-    .from("purchase_order")
-    .select("id", { count: "exact", head: true })
-    .or(
-      `contact_person_id.eq.${id},authorized_signer_id.eq.${id},sign_person_id.eq.${id}`
-    );
-
-  const supplierQ = supabase
-    .from("supplier")
-    .select("id", { count: "exact", head: true })
-    .eq("contact_person_id", id);
-
-  const trxQ = supabase
-    .from("stock_transaction")
-    .select("id", { count: "exact", head: true })
-    .eq("approve_by_contact_id", id);
-
-  const [
-    { count: poCount, error: poErr },
-    { count: supCount, error: supErr },
-    { count: trxCount, error: trxErr },
-  ] = await Promise.all([poQ, supplierQ, trxQ]);
-
-  if (poErr || supErr || trxErr) {
-    const msg = [poErr?.message, supErr?.message, trxErr?.message]
-      .filter(Boolean)
-      .join("; ");
-    return NextResponse.json(error(`Failed to check relations: ${msg}`, 500), {
-      status: 500,
-    });
-  }
-
-  // Block if any relations exist
-  if ((poCount ?? 0) > 0 || (supCount ?? 0) > 0 || (trxCount ?? 0) > 0) {
-    return NextResponse.json(
-      error("Cannot deactivate: person has related data.", 409, {
-        purchase_orders: poCount ?? 0,
-        suppliers: supCount ?? 0,
-        transactions: trxCount ?? 0,
-      }),
-      { status: 409 }
-    );
-  }
-
-  // No relations -> deactivate
+  // Directly deactivate without any validation/checks
   const { data: updated, error: upErr } = await supabase
     .from("person")
     .update({ status: false })
     .eq("id", id)
     .select("id,name,email,status")
-    .maybeSingle<PersonRow>();
+    .maybeSingle<PersonInterface>();
 
   if (upErr || !updated) {
     return NextResponse.json(error("Failed to deactivate person", 500), {
@@ -154,13 +95,16 @@ export async function PUT(
     });
   }
 
+  // Audit log (optional, still helpful)
   await createPersonAuditLogEntries(supabase, user.id, person, updated);
 
   return NextResponse.json(
     success(
       {
-        person: updated,
-        relatedCounts: { purchase_orders: 0, suppliers: 0, transactions: 0 },
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        status: updated.status,
       },
       "Person deactivated successfully"
     ),

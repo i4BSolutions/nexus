@@ -110,6 +110,7 @@ const StockOut = ({
 
   const { data: contactPersons } = useList<PersonResponse>("persons", {
     pageSize: "all" as any,
+    status: "true",
   });
 
   useEffect(() => {
