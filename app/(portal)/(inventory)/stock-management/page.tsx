@@ -39,7 +39,10 @@ const StockManagementPage = () => {
   );
 
   const { data: warehousesData, isLoading: warehouseLoading } =
-    useList<WarehouseResponse>("warehouses");
+    useList<WarehouseResponse>("warehouses", {
+      page: 1,
+      pageSize: 100,
+    });
 
   const { data: stockInHistoryData, isLoading: stockInHistoryLoading } =
     useList<StockTransactionHistory[]>("stock-in/history");
