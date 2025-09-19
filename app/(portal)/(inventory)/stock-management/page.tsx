@@ -91,13 +91,13 @@ const StockManagementPage = () => {
               const fd = new FormData();
               fd.append("invoice_items", JSON.stringify(meta));
 
-              // Attach files per row as evidence_{index}
               payload.invoice_items.forEach((it: any, idx: number) => {
                 const files: File[] = it.__files__ ?? [];
-                files.forEach((f) => fd.append(`evidence_photo`, f));
+                files.forEach((f) => {
+                  fd.append(`evidence_${it.invoice_line_item_id}`, f);
+                });
               });
 
-              // If your useCreate hook accepts FormData, great:
               const response: any = await mutateStockIn.mutateAsync(fd);
 
               const msg = Array.isArray(response)
