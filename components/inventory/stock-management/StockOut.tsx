@@ -311,35 +311,43 @@ const StockOut = ({
       return;
     }
 
-    const approvalAssets = approvalFiles.map((f) => ({
-      id: (f as any).id,
-      key: (f as any).storage_key || (f.response as any)?.data?.key,
-      mime: (f as any).mime || f.type,
-      size_bytes: (f as any).size_bytes ?? 0,
-      original_filename: (f as any).original_filename || f.name,
-      type: f.type === "application/pdf" ? "pdf" : "photo",
-    }));
-
     const rowPhotos: UploadFile[] = Object.values(evidenceMap)
       .flat()
       .filter(Boolean);
-    const photoAssets = rowPhotos.map((f) => ({
-      id: (f as any).id,
-      key: (f as any).storage_key || (f.response as any)?.data?.key,
-      mime: (f as any).mime || f.type,
-      size_bytes: (f as any).size_bytes ?? 0,
-      original_filename: (f as any).original_filename || f.name,
-      type: "photo",
-    }));
 
     const payload = {
       stock_out_items: (values.items ?? [])
         .filter((i: any) => Number(i.quantity) > 0)
-        .map((i: any) => {
+        .map((i: any, idx: number) => {
           const product = inventoryItems.find(
             (inv) => inv.product.id === i.product
           );
           if (!product || product.quantity <= 0) return null;
+
+          const lineKey = String(idx);
+          const rowEvidence = (evidenceMap[lineKey] ?? []).map((f) => ({
+            id: (f as any).id,
+            key: (f as any).storage_key || (f.response as any)?.data?.key,
+            mime: (f as any).mime || f.type,
+            size_bytes: (f as any).size_bytes ?? 0,
+            original_filename: (f as any).original_filename || f.name,
+            type: "photo",
+          }));
+
+          const approvalFiles = fileList.filter(
+            (f) =>
+              f.type === "application/pdf" ||
+              f.type === "image/jpeg" ||
+              f.type === "image/png"
+          );
+          const approvalAssets = approvalFiles.map((f) => ({
+            id: (f as any).id,
+            key: (f as any).storage_key || (f.response as any)?.data?.key,
+            mime: (f as any).mime || f.type,
+            size_bytes: (f as any).size_bytes ?? 0,
+            original_filename: (f as any).original_filename || f.name,
+            type: f.type === "application/pdf" ? "pdf" : "photo",
+          }));
 
           const base: any = {
             product_id: product.product.id,
@@ -347,11 +355,10 @@ const StockOut = ({
             quantity: Number(i.quantity),
             reason: values.reason,
             note: values.note || null,
-
             approve_by_contact_id: values.approved_by,
             approval_order_no: values.approved_order_no,
-            approval_letter_id: approvalAssets[0]?.id, // first file uuid
-            assets: [...photoAssets, ...approvalAssets],
+            approval_letter_id: approvalAssets[0]?.id ?? null,
+            assets: [...rowEvidence, ...approvalAssets],
           };
 
           if (
