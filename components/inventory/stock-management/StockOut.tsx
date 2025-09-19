@@ -327,29 +327,14 @@ const StockOut = ({
           const lineKey = String(idx);
           const rowEvidence = (evidenceMap[lineKey] ?? []).map((f) => ({
             id: (f as any).id,
-            key: (f as any).storage_key || (f.response as any)?.data?.key,
-            mime: (f as any).mime || f.type,
+            key: (f as any).storage_key,
+            mime: (f as any).mime,
             size_bytes: (f as any).size_bytes ?? 0,
-            original_filename: (f as any).original_filename || f.name,
+            original_filename: (f as any).original_filename,
             type: "photo",
           }));
 
-          const approvalFiles = fileList.filter(
-            (f) =>
-              f.type === "application/pdf" ||
-              f.type === "image/jpeg" ||
-              f.type === "image/png"
-          );
-          const approvalAssets = approvalFiles.map((f) => ({
-            id: (f as any).id,
-            key: (f as any).storage_key || (f.response as any)?.data?.key,
-            mime: (f as any).mime || f.type,
-            size_bytes: (f as any).size_bytes ?? 0,
-            original_filename: (f as any).original_filename || f.name,
-            type: f.type === "application/pdf" ? "pdf" : "photo",
-          }));
-
-          const base: any = {
+          return {
             product_id: product.product.id,
             warehouse_id: selectedWarehouse?.id!,
             quantity: Number(i.quantity),
@@ -357,23 +342,19 @@ const StockOut = ({
             note: values.note || null,
             approve_by_contact_id: values.approved_by,
             approval_order_no: values.approved_order_no,
-            approval_letter_id: approvalAssets[0]?.id ?? null,
-            assets: [...rowEvidence, ...approvalAssets],
+            approval_letter_id: fileList[0].uid ?? null,
+            assets: rowEvidence,
           };
-
-          if (
-            values.reason === "Warehouse Transfer" &&
-            values.destination_warehouse
-          ) {
-            const dest = warehouses?.find(
-              (w) => w.name === values.destination_warehouse
-            );
-            if (dest) base.destination_warehouse_id = dest.id;
-          }
-
-          return base;
         })
         .filter(Boolean),
+      approval_assets: fileList.map((f) => ({
+        id: (f as any).id,
+        key: (f as any).storage_key,
+        mime: (f as any).mime,
+        size_bytes: (f as any).size_bytes ?? 0,
+        original_filename: (f as any).original_filename,
+        type: f.type === "application/pdf" ? "pdf" : "photo",
+      })),
     };
 
     try {
