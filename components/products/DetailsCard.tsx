@@ -19,12 +19,14 @@ import {
   Modal,
   App,
 } from "antd";
+
 import {
   TagOutlined,
   LinkOutlined,
   EditOutlined,
   DeleteOutlined,
   PlusCircleOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 
 // Hooks
@@ -40,8 +42,11 @@ import { ProductAliasInterface } from "@/types/product/alias/alias.type";
 import { AliasLanguageInterface } from "@/types/product/alias/language.type";
 import { ProductInterface } from "@/types/product/product.type";
 
-// Model
+// Modal
 import DeleteConfirmModal from "../shared/DeleteConfirmModal";
+
+// Utils
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 export type ProductDetailsCardProps = Omit<
   ProductInterface,
@@ -299,8 +304,7 @@ const DetailsCard = ({
               </Typography.Text>
             </Space>
           </Space>
-        }
-      >
+        }>
         <List
           loading={aliasLoading}
           locale={{ emptyText: "No aliases added yet." }}
@@ -492,6 +496,13 @@ const DetailsCard = ({
                 </Space>
               </Form.Item>
             </Space>
+        </Col>
+        <Col span={12} style={{ marginTop: 16 }}>
+          <Space direction="vertical" size={0}>
+            <Typography.Text type="secondary">Unit Price</Typography.Text>
+            <Typography.Title level={5}>
+              {formatWithThousandSeparator(unit_price) ?? "N/A"}
+            </Typography.Title>
           </Space>
         </Form>
       </Card>
@@ -698,6 +709,9 @@ const DetailsCard = ({
             >
               Save
             </Button>
+            <Typography.Title level={5}>
+              {formatWithThousandSeparator(min_stock) ?? "N/A"}
+            </Typography.Title>
           </Space>
         </Form>
       </Modal>

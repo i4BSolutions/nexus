@@ -30,7 +30,6 @@ import {
   UploadFile,
   UploadProps,
 } from "antd";
-
 import React, { useEffect } from "react";
 import StockOutHistory from "./StockOutHistory";
 import { RcFile } from "antd/es/upload";
@@ -40,6 +39,7 @@ import ImageViewerModal, {
 import { useGetAll } from "@/hooks/react-query/useGetAll";
 import { PersonInterface, PersonResponse } from "@/types/person/person.type";
 import { useList } from "@/hooks/react-query/useList";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -601,7 +601,9 @@ const StockOut = ({
                                   );
                                   return (
                                     <Typography.Text>
-                                      {inv?.quantity?.toLocaleString() ?? "-"}
+                                      {formatWithThousandSeparator(
+                                        inv?.quantity
+                                      ) ?? "-"}
                                     </Typography.Text>
                                   );
                                 }}

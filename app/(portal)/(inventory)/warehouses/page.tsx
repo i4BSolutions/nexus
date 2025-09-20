@@ -35,6 +35,7 @@ import { useCreate } from "@/hooks/react-query/useCreate";
 import { useList } from "@/hooks/react-query/useList";
 import { useUpdate } from "@/hooks/react-query/useUpdate";
 import { usePermission } from "@/hooks/shared/usePermission";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 export default function WarehousePage() {
   const hasPermission = usePermission("can_manage_warehouses");
@@ -175,7 +176,9 @@ export default function WarehousePage() {
       }),
       render: (formatField) => (
         <div>
-          <Typography.Text>{formatField.toLocaleString()} USD</Typography.Text>
+          <Typography.Text>
+            {formatWithThousandSeparator(formatField)} USD
+          </Typography.Text>
         </div>
       ),
     },

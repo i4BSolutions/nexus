@@ -57,13 +57,12 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
       queryFn: fetchCurrencies,
     });
 
-    const { data: productsData, isLoading: productsLoading } = useList(
-      "products",
-      {
-        pageSize: "all" as any,
-        status: "true",
-      }
-    );
+    const { data: productsData, isLoading: productsLoading } = useList<{
+      items: ProductInterface[];
+    }>("products", {
+      pageSize: "all" as any,
+      status: "true",
+    });
 
     const forceUpdate = useForceUpdate();
 
@@ -220,17 +219,8 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                       ? (subtotal / exchangeRate).toFixed(2)
                       : "0.00";
 
-                    // Exclude already selected products except for the current row
-                    const selectedProductIds = items
-                      .map((item: any, idx: number) =>
-                        idx !== name ? item?.product : null
-                      )
-                      .filter(Boolean);
                     const availableProducts =
-                      (productsData as any)?.items?.filter(
-                        (product: ProductInterface) =>
-                          !selectedProductIds.includes(product.id)
-                      ) || [];
+                      (productsData?.items as ProductInterface[]) ?? [];
 
                     return (
                       <Row

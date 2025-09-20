@@ -18,6 +18,7 @@ import {
 } from "@/types/product/product.type";
 import { PurchaseOrderRegionInterface } from "@/types/purchase-order/purchase-order-region.type";
 import { SupplierInterface } from "@/types/supplier/supplier.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 interface StepReviewSubmitProps {
   onNext: (values: any) => void;
@@ -397,10 +398,12 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
                     )?.name || "-"}
                   </Col>
 
-                  <Col span={4}>{item.quantity}</Col>
+                  <Col span={4}>
+                    {formatWithThousandSeparator(item.quantity)}
+                  </Col>
 
                   <Col span={7}>
-                    {item.unit_price?.toLocaleString()}{" "}
+                    {formatWithThousandSeparator(item.unit_price)}{" "}
                     {(currencyData as ProductCurrencyInterface)?.currency_code}
                     <br />
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>

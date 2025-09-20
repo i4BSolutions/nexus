@@ -2,6 +2,7 @@
 
 import { Card, Progress, Typography, Space } from "antd";
 import { ShopOutlined } from "@ant-design/icons";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 const { Text, Title } = Typography;
 
@@ -96,7 +97,8 @@ export default function CurrentStockCard({
           }}
         >
           <Text>
-            Minimum Stock: <strong>{minStock}</strong>
+            Minimum Stock:{" "}
+            <strong>{formatWithThousandSeparator(minStock)}</strong>
           </Text>
           <Text style={{ color, fontWeight: 500 }}>
             {percentage}% of minimum

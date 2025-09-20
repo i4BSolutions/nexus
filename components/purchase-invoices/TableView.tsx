@@ -13,6 +13,7 @@ import {
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 export default function TableView({
   data,
@@ -70,12 +71,13 @@ export default function TableView({
         <div>
           <div>
             <Typography.Text>
-              {record.total_amount_local.toFixed(2)} {record.currency_code}
+              {formatWithThousandSeparator(record.total_amount_local)}{" "}
+              {record.currency_code}
             </Typography.Text>
           </div>
           <div>
             <Typography.Text type="secondary">
-              (${record.total_amount_usd.toLocaleString()})
+              (${formatWithThousandSeparator(record.total_amount_usd)})
             </Typography.Text>
           </div>
         </div>

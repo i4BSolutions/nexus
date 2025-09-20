@@ -9,6 +9,7 @@ import {
   InventoryResponse,
 } from "@/types/inventory/inventory.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import { DollarCircleOutlined, TagOutlined } from "@ant-design/icons";
 import {
   App,
@@ -98,7 +99,11 @@ const Inventory = () => {
         title: "IN-STOCK UNITS",
         dataIndex: "current_stock",
         key: "current_stock",
-        render: (value) => <Typography.Text>{value}</Typography.Text>,
+        render: (value) => (
+          <Typography.Text>
+            {formatWithThousandSeparator(value)}
+          </Typography.Text>
+        ),
       },
       {
         title: "UNIT PRICE",
@@ -106,7 +111,9 @@ const Inventory = () => {
         key: "unit_price",
         render: (value) => (
           <Typography.Text>
-            {typeof value === "number" ? `${value.toLocaleString()} USD` : "-"}
+            {typeof value === "number"
+              ? `${formatWithThousandSeparator(value)} USD`
+              : "-"}
           </Typography.Text>
         ),
       },
@@ -116,7 +123,9 @@ const Inventory = () => {
         key: "total_value",
         render: (value) => (
           <Typography.Text>
-            {typeof value === "number" ? `${value.toLocaleString()} USD` : "-"}
+            {typeof value === "number"
+              ? `${formatWithThousandSeparator(value)} USD`
+              : "-"}
           </Typography.Text>
         ),
       },
@@ -135,7 +144,10 @@ const Inventory = () => {
         stats={[
           {
             title: "Total Items",
-            value: inventoryListData?.total_item_count ?? 0,
+            value:
+              formatWithThousandSeparator(
+                inventoryListData?.total_item_count
+              ) ?? 0,
             tooltip: "Total Items",
             icon: <TagOutlined />,
             bgColor: "#36CFC9",
@@ -145,7 +157,10 @@ const Inventory = () => {
           },
           {
             title: "Total Inventory Value (USD)",
-            value: inventoryListData?.total_inventory_value ?? 0,
+            value:
+              formatWithThousandSeparator(
+                inventoryListData?.total_inventory_value
+              ) ?? 0,
             tooltip: "Total Inventory Value (USD)",
             icon: <DollarCircleOutlined />,
             bgColor: "#73D13D",

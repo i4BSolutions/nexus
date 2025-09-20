@@ -1,4 +1,5 @@
 import { useGetById } from "@/hooks/react-query/useGetById";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import {
   CalendarOutlined,
   CheckCircleTwoTone,
@@ -126,18 +127,11 @@ const BudgetAllocationLinkedPOView = ({ id }: { id: number }) => {
 
           {/* Amount */}
           <Col span={4}>
-            {linkedPOData?.total_amount_local.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}{" "}
+            {formatWithThousandSeparator(linkedPOData?.total_amount_local)}{" "}
             {linkedPOData?.currency?.currency_code}
             <br />
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              (
-              {linkedPOData?.total_amount_usd.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}{" "}
+              ({formatWithThousandSeparator(linkedPOData?.total_amount_usd)}{" "}
               USD)
             </Typography.Text>
           </Col>

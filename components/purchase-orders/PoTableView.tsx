@@ -16,6 +16,7 @@ import {
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import StatusBadge from "./StatusBadge";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 export default function PoTableView({
   data,
@@ -88,12 +89,12 @@ export default function PoTableView({
         <div>
           <div>
             <Typography.Text>
-              {amount.toFixed(2)} {record.currency_code}
+              {formatWithThousandSeparator(amount)} {record.currency_code}
             </Typography.Text>
           </div>
           <div>
             <Typography.Text type="secondary">
-              (${record.amount_usd.toLocaleString("en-US")})
+              (${formatWithThousandSeparator(record.amount_usd)})
             </Typography.Text>
           </div>
         </div>

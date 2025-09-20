@@ -1,7 +1,6 @@
 "use client";
 
 import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
-
 import PoCardView from "@/components/purchase-orders/PoCardView";
 import PoTableView from "@/components/purchase-orders/PoTableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -31,6 +30,7 @@ import { exportPOToCsv } from "@/utils/exportPOCSV";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import isBetween from "dayjs/plugin/isBetween";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
@@ -90,7 +90,7 @@ export default function PurchaseOrdersPage() {
       setStatItems([
         {
           title: "Total POs",
-          value: poData.statistics.total,
+          value: formatWithThousandSeparator(poData.statistics.total),
           icon: <ShoppingCartOutlined />,
           bgColor: "#40A9FF",
           gradient: "linear-gradient(90deg, #E6F7FF 0%, #FFF 100%)",
@@ -114,7 +114,7 @@ export default function PurchaseOrdersPage() {
         },
         {
           title: "Total USD Value",
-          value: poData.statistics.total_usd_value,
+          value: formatWithThousandSeparator(poData.statistics.total_usd_value),
           icon: <DollarOutlined />,
           bgColor: "#36CFC9",
           gradient: "linear-gradient(90deg, #E6FFFB 0%, #FFF 100%)",
