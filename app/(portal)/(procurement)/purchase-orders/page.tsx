@@ -226,7 +226,7 @@ export default function PurchaseOrdersPage() {
           onAddNew={() => setShowCreateModal(true)}
           buttonText="New Purchase Order"
           buttonIcon={<PlusOutlined />}
-          isExport={true}
+          isExport={false}
           onExport={() => {
             setShowExportCSVModal((prev) => !prev);
           }}

@@ -227,7 +227,7 @@ export default function MainLayout({
       style: { cursor: "default" },
     },
     {
-      label: <Typography.Text>V1.0.1</Typography.Text>,
+      label: <Typography.Text>v1.0.1.0</Typography.Text>,
       key: "2",
       style: { cursor: "default" },
     },
