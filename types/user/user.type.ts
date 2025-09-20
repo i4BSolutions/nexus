@@ -1,24 +1,23 @@
 export type UserFieldType = {
-  avatar?: string;
   full_name: string;
   username: string;
   email: string;
   department: string;
-  view_purchase_orders: boolean;
-  manage_purchase_orders: boolean;
-  view_invoices: boolean;
-  manage_invoices: boolean;
-  view_products_suppliers: boolean;
-  manage_products_suppliers: boolean;
-  view_stock: boolean;
-  stock_in: boolean;
-  stock_out: boolean;
-  view_warehouses: boolean;
-  manage_warehouses: boolean;
-  view_budgets_allocations: boolean;
-  manage_budgets_allocations: boolean;
-  view_dashboard: boolean;
-  manage_users: boolean;
+  can_view_purchase_orders: boolean;
+  can_manage_purchase_orders: boolean;
+  can_view_invoices: boolean;
+  can_manage_invoices: boolean;
+  can_view_products_suppliers: boolean;
+  can_manage_products_suppliers: boolean;
+  can_view_stock: boolean;
+  can_stock_in: boolean;
+  can_stock_out: boolean;
+  can_view_warehouses: boolean;
+  can_manage_warehouses: boolean;
+  can_view_budgets_allocations: boolean;
+  can_manage_budgets_allocations: boolean;
+  can_view_dashboard: boolean;
+  can_manage_users: boolean;
 };
 
 export type UserInterface = {

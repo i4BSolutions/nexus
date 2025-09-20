@@ -10,7 +10,7 @@ import { useList } from "@/hooks/react-query/useList";
 
 // Types
 import { Budget } from "@/types/budgets/budgets.type";
-import { PersonInterface } from "@/types/person/person.type";
+import { PersonInterface, PersonResponse } from "@/types/person/person.type";
 import {
   ProductCurrencyInterface,
   ProductInterface,
@@ -24,6 +24,7 @@ interface StepReviewSubmitProps {
   onNext: (values: any) => void;
   onBack: () => void;
   formData?: any;
+  setTestData?: (data: any) => void;
 }
 
 export interface StepReviewSubmitRef {
@@ -32,7 +33,7 @@ export interface StepReviewSubmitRef {
 }
 
 const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
-  ({ onNext, onBack, formData }, ref) => {
+  ({ onNext, onBack, formData, setTestData }, ref) => {
     const { message } = App.useApp();
 
     const [form] = Form.useForm();
@@ -59,7 +60,16 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
       pageSize: "all" as any,
     });
 
-    const { data: personsData = [] } = useList("persons");
+    const {
+      data: personsDataRaw,
+      isLoading: personsLoading,
+      refetch: refetchPersons,
+    } = useList("persons", {
+      pageSize: "all" as any,
+      status: "true",
+    });
+
+    const personsData = personsDataRaw as PersonResponse;
 
     const getTotal = () => {
       const items = formData.items;
@@ -129,6 +139,12 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
         }
 
         const data = await response.json();
+        console.log("Created PO:", data);
+        setTestData &&
+          setTestData({
+            id: data.data.id,
+            po_number: data.data.purchase_order_no,
+          });
         onNext(data);
       } catch (error: any) {
         message.error(error.message || "Failed to create purchase order");
@@ -443,7 +459,7 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
                   Contact Person
                 </Typography.Text>
                 <div style={{ fontSize: 16, fontWeight: 600 }}>
-                  {(personsData as PersonInterface[])?.find(
+                  {(personsData?.items as PersonInterface[])?.find(
                     (p: PersonInterface) => p.id === formData?.contact_person
                   )?.name || "-"}
                 </div>
@@ -451,7 +467,7 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
               <Col span={12} style={{ marginBottom: 12 }}>
                 <Typography.Text type="secondary">Sign Person</Typography.Text>
                 <div style={{ fontSize: 16, fontWeight: 600 }}>
-                  {(personsData as PersonInterface[])?.find(
+                  {(personsData?.items as PersonInterface[])?.find(
                     (p: PersonInterface) => p.id === formData?.sign_person
                   )?.name || "-"}
                 </div>
@@ -461,7 +477,7 @@ const StepReviewSubmit = forwardRef<StepReviewSubmitRef, StepReviewSubmitProps>(
                   Authorized Sign Person
                 </Typography.Text>
                 <div style={{ fontSize: 16, fontWeight: 600 }}>
-                  {(personsData as PersonInterface[])?.find(
+                  {(personsData?.items as PersonInterface[])?.find(
                     (p: PersonInterface) =>
                       p.id === formData?.authorized_sign_person
                   )?.name || "-"}

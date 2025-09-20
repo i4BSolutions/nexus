@@ -5,6 +5,7 @@ import { ExclamationCircleOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 
 interface DeleteConfirmModalProps {
+  btnText?: string;
   open: boolean;
   title: string;
   onCancel: () => void;
@@ -12,6 +13,7 @@ interface DeleteConfirmModalProps {
 }
 
 const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
+  btnText,
   open,
   title,
   onCancel,
@@ -42,7 +44,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
       </div>
 
       <Title level={4} style={{ margin: 0 }}>
-        Delete {title}
+        {btnText ? btnText : "Delete"} {title}
       </Title>
 
       <Text type="secondary">
@@ -56,7 +58,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           Cancel
         </Button>
         <Button size="large" danger type="primary" onClick={onConfirm}>
-          Delete
+          {btnText ? btnText : "Delete"}
         </Button>
       </Space>
     </Space>

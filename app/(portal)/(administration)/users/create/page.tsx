@@ -3,6 +3,7 @@
 import DepartmentCreateModal from "@/components/users/DepartmentCreateModal";
 import { useCreate } from "@/hooks/react-query/useCreate";
 import { useGetAll } from "@/hooks/react-query/useGetAll";
+import { PERMISSION_KEYS } from "@/lib/constants";
 import { DepartmentInterface } from "@/types/departments/department.type";
 import { UserFieldType } from "@/types/user/user.type";
 import getAvatarUrl from "@/utils/getAvatarUrl";
@@ -55,14 +56,7 @@ export default function UserCreationPage() {
   >("departments", ["departments"]);
 
   const onFinish: FormProps<UserFieldType>["onFinish"] = (values) => {
-    const permissionKeys = Object.keys(values).filter(
-      (key) =>
-        key.startsWith("view_") ||
-        key.startsWith("manage_") ||
-        key.startsWith("stock_")
-    );
-
-    const hasAtLeastOnePermission = permissionKeys.some(
+    const hasAtLeastOnePermission = PERMISSION_KEYS.some(
       (key) => values[key as keyof UserFieldType]
     );
 
@@ -77,10 +71,12 @@ export default function UserCreationPage() {
         username: "@" + values.username,
         email: values.email,
         department: values.department,
-        permissions: permissionKeys.reduce((acc, key) => {
-          acc[`can_${key}`] = !!values[key as keyof UserFieldType];
-          return acc;
-        }, {} as Record<string, boolean>),
+        permissions: Object.fromEntries(
+          PERMISSION_KEYS.map((key) => [
+            key,
+            values[key as keyof UserFieldType],
+          ])
+        ),
       },
       {
         onSuccess: () => {
@@ -96,7 +92,6 @@ export default function UserCreationPage() {
   };
 
   const handleDepartmentCreate = (values: { name: string }) => {
-    console.log("Creating department with values:", values);
     createDepartment(values, {
       onSuccess: () => {
         message.success("Department created successfully!");
@@ -147,31 +142,20 @@ export default function UserCreationPage() {
         layout="vertical"
         autoComplete="off"
         onFinish={onFinish}
-        initialValues={{
-          view_purchase_orders: false,
-          manage_purchase_orders: false,
-          view_invoices: false,
-          manage_invoices: false,
-          view_products_suppliers: false,
-          manage_products_suppliers: false,
-          view_stock: false,
-          stock_in: false,
-          stock_out: false,
-          view_warehouses: false,
-          manage_warehouses: false,
-          view_budgets_allocations: false,
-          manage_budgets_allocations: false,
-          view_dashboard: false,
-          manage_users: false,
-        }}
+        initialValues={PERMISSION_KEYS.reduce((obj, key) => {
+          obj[key] = false;
+          return obj;
+        }, {} as Partial<UserFieldType>)}
         onValuesChange={(changed) => {
           const changedKey = Object.keys(changed)[0];
-          if (changedKey.startsWith("stock_")) {
-            const correspondingViewKey = "view_stock";
-            form.setFieldsValue({ [correspondingViewKey]: true });
+          if (changedKey.startsWith("can_stock_") && changed[changedKey]) {
+            form.setFieldsValue({ can_view_stock: true });
           }
-          if (changedKey.startsWith("manage_")) {
-            const correspondingViewKey = changedKey.replace("manage_", "view_");
+          if (changedKey.startsWith("can_manage_") && changed[changedKey]) {
+            const correspondingViewKey = changedKey.replace(
+              "can_manage_",
+              "can_view_"
+            );
             form.setFieldsValue({ [correspondingViewKey]: true });
           }
         }}
@@ -228,6 +212,10 @@ export default function UserCreationPage() {
               style={{ width: "100%" }}
               rules={[
                 { required: true, message: "Please enter email address!" },
+                {
+                  type: "email",
+                  message: "Please enter a valid email address!",
+                },
               ]}
             >
               <Input placeholder="Enter email address" />
@@ -307,7 +295,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="view_purchase_orders"
+                  name="can_view_purchase_orders"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -327,7 +315,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="manage_purchase_orders"
+                  name="can_manage_purchase_orders"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -366,7 +354,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="view_invoices"
+                  name="can_view_invoices"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -385,7 +373,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="manage_invoices"
+                  name="can_manage_invoices"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -428,7 +416,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="view_products_suppliers"
+                  name="can_view_products_suppliers"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -447,7 +435,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="manage_products_suppliers"
+                  name="can_manage_products_suppliers"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -488,7 +476,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="view_stock"
+                  name="can_view_stock"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -507,7 +495,7 @@ export default function UserCreationPage() {
             <Col span={8} className="!space-y-2">
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="stock_in"
+                  name="can_stock_in"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -525,7 +513,7 @@ export default function UserCreationPage() {
 
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="stock_out"
+                  name="can_stock_out"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -566,7 +554,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="view_warehouses"
+                  name="can_view_warehouses"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -585,7 +573,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="manage_warehouses"
+                  name="can_manage_warehouses"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -626,7 +614,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="view_budgets_allocations"
+                  name="can_view_budgets_allocations"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -645,7 +633,7 @@ export default function UserCreationPage() {
             <Col span={8}>
               <div className="flex items-center gap-4">
                 <Form.Item<UserFieldType>
-                  name="manage_budgets_allocations"
+                  name="can_manage_budgets_allocations"
                   valuePropName="checked"
                   style={{
                     marginBottom: 0,
@@ -683,49 +671,44 @@ export default function UserCreationPage() {
               </span>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="view_dashboard"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">View Dashboard</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can access the main system dashboard
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="can_view_dashboard"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+                <div className="flex flex-col">
+                  <span className="text-sm">View Dashboard</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can access the main system dashboard
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
             <Col span={8}>
-              <Form.Item<UserFieldType>
-                name="manage_users"
-                valuePropName="checked"
-                style={{
-                  marginBottom: 0,
-                  width: "100%",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <Checkbox />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm">Manage Users</span>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      Can create, edit, and manage user accounts and their
-                      permissions
-                    </Typography.Text>
-                  </div>
+              <div className="flex items-center gap-4">
+                <Form.Item<UserFieldType>
+                  name="can_manage_users"
+                  valuePropName="checked"
+                  style={{
+                    marginBottom: 0,
+                  }}
+                >
+                  <Checkbox />
+                </Form.Item>
+
+                <div className="flex flex-col">
+                  <span className="text-sm">Manage Users</span>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Can create, edit, and manage user accounts and their
+                    permissions
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              </div>
             </Col>
           </Row>
         </div>

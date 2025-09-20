@@ -103,6 +103,8 @@ export async function PUT(
     const body = await req.json();
     const updateData = {
       ...body,
+      contact_person: "deprecated_field",
+      contact_person_id: body.contact_person,
       updated_at: new Date().toISOString(),
     };
 
@@ -213,7 +215,7 @@ export async function GET(
 
     const { data, error: dbError } = await supabase
       .from("supplier")
-      .select("*")
+      .select("*, contact_person:contact_person_id(name)")
       .eq("id", id)
       .single();
 
@@ -221,9 +223,24 @@ export async function GET(
       throw new Error("Failed to retrieve supplier: " + dbError.message);
     if (!data) throw new Error("Supplier not found");
 
-    return NextResponse.json(success(data, "Supplier retrieved successfully"), {
-      status: 200,
-    });
+    const formattedItems = {
+      id: data.id,
+      name: data.name,
+      contact_person: data.contact_person?.name,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      status: data.status,
+      created_at: data.inserted_at,
+      updated_at: data.updated_at,
+    };
+
+    return NextResponse.json(
+      success(formattedItems, "Supplier retrieved successfully"),
+      {
+        status: 200,
+      }
+    );
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : "Invalid request";
     const statusCode = errorMessage.includes("Unauthorized")

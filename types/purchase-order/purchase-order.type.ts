@@ -37,6 +37,8 @@ export interface PurchaseOrderDto {
   remaining_allocation?: number;
   allocation_percentage?: number;
   purchase_order_smart_status: string;
+  supplier?: string;
+  region?: string;
 }
 
 export interface PurchaseOrderResponse {

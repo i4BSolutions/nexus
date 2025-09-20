@@ -1,4 +1,3 @@
-// PoDetailPDF.tsx
 import {
   ClipPath,
   Defs,
@@ -16,7 +15,6 @@ import {
 import { PurchaseOrderDetailDto } from "@/types/purchase-order/purchase-order-detail.type";
 import { PurchaseOrderItemInterface } from "@/types/purchase-order/purchase-order-item.type";
 
-// PDF-specific styles
 const styles = StyleSheet.create({
   page: {
     padding: 24,
@@ -79,12 +77,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#f2f2f2",
     padding: 8,
-    borderTop: "1pt solid #e0e0e0",
-    borderBottom: "1pt solid #e0e0e0",
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
   },
   tableRow: {
     flexDirection: "row",
-    borderBottom: "1pt solid #e0e0e0",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
     padding: 8,
   },
   col: {
@@ -115,14 +116,10 @@ export default function PoDetailPDF({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* <View style={styles.orgHeader}>
-          <Image src={""} style={styles.orgLogo} />
-        </View> */}
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.iconContainer}>
             <Svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <G clip-path="url(#clip0_981_1937)">
+              <G clipPath="url(#clip0_981_1937)">
                 <Path
                   d="M19.5091 8.8098L18.8484 1.83212C18.8149 1.47052 18.527 1.1848 18.1654 1.14909L11.1877 0.488373H11.1788C11.1073 0.488373 11.0515 0.510694 11.0091 0.553105L0.556 11.0062C0.535308 11.0269 0.518891 11.0514 0.507689 11.0784C0.496488 11.1054 0.490723 11.1344 0.490723 11.1636C0.490723 11.1928 0.496488 11.2218 0.507689 11.2488C0.518891 11.2758 0.535308 11.3003 0.556 11.321L8.67654 19.4415C8.71895 19.4839 8.77475 19.5062 8.83502 19.5062C8.89529 19.5062 8.95109 19.4839 8.9935 19.4415L19.4466 8.98837C19.4913 8.9415 19.5136 8.87677 19.5091 8.8098ZM8.83279 17.2004L2.79707 11.1647L11.7189 2.24284L17.2323 2.76516L17.7547 8.27855L8.83279 17.2004ZM13.7502 4.28302C12.6676 4.28302 11.7859 5.16471 11.7859 6.2473C11.7859 7.32989 12.6676 8.21159 13.7502 8.21159C14.8328 8.21159 15.7145 7.32989 15.7145 6.2473C15.7145 5.16471 14.8328 4.28302 13.7502 4.28302ZM13.7502 6.96159C13.3551 6.96159 13.0359 6.64239 13.0359 6.2473C13.0359 5.85221 13.3551 5.53302 13.7502 5.53302C14.1453 5.53302 14.4645 5.85221 14.4645 6.2473C14.4645 6.64239 14.1453 6.96159 13.7502 6.96159Z"
                   fill="white"
@@ -136,7 +133,7 @@ export default function PoDetailPDF({
             </Svg>
           </View>
           <View>
-            <Text style={styles.headerTitle}>Purchase Order Details</Text>
+            <Text style={styles.headerTitle}>{data.purchase_order_no}</Text>
             <Text style={styles.headerSubtitle}>
               Details and information about this purchase order
             </Text>
