@@ -2,7 +2,13 @@ import { useGetById } from "@/hooks/react-query/useGetById";
 import { InventoryInterface } from "@/types/inventory/inventory.type";
 import { StockTransactionHistory } from "@/types/stock/stock.type";
 import { WarehouseInterface } from "@/types/warehouse/warehouse.type";
-import { PlusOutlined, TagOutlined, UploadOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  PaperClipOutlined,
+  PlusOutlined,
+  TagOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import {
   App,
   Button,
@@ -14,15 +20,25 @@ import {
   Form,
   Input,
   InputNumber,
+  Modal,
   Row,
   Select,
   Space,
   Spin,
   Typography,
+  Upload,
+  UploadFile,
+  UploadProps,
 } from "antd";
-
 import React, { useEffect } from "react";
 import StockOutHistory from "./StockOutHistory";
+import { RcFile } from "antd/es/upload";
+import ImageViewerModal, {
+  ViewerImage,
+} from "@/components/shared/ImageViewerModal";
+import { useGetAll } from "@/hooks/react-query/useGetAll";
+import { PersonInterface, PersonResponse } from "@/types/person/person.type";
+import { useList } from "@/hooks/react-query/useList";
 import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 const { Option } = Select;
@@ -37,6 +53,8 @@ interface StockOutProps {
   onSubmit?: (payload: any) => void;
 }
 
+const MAX_FILES = 10;
+
 const StockOut = ({
   warehouses,
   warehouseLoading,
@@ -47,6 +65,33 @@ const StockOut = ({
 }: StockOutProps) => {
   const [form] = Form.useForm();
   const { message } = App.useApp();
+  const [fileList, setFileList] = React.useState<UploadFile[]>([]);
+  const [openUploadModal, setOpenUploadModal] = React.useState(false);
+  const [evidenceMap, setEvidenceMap] = React.useState<
+    Record<string, UploadFile[]>
+  >({});
+  const [activeLineKey, setActiveLineKey] = React.useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
+
+  const [openConfirmModal, setOpenConfirmModal] = React.useState(false);
+  const [pendingRemove, setPendingRemove] = React.useState<UploadFile | null>(
+    null
+  );
+  const removeResolverRef = React.useRef<((ok: boolean) => void) | null>(null);
+
+  const [viewerOpen, setViewerOpen] = React.useState(false);
+  const [viewerStart, setViewerStart] = React.useState(0);
+  const [viewerImages, setViewerImages] = React.useState<ViewerImage[]>([]);
+
+  const toViewerImages = (files: UploadFile[]): ViewerImage[] =>
+    files.map((f, i) => ({
+      src:
+        f.url ||
+        f.thumbUrl ||
+        (f.originFileObj ? URL.createObjectURL(f.originFileObj as File) : ""),
+      name: f.name,
+      key: f.uid ?? i,
+    }));
 
   const reason = Form.useWatch("reason", form);
   const selectedWarehouseName = Form.useWatch("warehouse", form);
@@ -63,15 +108,190 @@ const StockOut = ({
 
   const inventoryItems = (inventoryDataRaw as InventoryInterface[]) || [];
 
+  const { data: contactPersons } = useList<PersonResponse>("persons", {
+    pageSize: "all" as any,
+    status: "true",
+  });
+
   useEffect(() => {
-    if (selectedWarehouse && inventoryItems.length > 0) {
+    setEvidenceMap({});
+    setActiveLineKey(null);
+    setActiveIndex(null);
+
+    if (selectedWarehouse?.id && inventoryItems.length > 0) {
       form.setFieldsValue({
         items: [{ product: null, quantity: 1 }],
       });
     } else {
       form.setFieldsValue({ items: [] });
     }
-  }, [selectedWarehouse, inventoryItems, form]);
+  }, [selectedWarehouse?.id, inventoryItems.length, form]);
+
+  const beforeUpload = (file: RcFile) => {
+    const isImage = ["image/jpeg", "image/png"].includes(file.type);
+    const isPdf = file.type === "application/pdf";
+
+    // Only allow image or pdf
+    if (!isImage && !isPdf) {
+      message.error(`${file.name} is not a valid file type`);
+      return Upload.LIST_IGNORE;
+    }
+
+    // Size checks
+    const isLtPhoto5M = file.size / 1024 / 1024 < 5;
+    const isLtPdf5M = file.size / 1024 / 1024 < 5;
+
+    if (isImage && !isLtPhoto5M) {
+      message.error(`${file.name} must be smaller than 5MB!`);
+      return Upload.LIST_IGNORE;
+    }
+    if (isPdf && !isLtPdf5M) {
+      message.error(`${file.name} must be smaller than 5MB!`);
+      return Upload.LIST_IGNORE;
+    }
+
+    return true;
+  };
+
+  const handleUploadChange: UploadProps["onChange"] = (info) => {
+    let newFileList = [...info.fileList].slice(-5);
+
+    newFileList = newFileList.map((file) => {
+      const resp = file.response as any;
+
+      // map backend response ➜ file.url + keep storage_key for submit
+      if (resp && typeof resp === "object" && resp.data) {
+        (file as any).id = resp.data.id;
+        file.url = resp.data.url || file.url;
+        (file as any).storage_key = resp.data.key;
+        (file as any).mime = resp.data.mime ?? file.type;
+        (file as any).size_bytes = resp.data.size_bytes ?? file.size ?? 0;
+        (file as any).original_filename =
+          resp.data.original_filename ?? file.name;
+      }
+
+      // fallback local blob preview (while uploading)
+      if (!file.url && file.originFileObj) {
+        file.url = URL.createObjectURL(file.originFileObj as RcFile);
+      }
+      return file;
+    });
+
+    setFileList(newFileList);
+  };
+
+  const askRemove = (file: UploadFile) =>
+    new Promise<boolean>((resolve) => {
+      removeResolverRef.current = resolve;
+      setPendingRemove(file);
+      setOpenConfirmModal(true);
+    });
+
+  const handleConfirmRemove = () => {
+    setOpenConfirmModal(false);
+    removeResolverRef.current?.(true);
+    removeResolverRef.current = null;
+    setPendingRemove(null);
+  };
+  const handleCancelRemove = () => {
+    setOpenConfirmModal(false);
+    removeResolverRef.current?.(false);
+    removeResolverRef.current = null;
+    setPendingRemove(null);
+  };
+
+  const openViewerForRow = (lineKey: string, startIndex = 0) => {
+    const files = evidenceMap[lineKey] ?? [];
+    if (!files.length) return;
+    setViewerImages(toViewerImages(files));
+    setViewerStart(startIndex);
+    setViewerOpen(true);
+  };
+
+  const rowUploadProps: UploadProps = {
+    name: "file",
+    multiple: true,
+    accept: "image/jpeg,image/png",
+    action: "/api/uploads/direct", // client-only, no auto upload
+    fileList: activeLineKey !== null ? evidenceMap[activeLineKey] ?? [] : [],
+    beforeUpload(file) {
+      const isImg = file.type === "image/jpeg" || file.type === "image/png";
+      if (!isImg) {
+        message.error("You can only upload JPG/PNG file!");
+        return Upload.LIST_IGNORE;
+      }
+      const isLt2M = (file.size ?? 0) / 1024 / 1024 < 2;
+      if (!isLt2M) {
+        message.error("Image must be smaller than 2MB!");
+        return Upload.LIST_IGNORE;
+      }
+      return true;
+    },
+    async onRemove(file) {
+      if (activeLineKey === null || activeIndex === null) return false;
+      const ok = await askRemove(file);
+      if (!ok) return false;
+
+      setEvidenceMap((prev) => {
+        const next = { ...prev };
+        next[activeLineKey] = (next[activeLineKey] ?? []).filter(
+          (f) => f.uid !== file.uid
+        );
+
+        // keep form in sync + trigger row validation
+        form.setFieldValue(
+          ["items", activeIndex, "evidence_photo"],
+          next[activeLineKey]
+        );
+        form.validateFields([["items", activeIndex, "evidence_photo"]]);
+        return next;
+      });
+      return true;
+    },
+    onChange({ fileList: newList }) {
+      if (activeLineKey === null || activeIndex === null) return;
+
+      // trim count
+      let trimmed = newList;
+      if (newList.length > MAX_FILES) {
+        trimmed = newList.slice(0, MAX_FILES);
+        message.warning(`You can upload up to ${MAX_FILES} photos.`);
+      }
+
+      trimmed = trimmed.map((file) => {
+        const resp = file.response as any;
+        if (resp && typeof resp === "object" && resp.data) {
+          (file as any).id = resp.data.id;
+          file.url = resp.data.url || file.url;
+          (file as any).storage_key = resp.data.key;
+          (file as any).mime = resp.data.mime ?? file.type;
+          (file as any).size_bytes = resp.data.size_bytes ?? file.size ?? 0;
+          (file as any).original_filename =
+            resp.data.original_filename ?? file.name;
+        }
+        if (!file.url && file.originFileObj) {
+          file.url = URL.createObjectURL(file.originFileObj as RcFile);
+        }
+        return file;
+      });
+
+      setEvidenceMap((prev) => {
+        const next = { ...prev, [activeLineKey]: trimmed };
+        form.setFieldValue(["items", activeIndex, "evidence_photo"], trimmed);
+        form.validateFields([["items", activeIndex, "evidence_photo"]]);
+        return next;
+      });
+    },
+    onPreview(file) {
+      // preview from the same active row
+      if (!activeLineKey) return;
+      const files = evidenceMap[activeLineKey] ?? [];
+      const idx = files.findIndex((f) => f.uid === file.uid);
+      openViewerForRow(activeLineKey, idx >= 0 ? idx : 0);
+    },
+    listType: "picture",
+    showUploadList: true,
+  };
 
   const handleFinish = (values: any) => {
     if (!values.items || values.items.length === 0) {
@@ -79,52 +299,72 @@ const StockOut = ({
       return;
     }
 
+    const approvalFiles = fileList.filter(
+      (f) =>
+        f.type === "application/pdf" ||
+        f.type === "image/jpeg" ||
+        f.type === "image/png"
+    );
+
+    if (approvalFiles.length < 1) {
+      message.error("At least one Approval Letter (PDF/JPG/PNG) is required");
+      return;
+    }
+
+    const rowPhotos: UploadFile[] = Object.values(evidenceMap)
+      .flat()
+      .filter(Boolean);
+
     const payload = {
       stock_out_items: (values.items ?? [])
         .filter((i: any) => Number(i.quantity) > 0)
-        .map((i: any) => {
+        .map((i: any, idx: number) => {
           const product = inventoryItems.find(
             (inv) => inv.product.id === i.product
           );
-
           if (!product || product.quantity <= 0) return null;
 
-          const base = {
+          const lineKey = String(idx);
+          const rowEvidence = (evidenceMap[lineKey] ?? []).map((f) => ({
+            id: (f as any).id,
+            key: (f as any).storage_key,
+            mime: (f as any).mime,
+            size_bytes: (f as any).size_bytes ?? 0,
+            original_filename: (f as any).original_filename,
+            type: "photo",
+          }));
+
+          return {
             product_id: product.product.id,
             warehouse_id: selectedWarehouse?.id!,
             quantity: Number(i.quantity),
             reason: values.reason,
-          } as {
-            product_id: number;
-            warehouse_id: number;
-            quantity: number;
-            reason: string;
-            destination_warehouse_id?: number;
-            note?: string;
+            note: values.note || null,
+            approve_by_contact_id: values.approved_by,
+            approval_order_no: values.approved_order_no,
+            approval_letter_id: fileList[0].uid ?? null,
+            assets: rowEvidence,
           };
-
-          if (
-            values.reason === "Warehouse Transfer" &&
-            values.destination_warehouse
-          ) {
-            const dest = warehouses?.find(
-              (w) => w.name === values.destination_warehouse
-            );
-            if (dest) base.destination_warehouse_id = dest.id;
-          }
-
-          if (values.note) base.note = values.note;
-          return base;
         })
-        .filter(Boolean), // Remove null entries
+        .filter(Boolean),
+      approval_assets: fileList.map((f) => ({
+        id: (f as any).id,
+        key: (f as any).storage_key,
+        mime: (f as any).mime,
+        size_bytes: (f as any).size_bytes ?? 0,
+        original_filename: (f as any).original_filename,
+        type: f.type === "application/pdf" ? "pdf" : "photo",
+      })),
     };
 
     try {
       onSubmit?.(payload);
       message.success("Stock Out completed successfully!");
       form.resetFields();
+      setFileList([]);
+      setEvidenceMap({});
     } catch (error) {
-      console.log(error);
+      console.error(error);
       message.error("Stock Out Failed. Please try again.");
     }
   };
@@ -268,8 +508,9 @@ const StockOut = ({
                         >
                           <Col span={6}>PRODUCT</Col>
                           <Col span={4}>PRODUCT SKU</Col>
-                          <Col span={6}>AVAILABLE QTY</Col>
+                          <Col span={4}>AVAILABLE QTY</Col>
                           <Col span={6}>QUANTITY TO STOCK OUT</Col>
+                          <Col span={4}>EVIDENCE PHOTO</Col>
                         </Row>
 
                         {/* Rows */}
@@ -341,7 +582,7 @@ const StockOut = ({
                             </Col>
 
                             {/* Available Qty */}
-                            <Col span={6}>
+                            <Col span={4}>
                               <Form.Item
                                 noStyle
                                 shouldUpdate={(prev, cur) =>
@@ -430,6 +671,132 @@ const StockOut = ({
                                 />
                               </Form.Item>
                             </Col>
+
+                            {/* Evidence Photo */}
+                            <Col span={4}>
+                              <Form.Item
+                                {...restField}
+                                name={[name, "evidence_photo"]}
+                                valuePropName="value"
+                                style={{ marginBottom: 0 }}
+                                rules={[
+                                  {
+                                    validator: async (_, value) => {
+                                      const lineKey = String(name);
+                                      const filesFromMap =
+                                        evidenceMap[lineKey] ?? [];
+                                      const filesFromField =
+                                        (value as UploadFile[] | undefined) ??
+                                        [];
+                                      const files = filesFromField.length
+                                        ? filesFromField
+                                        : filesFromMap;
+
+                                      if (files.length === 0) {
+                                        throw new Error(
+                                          "Evidence Photo is required."
+                                        );
+                                      }
+                                    },
+                                  },
+                                ]}
+                              >
+                                <Flex align="center" gap={8} wrap>
+                                  {(() => {
+                                    const lineKey = String(name);
+                                    const files = evidenceMap[lineKey] ?? [];
+                                    const first = files[0];
+                                    const count = files.length;
+                                    const hasThumb = !!first;
+
+                                    return (
+                                      <>
+                                        <Flex
+                                          style={{
+                                            borderRadius: 12,
+                                            overflow: "hidden",
+                                            border: "1px solid #e5e5e5",
+                                            display: "grid",
+                                            placeItems: "center",
+                                            background: "#fafafa",
+                                            position: "relative",
+                                            cursor: hasThumb
+                                              ? "pointer"
+                                              : "default",
+                                          }}
+                                          onClick={() =>
+                                            hasThumb &&
+                                            openViewerForRow(lineKey, 0)
+                                          }
+                                          title={
+                                            hasThumb ? "Preview" : undefined
+                                          }
+                                        >
+                                          {hasThumb ? (
+                                            <img
+                                              alt="thumb"
+                                              src={
+                                                first.thumbUrl ||
+                                                (first as any).url ||
+                                                (first.originFileObj
+                                                  ? URL.createObjectURL(
+                                                      first.originFileObj as File
+                                                    )
+                                                  : undefined)
+                                              }
+                                              style={{
+                                                width: 32,
+                                                height: 32,
+                                                objectFit: "cover",
+                                              }}
+                                              onError={(e) =>
+                                                (e.currentTarget.style.display =
+                                                  "none")
+                                              }
+                                            />
+                                          ) : null}
+                                          {count > 1 && (
+                                            <div
+                                              style={{
+                                                position: "absolute",
+                                                inset: 0,
+                                                background: "rgba(0,0,0,.35)",
+                                                display: "grid",
+                                                placeItems: "center",
+                                                color: "#fff",
+                                                fontWeight: 600,
+                                                fontSize: 16,
+                                              }}
+                                            >
+                                              +{count - 1}
+                                            </div>
+                                          )}
+                                        </Flex>
+
+                                        <Button
+                                          icon={<UploadOutlined />}
+                                          onClick={() => {
+                                            setActiveLineKey(lineKey);
+                                            setActiveIndex(index);
+                                            setOpenUploadModal(true);
+                                            form.setFieldValue(
+                                              [
+                                                "items",
+                                                index,
+                                                "evidence_photo",
+                                              ],
+                                              evidenceMap[lineKey] ?? []
+                                            );
+                                          }}
+                                        >
+                                          {hasThumb ? "" : "Upload"}
+                                        </Button>
+                                      </>
+                                    );
+                                  })()}
+                                </Flex>
+                              </Form.Item>
+                            </Col>
                           </Row>
                         ))}
                       </div>
@@ -489,6 +856,120 @@ const StockOut = ({
               </Select>
             </Form.Item>
           )}
+          <Flex gap={20}>
+            <Form.Item
+              label="Approved by"
+              name="approved_by"
+              required
+              style={{ width: "100%" }}
+              rules={[{ required: true, message: "Please select approved by" }]}
+            >
+              <Select allowClear placeholder="Select approved by">
+                {contactPersons?.items.map((c) => (
+                  <Option key={c.id} value={c.id}>
+                    {c.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              label="Approved Order No."
+              name="approved_order_no"
+              required
+              style={{ width: "100%" }}
+              rules={[
+                { required: true, message: "Please enter approved order no." },
+              ]}
+            >
+              <Input placeholder="Enter approved order no." />
+            </Form.Item>
+          </Flex>
+          <Form.Item
+            label="Approval Letter"
+            required
+            name="evidence"
+            rules={[
+              { required: true, message: "Please upload approval evidence" },
+            ]}
+          >
+            <Upload
+              action="/api/uploads/direct" // TODO: replace with your backend
+              fileList={fileList}
+              onChange={handleUploadChange}
+              beforeUpload={beforeUpload}
+              multiple
+              data={(file) => ({
+                type:
+                  file.type === "application/pdf"
+                    ? "pdf"
+                    : "stock-out-evidence",
+              })}
+              accept=".jpg,.png,.pdf"
+              listType="picture"
+              onPreview={async (file) => {
+                let src = file.url;
+
+                if (!src && file.originFileObj) {
+                  src = URL.createObjectURL(file.originFileObj as RcFile);
+                }
+
+                if (src) {
+                  const newWindow = window.open(src, "_blank");
+                  newWindow?.focus();
+                } else {
+                  message.error("No preview available for this file.");
+                }
+              }}
+              itemRender={(originNode, file, currFileList, actions) => {
+                const isPdf =
+                  file.type === "application/pdf" || file.name.endsWith(".pdf");
+                if (isPdf) {
+                  return (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        background: "#fafafa",
+                        padding: "4px 8px",
+                        borderRadius: 4,
+                        marginTop: 4,
+                      }}
+                    >
+                      <span>
+                        <PaperClipOutlined />
+                        <span
+                          onClick={() => {
+                            if (file.originFileObj) {
+                              const src =
+                                file.url ||
+                                URL.createObjectURL(
+                                  file.originFileObj as RcFile
+                                );
+                              window.open(src, "_blank");
+                            }
+                          }}
+                          style={{ color: "#1677ff", cursor: "pointer" }}
+                        >
+                          {file.name}
+                        </span>
+                      </span>
+                      <span
+                        style={{ cursor: "pointer", color: "#999" }}
+                        onClick={actions.remove}
+                      >
+                        <DeleteOutlined />
+                      </span>
+                    </div>
+                  );
+                }
+                return originNode;
+              }}
+            >
+              <Button icon={<UploadOutlined />}>Click to Upload</Button>
+            </Upload>
+          </Form.Item>
+
           <Form.Item label="Note (Optional)" name="note">
             <TextArea placeholder="Enter note" />
           </Form.Item>
@@ -524,6 +1005,76 @@ const StockOut = ({
         items={stockOutHistories}
         isLoading={stockOutHistoryLoading}
       />
+
+      <Modal
+        open={openUploadModal}
+        onCancel={() => setOpenUploadModal(false)}
+        footer={null}
+        centered
+        // wrapClassName="centered-modal"
+      >
+        <Typography.Text
+          style={{
+            fontSize: 14,
+            fontWeight: 400,
+            color: "#000000D9",
+            marginBottom: 8,
+          }}
+        >
+          <span style={{ color: "red" }}>*</span> Evidence Photo
+        </Typography.Text>
+        <Upload.Dragger {...rowUploadProps}>
+          <p className="ant-upload-drag-icon">
+            <UploadOutlined />
+          </p>
+          <p className="ant-upload-text">Upload Evidence Photos</p>
+          <p className="ant-upload-hint">
+            Drag & drop or click to upload. JPEG/PNG only (max 2MB per file)
+          </p>
+          <Button icon={<UploadOutlined />}>Click to upload</Button>
+        </Upload.Dragger>
+      </Modal>
+
+      <Modal
+        open={openConfirmModal}
+        onCancel={handleCancelRemove}
+        footer={null}
+        centered
+        wrapClassName="centered-modal"
+        style={{ maxWidth: 400 }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <Typography.Text
+            style={{ fontSize: 20, fontWeight: 500, color: "#000000D9" }}
+          >
+            Remove Photo
+          </Typography.Text>
+          <Typography.Text style={{ fontSize: 14, color: "#00000073" }}>
+            Are you sure you want to delete this file?
+          </Typography.Text>
+        </div>
+        <Flex justify="center" gap={4} style={{ marginTop: 12 }}>
+          <Button onClick={handleCancelRemove}>Cancel</Button>
+          <Button type="primary" danger onClick={handleConfirmRemove}>
+            Remove
+          </Button>
+        </Flex>
+      </Modal>
+
+      {viewerOpen && (
+        <ImageViewerModal
+          open={viewerOpen}
+          images={viewerImages}
+          start={viewerStart}
+          onClose={() => setViewerOpen(false)}
+        />
+      )}
     </>
   );
 };

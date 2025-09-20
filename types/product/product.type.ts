@@ -12,6 +12,8 @@ export interface ProductInterface {
   updated_at: string;
   is_active?: boolean;
   current_stock: number;
+  product_currency?: ProductCurrencyInterface;
+  alias_names?: string[];
 }
 
 export interface ProductCurrencyInterface {
@@ -31,6 +33,7 @@ export interface ProductResponse {
   counts: { total: number; lowStock: number; outOfStock: number };
 }
 
+// version 0 product price history type
 export interface ProductPriceHistoryInterface {
   id: number;
   product_id: number;
@@ -41,8 +44,33 @@ export interface ProductPriceHistoryInterface {
   created_at: string;
 }
 
+// version 0 product price history type
 export interface ProductPriceHistoryResponse {
   items: ProductPriceHistoryInterface[];
+}
+
+// version 1 product price history type
+export interface ProductHistory {
+  id: number;
+  product_id: number;
+  changed_at: string;
+  changed_by?: string;
+  is_system: boolean;
+  changed_field: string;
+  new_values: string;
+  old_values: string;
+  user_profiles: {
+    full_name: string;
+  };
+}
+
+export interface ProductHistoryPaginatedResponse {
+  items: ProductHistory[];
+  pagination: {
+    totalPages: number;
+    page: number;
+    pageSize: number;
+  };
 }
 
 export interface LastStockMovement {
@@ -74,4 +102,33 @@ export interface ProductUsageHistory {
   page?: number;
   pageSize?: number;
   total?: number;
+}
+
+export interface DynamicPricingItems {
+  purchase_order_number: string;
+  order_date: string;
+  region: string;
+  contact_person: string;
+  currency_code: string;
+  unit_price_local: number;
+  exchange_rate: number;
+  unit_price_usd: number;
+}
+
+export interface ProductDynamicPricing {
+  items: DynamicPricingItems[];
+  statistics: {
+    average_price_usd: number;
+    max_price_usd: number;
+    max_price_local: string;
+    max_purchase_order_number: string;
+    min_price_usd: number;
+    min_price_local: string;
+    min_purchase_order_number: string;
+  };
+  pagination: {
+    total: number;
+    page: number;
+    pageSize: number;
+  };
 }

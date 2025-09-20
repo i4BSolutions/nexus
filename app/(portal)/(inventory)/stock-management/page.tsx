@@ -13,7 +13,18 @@ import { PurchaseInvoiceResponse } from "@/types/purchase-invoice/purchase-invoi
 import { StockTransactionHistory } from "@/types/stock/stock.type";
 import { WarehouseResponse } from "@/types/warehouse/warehouse.type";
 import { SwapOutlined } from "@ant-design/icons";
+import { useMutation } from "@tanstack/react-query";
 import { App, Space, Tabs, TabsProps, Typography } from "antd";
+
+const createStockIn = async (formData: FormData) => {
+  const res = await fetch("/api/stock-in", {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to create stock in");
+  return data;
+};
 
 const StockManagementPage = () => {
   const { message } = App.useApp();
@@ -28,7 +39,10 @@ const StockManagementPage = () => {
   );
 
   const { data: warehousesData, isLoading: warehouseLoading } =
-    useList<WarehouseResponse>("warehouses");
+    useList<WarehouseResponse>("warehouses", {
+      page: 1,
+      pageSize: 100,
+    });
 
   const { data: stockInHistoryData, isLoading: stockInHistoryLoading } =
     useList<StockTransactionHistory[]>("stock-in/history");
@@ -36,7 +50,15 @@ const StockManagementPage = () => {
   const { data: stockOutHistoryData, isLoading: stockOutHistoryLoading } =
     useList<StockTransactionHistory[]>("stock-out/history");
 
-  const mutateStockIn = useCreate("stock-in");
+  const mutateStockIn = useMutation({
+    mutationFn: createStockIn,
+    onSuccess: () => {
+      message.success("Stock In completed successfully!");
+    },
+    onError: (error: any) => {
+      message.error(error.message || "Unexpected error");
+    },
+  });
   const mutateStockOut = useCreate("stock-out");
 
   const tabItems: TabsProps["items"] = [
@@ -58,11 +80,31 @@ const StockManagementPage = () => {
           stockInHistoryLoading={stockInHistoryLoading}
           onSubmit={async (payload: any) => {
             try {
-              const response: any = await mutateStockIn.mutateAsync(payload);
+              // payload.invoice_items[i].__files__ is File[]
+              const meta = payload.invoice_items.map((it: any) => ({
+                product_id: it.product_id,
+                warehouse_id: it.warehouse_id,
+                quantity: it.quantity,
+                invoice_line_item_id: it.invoice_line_item_id,
+              }));
 
-              message.success(response[0].message);
+              const fd = new FormData();
+              fd.append("invoice_items", JSON.stringify(meta));
+
+              payload.invoice_items.forEach((it: any, idx: number) => {
+                const files: File[] = it.__files__ ?? [];
+                files.forEach((f) => {
+                  fd.append(`evidence_${it.invoice_line_item_id}`, f);
+                });
+              });
+
+              const response: any = await mutateStockIn.mutateAsync(fd);
+
+              const msg = Array.isArray(response)
+                ? response[0]?.message
+                : "Stock In completed successfully!";
+              message.success(msg);
             } catch (err: any) {
-              // Handle network or unexpected error (not from API response)
               const apiMessage =
                 err?.response?.data?.message ||
                 err?.message ||

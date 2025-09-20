@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 // Components
+import PoEmailModal from "@/components/purchase-orders/PoEmailModal";
 import StepContactPersons from "@/components/purchase-orders/steps/StepContactPersons";
 import StepDateCurrency from "@/components/purchase-orders/steps/StepDateCurrency";
 import StepItemEntry from "@/components/purchase-orders/steps/StepItemEntry";
@@ -28,6 +29,8 @@ function CreatePurchaseOrderPageContent() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isLoadingDraft, setIsLoadingDraft] = useState(false);
   const currentStepRef = useRef<any>(null);
+  const [showEmailModal, setEmailModal] = useState(false);
+  const [createdPoId, setCreatedPoId] = useState<any>(null);
 
   // Load draft if specified in URL
   useEffect(() => {
@@ -93,7 +96,7 @@ function CreatePurchaseOrderPageContent() {
       setFormData({ ...formData, ...values });
       setCurrentStep(currentStep + 1);
     } else {
-      router.push("/purchase-orders");
+      setEmailModal(true);
     }
   };
 
@@ -251,6 +254,7 @@ function CreatePurchaseOrderPageContent() {
             onNext={handleNext}
             onBack={handleBack}
             formData={formData}
+            setTestData={setCreatedPoId}
           />
         );
       default:
@@ -353,6 +357,13 @@ function CreatePurchaseOrderPageContent() {
         onDiscard={handleDiscardProgress}
         onSaveDraft={handleSaveDraft}
         loading={isSavingDraft}
+      />
+
+      {/* Email Modal */}
+      <PoEmailModal
+        showEmailModal={showEmailModal}
+        poEmailData={createdPoId}
+        setEmailModal={setEmailModal}
       />
     </section>
   );

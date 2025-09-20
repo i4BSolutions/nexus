@@ -11,7 +11,7 @@ export async function getAuthenticatedUser(supabase: any) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    throw new Error("Unauthorized");
+    console.error("Unauthorized");
   }
 
   return user;

@@ -40,7 +40,9 @@ export async function GET(
   const statusParam = searchParams.get("status");
   const sortParam = searchParams.get("sort");
 
-  let query = supabase.from("supplier").select("*", { count: "exact" });
+  let query = supabase
+    .from("supplier")
+    .select("*, contact_person:contact_person_id(name)", { count: "exact" });
 
   // Search functionality
   if (search) {
@@ -90,8 +92,22 @@ export async function GET(
       .eq("status", false),
   ]);
 
+  console.log(items);
+
+  const formattedItems = items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    contact_person: item.contact_person?.name,
+    email: item.email,
+    phone: item.phone,
+    address: item.address,
+    status: item.status,
+    created_at: item.inserted_at,
+    updated_at: item.updated_at,
+  }));
+
   const response: SuppliersResponse = {
-    items: items || [],
+    items: formattedItems || [],
     total: count || 0,
     page,
     pageSize: pageSize === "all" ? count || 0 : pageSize,
@@ -131,7 +147,8 @@ export async function POST(
       .insert([
         {
           name,
-          contact_person,
+          contact_person: "deprecated_field",
+          contact_person_id: contact_person,
           email,
           phone,
           address,

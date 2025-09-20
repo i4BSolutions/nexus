@@ -2,18 +2,46 @@
 
 import { getAuthenticatedUser } from "@/helper/getUser";
 import { createClient } from "@/lib/supabase/client";
+import getAvatarUrl from "@/utils/getAvatarUrl";
 import {
   AuditOutlined,
+  ContactsOutlined,
   DollarCircleOutlined,
+  DownOutlined,
   HomeOutlined,
   SettingOutlined,
   ShoppingOutlined,
 } from "@ant-design/icons";
-import { Button, Image, Layout, Menu, MenuProps, Spin, theme } from "antd";
-import { useRouter } from "next/navigation";
+import { User } from "@supabase/supabase-js";
+import {
+  Button,
+  Dropdown,
+  Image,
+  Input,
+  Layout,
+  Menu,
+  MenuProps,
+  Space,
+  Spin,
+  theme,
+  Typography,
+} from "antd";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
 const { Header, Content, Sider } = Layout;
+
+const PARENT_KEY_MAP: Record<string, string> = {
+  "purchase-orders": "procurement",
+  invoices: "procurement",
+  products: "procurement",
+  suppliers: "procurement",
+  "stock-management": "inventory",
+  warehouses: "inventory",
+  budgets: "finance",
+  "budget-allocations": "finance",
+  users: "administration",
+};
 
 export default function MainLayout({
   children,
@@ -25,15 +53,31 @@ export default function MainLayout({
   } = theme.useToken();
 
   const router = useRouter();
+  const pathname = usePathname();
   const [userPermissions, setUserPermissions] = React.useState<any>({});
+  const [user, setUser] = React.useState<User>();
+  const [openKeys, setOpenKeys] = React.useState<string[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
       const authenticatedUser = await getAuthenticatedUser(createClient());
       setUserPermissions(authenticatedUser.user_metadata.permissions || {});
+      setUser(authenticatedUser);
     };
     fetchUser();
   }, []);
+
+  const pathSegments = pathname.split("/").filter(Boolean);
+  const selectedKey = pathSegments[0] || "home";
+
+  useEffect(() => {
+    const parentKey = PARENT_KEY_MAP[selectedKey];
+    if (parentKey) {
+      setOpenKeys([parentKey]);
+    } else {
+      setOpenKeys([]);
+    }
+  }, [selectedKey]);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -81,8 +125,8 @@ export default function MainLayout({
 
   const MENU_ITEMS: MenuProps["items"] = [
     {
-      key: "main-menu",
-      label: "Main Menu",
+      key: "home",
+      label: "Home",
       icon: <HomeOutlined />,
       onClick: () => router.push("/"),
     },
@@ -159,9 +203,43 @@ export default function MainLayout({
         },
       ],
     },
+    {
+      key: "contacts",
+      label: "Contacts",
+      icon: <ContactsOutlined />,
+      onClick: () => router.push("/contacts"),
+    },
   ];
 
   const filteredMenu = filterMenu(MENU_ITEMS, userPermissions) || [];
+
+  const items: MenuProps["items"] = [
+    {
+      label: (
+        <Typography.Text>{user?.user_metadata?.full_name}</Typography.Text>
+      ),
+      key: "0",
+      style: { cursor: "default" },
+    },
+    {
+      label: <Typography.Text>{user?.email}</Typography.Text>,
+      key: "1",
+      style: { cursor: "default" },
+    },
+    {
+      label: <Typography.Text>v1.0.1.0</Typography.Text>,
+      key: "2",
+      style: { cursor: "default" },
+    },
+    {
+      type: "divider",
+    },
+    {
+      label: "Logout",
+      key: "3",
+      onClick: handleSignOut,
+    },
+  ];
 
   if (!userPermissions || Object.keys(userPermissions).length === 0) {
     return (
@@ -190,6 +268,8 @@ export default function MainLayout({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 8,
           background: colorBgContainer,
           borderBottom: "1px solid #F0F0F0 ",
           padding: "0 16px 0 32px",
@@ -203,9 +283,29 @@ export default function MainLayout({
           height={40}
         />
 
-        <Button type="default" onClick={handleSignOut}>
+        <Dropdown menu={{ items }} trigger={["click"]}>
+          <Typography.Text
+            style={{ cursor: "pointer" }}
+            onClick={(e) => e.preventDefault()}
+          >
+            <Space>
+              <img
+                src={getAvatarUrl(user?.user_metadata?.username)}
+                alt="avatar"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 50,
+                }}
+              />
+              {user?.user_metadata?.full_name}
+              <DownOutlined />
+            </Space>
+          </Typography.Text>
+        </Dropdown>
+        {/* <Button type="default" onClick={handleSignOut}>
           Logout
-        </Button>
+        </Button> */}
       </Header>
 
       <Layout
@@ -229,7 +329,10 @@ export default function MainLayout({
         >
           <Menu
             mode="inline"
-            defaultSelectedKeys={["main-menu"]}
+            defaultSelectedKeys={["home"]}
+            selectedKeys={[selectedKey]}
+            openKeys={openKeys}
+            onOpenChange={(keys) => setOpenKeys(keys as string[])}
             style={{ height: "100%", borderRadius: 16 }}
             items={filteredMenu}
           />
