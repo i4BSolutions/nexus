@@ -26,7 +26,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   PlusCircleOutlined,
-  TagOutlined,
 } from "@ant-design/icons";
 
 // Hooks
@@ -304,7 +303,8 @@ const DetailsCard = ({
               </Typography.Text>
             </Space>
           </Space>
-        }>
+        }
+      >
         <List
           loading={aliasLoading}
           locale={{ emptyText: "No aliases added yet." }}
@@ -496,13 +496,6 @@ const DetailsCard = ({
                 </Space>
               </Form.Item>
             </Space>
-        </Col>
-        <Col span={12} style={{ marginTop: 16 }}>
-          <Space direction="vertical" size={0}>
-            <Typography.Text type="secondary">Unit Price</Typography.Text>
-            <Typography.Title level={5}>
-              {formatWithThousandSeparator(unit_price) ?? "N/A"}
-            </Typography.Title>
           </Space>
         </Form>
       </Card>
