@@ -29,8 +29,6 @@ export async function GET(
   const { id: txId } = await context.params;
   const supabase = await createClient();
 
-  console.log(txId);
-
   const { data: txRaw, error: txErr } = await supabase
     .from("stock_transaction")
     .select(
@@ -64,9 +62,6 @@ export async function GET(
   const productId = tx.product_id as number;
   const warehouseId = tx.warehouse_id as number;
 
-  console.log(productId);
-  console.log(warehouseId);
-
   const { data: allTx, error: sumErr } = await supabase
     .from("stock_transaction")
     .select("quantity, type")
@@ -74,7 +69,6 @@ export async function GET(
     .eq("warehouse_id", warehouseId);
 
   if (sumErr || !allTx) {
-    console.log(sumErr);
     return NextResponse.json(error(sumErr.message, 500));
   }
 
@@ -85,6 +79,8 @@ export async function GET(
     .eq("warehouse_id", warehouseId)
     .single();
 
+  console.log(invData);
+
   const currentQty = invData?.quantity;
 
   const qty = Number(tx.quantity) || 0;
@@ -92,8 +88,6 @@ export async function GET(
   const newQty = currentQty + deltaIfVoided;
 
   const { date, time } = formatDateTime(tx.created_at);
-
-  console.log(tx);
 
   const formatData: VoidPreview = {
     id: tx.id,

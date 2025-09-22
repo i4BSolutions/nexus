@@ -434,6 +434,26 @@ export async function POST(
       });
     }
 
+    // Check if inventory record exists
+    const { data: existing } = await supabase
+      .from("inventory")
+      .select("id, quantity")
+      .eq("product_id", product_id)
+      .eq("warehouse_id", warehouse_id)
+      .single();
+
+    if (existing) {
+      const { error: updateError } = await supabase
+        .from("inventory")
+        .update({ quantity: existing.quantity + quantity })
+        .eq("id", existing.id);
+    } else {
+      const { error: insertError } = await supabase
+        .from("inventory")
+        .insert([{ product_id, warehouse_id, quantity }]);
+    }
+    //     }
+
     // 2. Pull only this line’s files from the FormData
     const evidenceFiles = form.getAll(
       `evidence_${invoice_line_item_id}`
