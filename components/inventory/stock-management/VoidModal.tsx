@@ -121,8 +121,11 @@ export default function VoidTransactionModal({
           <Flex justify="space-between" align="start">
             <Text style={{ fontWeight: 600 }}>{tx?.product_name}</Text>
             <Text style={{ color: accent }} strong>
-              {(delta > 0 ? "+" : "") + delta.toLocaleString()}
+              {delta ? (delta > 0 ? "+" : "") + delta.toLocaleString() : "N/A"}
             </Text>
+            {/* <Text style={{ color: accent }} strong>
+              {(delta > 0 ? "+" : "") + delta.toLocaleString()}
+            </Text> */}
           </Flex>
           <Flex justify="space-between" style={{ marginTop: 4 }}>
             {!!tx?.product_sku && (
