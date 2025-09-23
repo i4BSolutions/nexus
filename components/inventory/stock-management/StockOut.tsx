@@ -311,10 +311,6 @@ const StockOut = ({
       return;
     }
 
-    const rowPhotos: UploadFile[] = Object.values(evidenceMap)
-      .flat()
-      .filter(Boolean);
-
     const payload = {
       stock_out_items: (values.items ?? [])
         .filter((i: any) => Number(i.quantity) > 0)
@@ -325,6 +321,7 @@ const StockOut = ({
           if (!product || product.quantity <= 0) return null;
 
           const lineKey = String(idx);
+
           const rowEvidence = (evidenceMap[lineKey] ?? []).map((f) => ({
             id: (f as any).id,
             key: (f as any).storage_key,
@@ -333,6 +330,17 @@ const StockOut = ({
             original_filename: (f as any).original_filename,
             type: "photo",
           }));
+
+          const approvalEvidence = fileList.map((f) => ({
+            id: (f as any).id,
+            key: (f as any).storage_key,
+            mime: (f as any).mime,
+            size_bytes: (f as any).size_bytes ?? 0,
+            original_filename: (f as any).original_filename,
+            type: f.type === "application/pdf" ? "pdf" : "photo",
+          }));
+
+          const mergedAssets = [...rowEvidence, ...approvalEvidence];
 
           return {
             product_id: product.product.id,
@@ -343,18 +351,10 @@ const StockOut = ({
             approve_by_contact_id: values.approved_by,
             approval_order_no: values.approved_order_no,
             approval_letter_id: fileList[0].uid ?? null,
-            assets: rowEvidence,
+            assets: mergedAssets, // merged here
           };
         })
         .filter(Boolean),
-      approval_assets: fileList.map((f) => ({
-        id: (f as any).id,
-        key: (f as any).storage_key,
-        mime: (f as any).mime,
-        size_bytes: (f as any).size_bytes ?? 0,
-        original_filename: (f as any).original_filename,
-        type: f.type === "application/pdf" ? "pdf" : "photo",
-      })),
     };
 
     try {
@@ -899,10 +899,7 @@ const StockOut = ({
               beforeUpload={beforeUpload}
               multiple
               data={(file) => ({
-                type:
-                  file.type === "application/pdf"
-                    ? "pdf"
-                    : "stock-out-evidence",
+                type: file.type === "application/pdf" ? "pdf" : "photo",
               })}
               accept=".jpg,.png,.pdf"
               listType="picture"
