@@ -22,7 +22,7 @@ import {
 import { StatItem } from "@/types/shared/stat-item.type";
 import { Badge, Button, Flex, Segmented, Select, Spin, Typography } from "antd";
 import Input, { SearchProps } from "antd/es/input";
-import { SortOrder } from "antd/es/table/interface";
+// import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import PurchaseOrderExportCSVModal from "@/components/purchase-orders/PurchaseOrderExportCSVModal";
@@ -43,7 +43,8 @@ export default function PurchaseOrdersPage() {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
-  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+  // const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+  const [sortParam, setSortParam] = useState<string | undefined>();
   const [total, setTotal] = useState<number>(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showExportCSVModal, setShowExportCSVModal] = useState(false);
@@ -54,9 +55,7 @@ export default function PurchaseOrdersPage() {
     {
       page: pagination.page,
       pageSize: pagination.pageSize,
-      sort: sortOrder
-        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
-        : undefined,
+      sort: sortParam,
       status: status !== "All Status" ? status : undefined,
       q: searchText,
     }
@@ -185,7 +184,15 @@ export default function PurchaseOrdersPage() {
   };
 
   const onSortHandler = (value: string) => {
-    setSortOrder(value === "Date (Newest First)" ? "descend" : "ascend");
+    if (value.includes("Date")) {
+      setSortParam(
+        value.includes("Newest") ? "order_date_desc" : "order_date_asc"
+      );
+    } else if (value.includes("PO Number")) {
+      setSortParam(
+        value.includes("A to Z") ? "po_number_asc" : "po_number_desc"
+      );
+    }
   };
 
   const statusChangeHandler = (value: string) => {
@@ -254,6 +261,14 @@ export default function PurchaseOrdersPage() {
                     {
                       value: "Date (Oldest First)",
                       label: "Date (Oldest First)",
+                    },
+                    {
+                      value: "PO Number (A to Z)",
+                      label: "PO Number (A to Z)",
+                    },
+                    {
+                      value: "PO Number (Z to A)",
+                      label: "PO Number (Z to A)",
                     },
                   ]}
                 />
