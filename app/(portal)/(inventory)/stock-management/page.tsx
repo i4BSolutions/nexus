@@ -102,10 +102,7 @@ const StockManagementPage = () => {
 
               const response: any = await mutateStockIn.mutateAsync(fd);
 
-              const msg = Array.isArray(response)
-                ? response[0]?.message
-                : "Stock In completed successfully!";
-              message.success(msg);
+              message.success(response[0]?.message);
             } catch (err: any) {
               const apiMessage =
                 err?.response?.data?.message ||

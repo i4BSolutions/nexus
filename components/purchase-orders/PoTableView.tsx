@@ -38,6 +38,11 @@ export default function PoTableView({
       title: "PURCHASE ORDER",
       dataIndex: "purchase_order_no",
       key: "id",
+      sorter: {
+        compare: (a, b) =>
+          a.purchase_order_no.localeCompare(b.purchase_order_no),
+        multiple: 1,
+      },
       render: (text, record) => (
         <div className="flex items-center gap-1.5">
           <a>{text}</a>

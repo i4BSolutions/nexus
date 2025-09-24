@@ -23,7 +23,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(error("Missing key", 400), { status: 400 });
     }
 
-    // Download the file as Blob
     const { data, error: downloadErr } = await supabase.storage
       .from(BUCKET)
       .download(key);
@@ -35,14 +34,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Guess Content-Type by extension
     let contentType = "application/octet-stream";
     if (key.endsWith(".png")) contentType = "image/png";
     if (key.endsWith(".jpg") || key.endsWith(".jpeg"))
       contentType = "image/jpeg";
     if (key.endsWith(".pdf")) contentType = "application/pdf";
 
-    // Convert Blob → ReadableStream
     const stream = data.stream();
 
     return new NextResponse(stream, {
@@ -104,23 +101,20 @@ export async function POST(
     .toISOString()
     .slice(0, 10)}/${fileId}.${ext}`;
 
-  // ➜ Upload the File blob directly (no Buffer conversion)
   let uploadErr: any = null;
   const tryUpload = async (ct: string) => {
     const { error: err } = await supabase.storage
       .from(BUCKET)
       .upload(key, file, {
-        contentType: ct, // first try with real content-type
+        contentType: ct,
         upsert: false,
         cacheControl: "3600",
       });
     return err;
   };
 
-  // 1st attempt: true content-type
   uploadErr = await tryUpload(isPdf ? "application/pdf" : mime);
 
-  // Fallback if bucket complains about mime type
   if (uploadErr && /mime type .* is not supported/i.test(uploadErr.message)) {
     uploadErr = await tryUpload("application/octet-stream");
   }
@@ -149,7 +143,7 @@ export async function POST(
       {
         id: fileId,
         key,
-        url: signed.signedUrl, // AntD <Upload> will use this as the blue link
+        url: signed.signedUrl,
         original_filename: file.name,
         mime,
         size_bytes: size,
@@ -174,7 +168,6 @@ export async function DELETE(
     const key: string | undefined = body?.key;
     const keys: string[] | undefined = body?.keys;
 
-    // normalize to an array
     let toRemove: string[] = [];
     if (Array.isArray(keys) && keys.length) {
       toRemove = keys;
