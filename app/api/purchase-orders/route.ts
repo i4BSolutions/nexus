@@ -270,9 +270,15 @@ export async function GET(
     query = query.eq("status", statusParam);
   }
 
-  query = query.order("order_date", {
-    ascending: sortParam === "order_date_asc",
-  });
+  if (sortParam === "order_date_asc" || sortParam === "order_date_desc") {
+    query = query.order("order_date", {
+      ascending: sortParam === "order_date_asc",
+    });
+  } else if (sortParam === "po_number_asc" || sortParam === "po_number_desc") {
+    query = query.order("purchase_order_no", {
+      ascending: sortParam === "po_number_asc",
+    });
+  }
 
   if (typeof from === "number" && typeof to === "number") {
     query = query.range(from, to);
