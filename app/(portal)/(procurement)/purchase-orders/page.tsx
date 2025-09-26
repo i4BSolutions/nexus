@@ -50,6 +50,7 @@ function flattenForExport(
           inv_amount: 0,
           inv_quantity: 0,
           inv_sku: "",
+          inv_name: "",
           inv_price: 0,
         },
       ];
@@ -63,6 +64,7 @@ function flattenForExport(
         inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
         inv_quantity: item.quantity ?? 0,
         inv_sku: item.sku ?? "",
+        inv_name: item.name ?? "",
         inv_price: item.unit_price_local ?? 0,
       }))
     );
