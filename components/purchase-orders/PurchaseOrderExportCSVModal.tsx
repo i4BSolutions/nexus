@@ -37,8 +37,18 @@ import { PurchaseOrderRegionsResponse } from "@/types/purchase-order/purchase-or
 
 const { RangePicker } = DatePicker;
 
+export type FlattenedPurchaseOrderDto = PurchaseOrderDto & {
+  inv_number?: string;
+  inv_currency?: string;
+  inv_amount?: number;
+  inv_quantity?: number;
+  inv_sku?: string;
+  inv_name?: string;
+  inv_price?: number;
+};
+
 export type ExportColumn = {
-  key: keyof PurchaseOrderDto;
+  key: keyof FlattenedPurchaseOrderDto;
   label: string;
 };
 
@@ -54,6 +64,13 @@ const AVAILABLE_COLUMNS: ExportColumn[] = [
   { key: "supplier", label: "Supplier" },
   { key: "currency_code", label: "Currency" },
   { key: "purchase_order_smart_status", label: "Status" },
+  { key: "inv_number", label: "Invoice Number" },
+  { key: "inv_amount", label: "Invoice Amount" },
+  { key: "inv_quantity", label: "Invoice Quantity" },
+  { key: "inv_sku", label: "Invoice SKU" },
+  { key: "inv_price", label: "Invoice Price" },
+  { key: "inv_currency", label: "Invoice Currency" },
+  { key: "inv_name", label: "Invoice Product Name" },
 ];
 
 type TransactionDetailsModalProps = {
@@ -306,7 +323,7 @@ const PurchaseOrderExportCSVModal = ({
           <Card
             variant="outlined"
             style={{
-              maxHeight: 400,
+              // maxHeight: 400,
               height: "100%",
             }}
             styles={{

@@ -25,7 +25,9 @@ import Input, { SearchProps } from "antd/es/input";
 import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import PurchaseOrderExportCSVModal from "@/components/purchase-orders/PurchaseOrderExportCSVModal";
+import PurchaseOrderExportCSVModal, {
+  FlattenedPurchaseOrderDto,
+} from "@/components/purchase-orders/PurchaseOrderExportCSVModal";
 import { exportPOToCsv } from "@/utils/exportPOCSV";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -34,6 +36,40 @@ import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
+
+function flattenForExport(
+  data: PurchaseOrderDto[]
+): FlattenedPurchaseOrderDto[] {
+  return data.flatMap((po) => {
+    if (!po.invoices?.length) {
+      return [
+        {
+          ...po,
+          inv_number: "",
+          inv_currency: "",
+          inv_amount: 0,
+          inv_quantity: 0,
+          inv_sku: "",
+          inv_name: "",
+          inv_price: 0,
+        },
+      ];
+    }
+
+    return po.invoices.flatMap((inv) =>
+      (inv.items ?? []).map((item) => ({
+        ...po,
+        inv_number: inv.purchase_invoice_number ?? "",
+        inv_currency: inv.purchase_invoice_currency ?? "",
+        inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
+        inv_quantity: item.quantity ?? 0,
+        inv_sku: item.sku ?? "",
+        inv_name: item.name ?? "",
+        inv_price: item.unit_price_local ?? 0,
+      }))
+    );
+  });
+}
 
 export default function PurchaseOrdersPage() {
   const router = useRouter();
@@ -84,6 +120,7 @@ export default function PurchaseOrdersPage() {
         purchase_order_smart_status: item.purchase_order_smart_status,
         region: item.region,
         supplier: item.supplier,
+        invoices: item.invoices || [],
       }));
       setData(data);
       setTotal(poData.total);
@@ -357,8 +394,10 @@ export default function PurchaseOrdersPage() {
               );
             }
 
+            const flattened = flattenForExport(filteredData);
+
             exportPOToCsv(
-              filteredData,
+              flattened,
               columns,
               `purchase_orders_${dayjs().format("YYYYMMDD_HH:mm:ss")}.csv`
             );
