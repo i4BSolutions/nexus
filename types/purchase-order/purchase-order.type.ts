@@ -47,6 +47,10 @@ export interface PurchaseOrderDto {
       name?: string;
       unit_price_local?: number;
       quantity?: number;
+      stock_transactions?: Array<{
+        type?: string;
+        quantity?: number;
+      }>;
     }>;
   }>;
   quantity?: number;

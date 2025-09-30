@@ -37,6 +37,44 @@ import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
 
+// function flattenForExport(
+//   data: PurchaseOrderDto[]
+// ): FlattenedPurchaseOrderDto[] {
+//   return data.flatMap((po) => {
+//     if (!po.invoices?.length) {
+//       return [
+//         {
+//           ...po,
+//           inv_number: "",
+//           inv_currency: "",
+//           inv_amount: 0,
+//           inv_quantity: 0,
+//           inv_sku: "",
+//           inv_name: "",
+//           inv_price: 0,
+//           stock_type: "",
+//           stock_qty: 0,
+//         },
+//       ];
+//     }
+
+//     return po.invoices.flatMap((inv) =>
+//       (inv.items ?? []).map((item) => ({
+//         ...po,
+//         inv_number: inv.purchase_invoice_number ?? "",
+//         inv_currency: inv.purchase_invoice_currency ?? "",
+//         inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
+//         inv_quantity: item.quantity ?? 0,
+//         inv_sku: item.sku ?? "",
+//         inv_name: item.name ?? "",
+//         inv_price: item.unit_price_local ?? 0,
+//         stock_type: item.stock_type ?? "",
+//         stock_qty: item.stock_qty ?? 0,
+//       }))
+//     );
+//   });
+// }
+
 function flattenForExport(
   data: PurchaseOrderDto[]
 ): FlattenedPurchaseOrderDto[] {
@@ -52,21 +90,46 @@ function flattenForExport(
           inv_sku: "",
           inv_name: "",
           inv_price: 0,
+          stock_type: "",
+          stock_qty: 0,
         },
       ];
     }
 
     return po.invoices.flatMap((inv) =>
-      (inv.items ?? []).map((item) => ({
-        ...po,
-        inv_number: inv.purchase_invoice_number ?? "",
-        inv_currency: inv.purchase_invoice_currency ?? "",
-        inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
-        inv_quantity: item.quantity ?? 0,
-        inv_sku: item.sku ?? "",
-        inv_name: item.name ?? "",
-        inv_price: item.unit_price_local ?? 0,
-      }))
+      (inv.items ?? []).flatMap((item) => {
+        if (item.stock_transactions?.length) {
+          return item.stock_transactions.map((st) => ({
+            ...po,
+            inv_number: inv.purchase_invoice_number ?? "",
+            inv_currency: inv.purchase_invoice_currency ?? "",
+            inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
+            inv_quantity: item.quantity ?? 0,
+            inv_sku: item.sku ?? "",
+            inv_name: item.name ?? "",
+            inv_price: item.unit_price_local ?? 0,
+            stock_type: st.type ?? "",
+            stock_qty: st.quantity ?? 0,
+            stock_sku: item.sku ?? "",
+          }));
+        }
+
+        return [
+          {
+            ...po,
+            inv_number: inv.purchase_invoice_number ?? "",
+            inv_currency: inv.purchase_invoice_currency ?? "",
+            inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
+            inv_quantity: item.quantity ?? 0,
+            inv_sku: item.sku ?? "",
+            inv_name: item.name ?? "",
+            inv_price: item.unit_price_local ?? 0,
+            stock_type: "",
+            stock_qty: 0,
+            stock_sku: item.sku ?? "",
+          },
+        ];
+      })
     );
   });
 }

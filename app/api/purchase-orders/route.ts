@@ -253,7 +253,7 @@ export async function GET(
     "region:region_id ( id, name )",
     "purchase_order_smart_status ( status, created_at, updated_at )",
     "budget_allocation ( id, po_id, allocation_amount, status, exchange_rate_usd )",
-    "purchase_invoice ( id, purchase_invoice_number, purchase_order_id, status, currency_id ( currency_code ), exchange_rate_to_usd, is_voided, purchase_invoice_item ( quantity, unit_price_local, product:product_id (*) ) )",
+    "purchase_invoice ( id, purchase_invoice_number, purchase_order_id, status, currency_id ( currency_code ), exchange_rate_to_usd, is_voided, purchase_invoice_item ( quantity, unit_price_local, product:product_id (*), stock_transaction:id ( id, type, quantity, is_voided ) ) )",
   ];
 
   let query = supabase
@@ -293,7 +293,7 @@ export async function GET(
   }
 
   const orders = data?.map((order) => {
-    // console.log(JSON.stringify(order, null, 2));
+    console.log(JSON.stringify(order, null, 2));
 
     const amount_local = order.purchase_order_items.reduce(
       (total: number, item: { quantity: number; unit_price_local: number }) =>
@@ -352,6 +352,12 @@ export async function GET(
         name: item.product?.name,
         unit_price_local: item.unit_price_local,
         quantity: item.quantity,
+        stock_transactions: (item.stock_transaction || [])
+          .filter((st: any) => !st.is_voided)
+          .map((st: any) => ({
+            type: st.type,
+            quantity: st.quantity,
+          })),
       })),
     }));
 
