@@ -45,6 +45,9 @@ export type FlattenedPurchaseOrderDto = PurchaseOrderDto & {
   inv_sku?: string;
   inv_name?: string;
   inv_price?: number;
+  stock_type?: string;
+  stock_qty?: number;
+  stock_sku?: string;
 };
 
 export type ExportColumn = {
@@ -70,6 +73,9 @@ const AVAILABLE_COLUMNS: ExportColumn[] = [
   { key: "inv_price", label: "Invoice Price" },
   { key: "inv_currency", label: "Invoice Currency" },
   { key: "inv_name", label: "Invoice Product Name" },
+  { key: "stock_type", label: "Stock Type" },
+  { key: "stock_qty", label: "Stock Qty" },
+  { key: "stock_sku", label: "Stock SKU" },
 ];
 
 type TransactionDetailsModalProps = {
