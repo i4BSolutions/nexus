@@ -347,6 +347,7 @@ export async function GET(
     const invoices = order.purchase_invoice.map((inv: any) => ({
       purchase_invoice_number: inv.purchase_invoice_number,
       purchase_invoice_currency: inv.currency_id.currency_code,
+      purchase_invoice_exchange_rate_to_usd: inv.exchange_rate_to_usd,
       items: inv.purchase_invoice_item.map((item: any) => ({
         sku: item.product?.sku,
         name: item.product?.name,

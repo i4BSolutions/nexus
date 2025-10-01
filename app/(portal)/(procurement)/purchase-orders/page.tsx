@@ -86,6 +86,7 @@ function flattenForExport(
           inv_number: "",
           inv_currency: "",
           inv_amount: 0,
+          inv_exchange_rate_to_usd: 0,
           inv_quantity: 0,
           inv_sku: "",
           inv_name: "",
@@ -104,6 +105,8 @@ function flattenForExport(
             inv_number: inv.purchase_invoice_number ?? "",
             inv_currency: inv.purchase_invoice_currency ?? "",
             inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
+            inv_exchange_rate_to_usd:
+              inv.purchase_invoice_exchange_rate_to_usd || 0,
             inv_quantity: item.quantity ?? 0,
             inv_sku: item.sku ?? "",
             inv_name: item.name ?? "",
@@ -120,6 +123,8 @@ function flattenForExport(
             inv_number: inv.purchase_invoice_number ?? "",
             inv_currency: inv.purchase_invoice_currency ?? "",
             inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
+            inv_exchange_rate_to_usd:
+              inv.purchase_invoice_exchange_rate_to_usd || 0,
             inv_quantity: item.quantity ?? 0,
             inv_sku: item.sku ?? "",
             inv_name: item.name ?? "",
