@@ -253,7 +253,7 @@ export async function GET(
     "region:region_id ( id, name )",
     "purchase_order_smart_status ( status, created_at, updated_at )",
     "budget_allocation ( id, po_id, allocation_amount, status, exchange_rate_usd )",
-    "purchase_invoice ( id, purchase_order_id, status, exchange_rate_to_usd, is_voided, purchase_invoice_item ( quantity, unit_price_local ) )",
+    "purchase_invoice ( id, purchase_invoice_number, purchase_order_id, status, currency_id ( currency_code ), exchange_rate_to_usd, is_voided, purchase_invoice_item ( quantity, unit_price_local, product:product_id (*), stock_transaction:id ( id, type, quantity, is_voided ) ) )",
   ];
 
   let query = supabase
@@ -299,6 +299,8 @@ export async function GET(
   }
 
   const orders = data?.map((order) => {
+    console.log(JSON.stringify(order, null, 2));
+
     const amount_local = order.purchase_order_items.reduce(
       (total: number, item: { quantity: number; unit_price_local: number }) =>
         total + item.quantity * item.unit_price_local,
@@ -342,6 +344,30 @@ export async function GET(
 
     const remaining_allocation = amount_usd - Number(allocated_amount);
 
+    const invoice_quantity =
+      order.purchase_invoice[0]?.purchase_invoice_item.reduce(
+        (sum: number, item: { quantity: number }) => sum + item.quantity,
+        0
+      ) || 0;
+
+    const invoices = order.purchase_invoice.map((inv: any) => ({
+      purchase_invoice_number: inv.purchase_invoice_number,
+      purchase_invoice_currency: inv.currency_id.currency_code,
+      purchase_invoice_exchange_rate_to_usd: inv.exchange_rate_to_usd,
+      items: inv.purchase_invoice_item.map((item: any) => ({
+        sku: item.product?.sku,
+        name: item.product?.name,
+        unit_price_local: item.unit_price_local,
+        quantity: item.quantity,
+        stock_transactions: (item.stock_transaction || [])
+          .filter((st: any) => !st.is_voided)
+          .map((st: any) => ({
+            type: st.type,
+            quantity: st.quantity,
+          })),
+      })),
+    }));
+
     return {
       id: order.id,
       purchase_order_no: order.purchase_order_no,
@@ -368,6 +394,8 @@ export async function GET(
         0.0,
       purchase_order_smart_status:
         order.purchase_order_smart_status?.status ?? "Error",
+      invoices,
+      quantity: invoice_quantity,
     };
   });
 
