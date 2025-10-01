@@ -42,6 +42,7 @@ export interface PurchaseOrderDto {
   invoices?: Array<{
     purchase_invoice_number?: string;
     purchase_invoice_currency?: string;
+    purchase_invoice_exchange_rate_to_usd?: number;
     items?: Array<{
       sku?: string;
       name?: string;

@@ -40,6 +40,7 @@ const { RangePicker } = DatePicker;
 export type FlattenedPurchaseOrderDto = PurchaseOrderDto & {
   inv_number?: string;
   inv_currency?: string;
+  inv_exchange_rate_to_usd?: number;
   inv_amount?: number;
   inv_quantity?: number;
   inv_sku?: string;
@@ -68,7 +69,8 @@ const AVAILABLE_COLUMNS: ExportColumn[] = [
   { key: "currency_code", label: "Currency" },
   { key: "purchase_order_smart_status", label: "Status" },
   { key: "inv_number", label: "Invoice Number" },
-  { key: "inv_amount", label: "Invoice Amount" },
+  { key: "inv_amount", label: "Invoice Amount (Local)" },
+  { key: "inv_exchange_rate_to_usd", label: "Invoice Amount (USD)" },
   { key: "inv_quantity", label: "Invoice Quantity" },
   { key: "inv_sku", label: "Invoice SKU" },
   { key: "inv_price", label: "Invoice Price" },
