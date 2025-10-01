@@ -39,6 +39,27 @@ export interface PurchaseOrderDto {
   purchase_order_smart_status: string;
   supplier?: string;
   region?: string;
+  invoices?: Array<{
+    purchase_invoice_number?: string;
+    purchase_invoice_currency?: string;
+    purchase_invoice_exchange_rate_to_usd?: number;
+    items?: Array<{
+      sku?: string;
+      name?: string;
+      unit_price_local?: number;
+      quantity?: number;
+      stock_transactions?: Array<{
+        type?: string;
+        quantity?: number;
+      }>;
+    }>;
+  }>;
+  quantity?: number;
+  // inv_number?: string;
+  // inv_amount?: number;
+  // inv_quantity?: number;
+  // inv_sku?: string;
+  // inv_price?: number;
 }
 
 export interface PurchaseOrderResponse {
