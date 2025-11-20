@@ -11,6 +11,8 @@ const HeaderSection = ({
   buttonText,
   buttonIcon,
   hasPermission = false,
+  isExport = false,
+  onExport,
 }: {
   title: string;
   description?: string;
@@ -21,6 +23,8 @@ const HeaderSection = ({
   buttonText?: string;
   buttonIcon?: React.ReactNode;
   hasPermission?: boolean;
+  isExport?: boolean;
+  onExport?: () => void;
 }) => (
   <Space
     size="small"
@@ -58,11 +62,18 @@ const HeaderSection = ({
         )}
       </Space>
     </Space>
-    {buttonText && hasPermission && (
-      <Button type="primary" onClick={onAddNew} icon={buttonIcon}>
-        {buttonText || `New ${title}`}
-      </Button>
-    )}
+    <Space>
+      {isExport && hasPermission && (
+        <Button type="default" onClick={onExport}>
+          Export CSV
+        </Button>
+      )}
+      {buttonText && hasPermission && (
+        <Button type="primary" onClick={onAddNew} icon={buttonIcon}>
+          {buttonText || `New ${title}`}
+        </Button>
+      )}
+    </Space>
   </Space>
 );
 

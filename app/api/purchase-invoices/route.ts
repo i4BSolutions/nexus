@@ -479,6 +479,7 @@ export async function GET(
   const { data: deliveredStats, error: deliveredError } = await supabase
     .from("stock_transaction")
     .select("invoice_line_item_id, quantity")
+    .eq("is_voided", false)
     .eq("type", "IN");
 
   const deliveredMap = new Map<number, number>();

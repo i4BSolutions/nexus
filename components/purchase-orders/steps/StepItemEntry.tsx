@@ -260,25 +260,35 @@ const StepItemEntry = forwardRef<StepItemEntryRef, StepItemEntryProps>(
                                   ? "Loading products..."
                                   : "Select Product"
                               }
+                              showSearch
+                              // 1) Include a custom searchText per option
                               options={availableProducts.map(
-                                (product: ProductInterface) => ({
+                                (product: any) => ({
                                   value: product.id,
-                                  label: product.name,
+                                  label: product.name, // what shows in the input when selected
+                                  // everything we want to match against when the user types:
+                                  searchText: [
+                                    product.name,
+                                    product.sku ?? "",
+                                    ...((product.alias_names ??
+                                      []) as string[]),
+                                  ]
+                                    .join(" ")
+                                    .toLowerCase(),
                                 })
                               )}
                               loading={productsLoading}
-                              showSearch
+                              // 2) Match input against our custom searchText
                               filterOption={(input, option) => {
-                                const label = option?.label;
-                                if (typeof label === "string") {
-                                  return label
-                                    .toLowerCase()
-                                    .includes(input.toLowerCase());
-                                }
-                                return false;
+                                const haystack =
+                                  (option as any)?.searchText ??
+                                  (typeof option?.label === "string"
+                                    ? option.label.toLowerCase()
+                                    : "");
+                                return haystack.includes(input.toLowerCase());
                               }}
+                              // keep your current onChange handler
                               onChange={(value) => {
-                                // Auto-select the currency from previous step
                                 const currentItems =
                                   form.getFieldValue("items") || [];
                                 currentItems[name] = {

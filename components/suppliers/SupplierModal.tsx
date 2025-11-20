@@ -8,12 +8,15 @@ import {
   ShopOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Button, Form, Input, Radio, Space, Typography } from "antd";
-import React, { useEffect } from "react";
+import { Button, Form, Input, Radio, Select, Space, Typography } from "antd";
+import React, { useEffect, useState } from "react";
 
 import { SupplierInterface } from "@/types/supplier/supplier.type";
 
 import Modal from "@/components/shared/Modal";
+
+import { useList } from "@/hooks/react-query/useList";
+import { PersonResponse } from "@/types/person/person.type";
 
 interface SupplierModalProps {
   open: boolean;
@@ -37,6 +40,11 @@ const SupplierModal: React.FC<SupplierModalProps> = ({
   loading = false,
 }) => {
   const [form] = Form.useForm();
+
+  const { data: personData } = useList<PersonResponse>("persons", {
+    pageSize: "all" as any,
+    status: "true",
+  });
 
   useEffect(() => {
     if (open) {
@@ -107,29 +115,50 @@ const SupplierModal: React.FC<SupplierModalProps> = ({
 
         <Form.Item
           label={
-            <div className="p-0 m-0 flex items-center">
-              <Typography.Paragraph
-                style={{
-                  color: "red",
-                  fontSize: 20,
-                  marginTop: "6px",
-                  marginBottom: "0px",
-                  marginRight: "4px",
-                }}
-              >
-                *
-              </Typography.Paragraph>
-              <Typography.Text style={{ fontSize: 16 }}>
-                Contact Person
-              </Typography.Text>
+            <div
+              style={{
+                width: "500px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div className="p-0 m-0 flex items-center">
+                <Typography.Paragraph
+                  style={{
+                    color: "red",
+                    fontSize: 20,
+                    marginTop: "6px",
+                    marginBottom: "0px",
+                    marginRight: "4px",
+                  }}
+                >
+                  *
+                </Typography.Paragraph>
+                <Typography.Text style={{ fontSize: 16 }}>
+                  Contact Person
+                </Typography.Text>
+              </div>
             </div>
           }
           name="contact_person"
           rules={[{ required: true, message: "Contact person is required" }]}
         >
-          <Input
+          <Select
             size="large"
-            placeholder="Enter contact name"
+            placeholder="Select contact person"
+            options={personData?.items?.map((person) => ({
+              label:
+                person.name +
+                " (" +
+                person.rank +
+                ") " +
+                " (" +
+                person.department +
+                ")",
+              value: person.id,
+            }))}
+            allowClear
             prefix={<UserOutlined />}
           />
         </Form.Item>

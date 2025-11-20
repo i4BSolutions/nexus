@@ -1,7 +1,6 @@
 "use client";
 
 import CreateOptionsModal from "@/components/purchase-orders/CreateOptionsModal";
-
 import PoCardView from "@/components/purchase-orders/PoCardView";
 import PoTableView from "@/components/purchase-orders/PoTableView";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -23,10 +22,122 @@ import {
 import { StatItem } from "@/types/shared/stat-item.type";
 import { Badge, Button, Flex, Segmented, Select, Spin, Typography } from "antd";
 import Input, { SearchProps } from "antd/es/input";
-import { SortOrder } from "antd/es/table/interface";
+// import { SortOrder } from "antd/es/table/interface";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import PurchaseOrderExportCSVModal, {
+  FlattenedPurchaseOrderDto,
+} from "@/components/purchase-orders/PurchaseOrderExportCSVModal";
+import { exportPOToCsv } from "@/utils/exportPOCSV";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import isBetween from "dayjs/plugin/isBetween";
 import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
+
+dayjs.extend(isBetween);
+dayjs.extend(customParseFormat);
+
+// function flattenForExport(
+//   data: PurchaseOrderDto[]
+// ): FlattenedPurchaseOrderDto[] {
+//   return data.flatMap((po) => {
+//     if (!po.invoices?.length) {
+//       return [
+//         {
+//           ...po,
+//           inv_number: "",
+//           inv_currency: "",
+//           inv_amount: 0,
+//           inv_quantity: 0,
+//           inv_sku: "",
+//           inv_name: "",
+//           inv_price: 0,
+//           stock_type: "",
+//           stock_qty: 0,
+//         },
+//       ];
+//     }
+
+//     return po.invoices.flatMap((inv) =>
+//       (inv.items ?? []).map((item) => ({
+//         ...po,
+//         inv_number: inv.purchase_invoice_number ?? "",
+//         inv_currency: inv.purchase_invoice_currency ?? "",
+//         inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
+//         inv_quantity: item.quantity ?? 0,
+//         inv_sku: item.sku ?? "",
+//         inv_name: item.name ?? "",
+//         inv_price: item.unit_price_local ?? 0,
+//         stock_type: item.stock_type ?? "",
+//         stock_qty: item.stock_qty ?? 0,
+//       }))
+//     );
+//   });
+// }
+
+function flattenForExport(
+  data: PurchaseOrderDto[]
+): FlattenedPurchaseOrderDto[] {
+  return data.flatMap((po) => {
+    if (!po.invoices?.length) {
+      return [
+        {
+          ...po,
+          inv_number: "",
+          inv_currency: "",
+          inv_amount: 0,
+          inv_exchange_rate_to_usd: 0,
+          inv_quantity: 0,
+          inv_sku: "",
+          inv_name: "",
+          inv_price: 0,
+          stock_type: "",
+          stock_qty: 0,
+        },
+      ];
+    }
+
+    return po.invoices.flatMap((inv) =>
+      (inv.items ?? []).flatMap((item) => {
+        if (item.stock_transactions?.length) {
+          return item.stock_transactions.map((st) => ({
+            ...po,
+            inv_number: inv.purchase_invoice_number ?? "",
+            inv_currency: inv.purchase_invoice_currency ?? "",
+            inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
+            inv_exchange_rate_to_usd:
+              inv.purchase_invoice_exchange_rate_to_usd || 0,
+            inv_quantity: item.quantity ?? 0,
+            inv_sku: item.sku ?? "",
+            inv_name: item.name ?? "",
+            inv_price: item.unit_price_local ?? 0,
+            stock_type: st.type ?? "",
+            stock_qty: st.quantity ?? 0,
+            stock_sku: item.sku ?? "",
+          }));
+        }
+
+        return [
+          {
+            ...po,
+            inv_number: inv.purchase_invoice_number ?? "",
+            inv_currency: inv.purchase_invoice_currency ?? "",
+            inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
+            inv_exchange_rate_to_usd:
+              inv.purchase_invoice_exchange_rate_to_usd || 0,
+            inv_quantity: item.quantity ?? 0,
+            inv_sku: item.sku ?? "",
+            inv_name: item.name ?? "",
+            inv_price: item.unit_price_local ?? 0,
+            stock_type: "",
+            stock_qty: 0,
+            stock_sku: item.sku ?? "",
+          },
+        ];
+      })
+    );
+  });
+}
 
 export default function PurchaseOrdersPage() {
   const router = useRouter();
@@ -36,9 +147,11 @@ export default function PurchaseOrdersPage() {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({ page: 1, pageSize: 9 });
-  const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+  // const [sortOrder, setSortOrder] = useState<SortOrder | undefined>();
+  const [sortParam, setSortParam] = useState<string | undefined>();
   const [total, setTotal] = useState<number>(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showExportCSVModal, setShowExportCSVModal] = useState(false);
   const hasPermission = usePermission("can_manage_purchase_orders");
 
   const { data: poData, isPending } = useList<PurchaseOrderResponse>(
@@ -46,9 +159,7 @@ export default function PurchaseOrdersPage() {
     {
       page: pagination.page,
       pageSize: pagination.pageSize,
-      sort: sortOrder
-        ? `order_date_${sortOrder === "ascend" ? "asc" : "desc"}`
-        : undefined,
+      sort: sortParam,
       status: status !== "All Status" ? status : undefined,
       q: searchText,
     }
@@ -74,6 +185,9 @@ export default function PurchaseOrdersPage() {
         remaining_allocation: item.remaining_allocation || 0,
         allocation_percentage: item.allocation_percentage || 0.0,
         purchase_order_smart_status: item.purchase_order_smart_status,
+        region: item.region,
+        supplier: item.supplier,
+        invoices: item.invoices || [],
       }));
       setData(data);
       setTotal(poData.total);
@@ -175,7 +289,15 @@ export default function PurchaseOrdersPage() {
   };
 
   const onSortHandler = (value: string) => {
-    setSortOrder(value === "Date (Newest First)" ? "descend" : "ascend");
+    if (value.includes("Date")) {
+      setSortParam(
+        value.includes("Newest") ? "order_date_desc" : "order_date_asc"
+      );
+    } else if (value.includes("PO Number")) {
+      setSortParam(
+        value.includes("A to Z") ? "po_number_asc" : "po_number_desc"
+      );
+    }
   };
 
   const statusChangeHandler = (value: string) => {
@@ -216,6 +338,10 @@ export default function PurchaseOrdersPage() {
           onAddNew={() => setShowCreateModal(true)}
           buttonText="New Purchase Order"
           buttonIcon={<PlusOutlined />}
+          isExport={false}
+          onExport={() => {
+            setShowExportCSVModal((prev) => !prev);
+          }}
         />
         <StatisticsCards stats={statItems} />
         <Flex justify="center" align="center" gap={12}>
@@ -240,6 +366,14 @@ export default function PurchaseOrdersPage() {
                     {
                       value: "Date (Oldest First)",
                       label: "Date (Oldest First)",
+                    },
+                    {
+                      value: "PO Number (A to Z)",
+                      label: "PO Number (A to Z)",
+                    },
+                    {
+                      value: "PO Number (Z to A)",
+                      label: "PO Number (Z to A)",
                     },
                   ]}
                 />
@@ -302,6 +436,55 @@ export default function PurchaseOrdersPage() {
           pagination={pagination}
           paginationChangeHandler={paginationChangeHandler}
           total={total}
+        />
+      )}
+
+      {/* Export CSV Modal */}
+      {showExportCSVModal && (
+        <PurchaseOrderExportCSVModal
+          open={showExportCSVModal}
+          onClose={() => setShowExportCSVModal(false)}
+          onExport={({ filters, columns }) => {
+            if (!data) return;
+
+            let filteredData = [...data];
+
+            if (filters.dateFrom && filters.dateTo) {
+              const from = dayjs(filters.dateFrom, "YYYY-MM-DD");
+              const to = dayjs(filters.dateTo, "YYYY-MM-DD");
+
+              filteredData = filteredData.filter((item) => {
+                const d = dayjs(item.order_date, ["YYYY-MM-DD", "MMM D, YYYY"]);
+                return d.isValid() && d.isBetween(from, to, "day", "[]");
+              });
+            }
+
+            if (filters.region) {
+              filteredData = filteredData.filter(
+                (item) => String(item.region) === String(filters.region)
+              );
+            }
+
+            if (filters.status) {
+              filteredData = filteredData.filter(
+                (item) => item.purchase_order_smart_status === filters.status
+              );
+            }
+
+            if (filters.currency) {
+              filteredData = filteredData.filter(
+                (item) => item.currency_code === filters.currency
+              );
+            }
+
+            const flattened = flattenForExport(filteredData);
+
+            exportPOToCsv(
+              flattened,
+              columns,
+              `purchase_orders_${dayjs().format("YYYYMMDD_HH:mm:ss")}.csv`
+            );
+          }}
         />
       )}
 

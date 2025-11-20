@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { supabaseAdmin } from "./admin";
 
 const routePermissions: Record<string, string> = {
   "/purchase-orders": "can_view_purchase_orders",
@@ -58,6 +59,14 @@ export async function updateSession(request: NextRequest) {
     !publicUrls.some((url) => request.nextUrl.pathname.startsWith(url))
   ) {
     // no user, potentially respond by redirecting the user to the login page
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  if (user && user.user_metadata.permissions === undefined) {
+    await supabaseAdmin.auth.admin.deleteUser(user.id);
+    await supabase.auth.signOut();
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

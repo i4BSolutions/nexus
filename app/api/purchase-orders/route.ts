@@ -250,9 +250,10 @@ export async function GET(
     "contact_person:contact_person_id ( id, name )",
     "purchase_order_items ( product_id, quantity, unit_price_local )",
     "supplier:supplier_id ( name )",
+    "region:region_id ( id, name )",
     "purchase_order_smart_status ( status, created_at, updated_at )",
     "budget_allocation ( id, po_id, allocation_amount, status, exchange_rate_usd )",
-    "purchase_invoice ( id, purchase_order_id, status, exchange_rate_to_usd, is_voided, purchase_invoice_item ( quantity, unit_price_local ) )",
+    "purchase_invoice ( id, purchase_invoice_number, purchase_order_id, status, currency_id ( currency_code ), exchange_rate_to_usd, is_voided, purchase_invoice_item ( quantity, unit_price_local, product:product_id (*), stock_transaction:id ( id, type, quantity, is_voided ) ) )",
   ];
 
   let query = supabase
@@ -269,9 +270,15 @@ export async function GET(
     query = query.eq("status", statusParam);
   }
 
-  query = query.order("order_date", {
-    ascending: sortParam === "order_date_asc",
-  });
+  if (sortParam === "order_date_asc" || sortParam === "order_date_desc") {
+    query = query.order("order_date", {
+      ascending: sortParam === "order_date_asc",
+    });
+  } else if (sortParam === "po_number_asc" || sortParam === "po_number_desc") {
+    query = query.order("purchase_order_no", {
+      ascending: sortParam === "po_number_asc",
+    });
+  }
 
   if (typeof from === "number" && typeof to === "number") {
     query = query.range(from, to);
@@ -292,6 +299,8 @@ export async function GET(
   }
 
   const orders = data?.map((order) => {
+    console.log(JSON.stringify(order, null, 2));
+
     const amount_local = order.purchase_order_items.reduce(
       (total: number, item: { quantity: number; unit_price_local: number }) =>
         total + item.quantity * item.unit_price_local,
@@ -335,6 +344,30 @@ export async function GET(
 
     const remaining_allocation = amount_usd - Number(allocated_amount);
 
+    const invoice_quantity =
+      order.purchase_invoice[0]?.purchase_invoice_item.reduce(
+        (sum: number, item: { quantity: number }) => sum + item.quantity,
+        0
+      ) || 0;
+
+    const invoices = order.purchase_invoice.map((inv: any) => ({
+      purchase_invoice_number: inv.purchase_invoice_number,
+      purchase_invoice_currency: inv.currency_id.currency_code,
+      purchase_invoice_exchange_rate_to_usd: inv.exchange_rate_to_usd,
+      items: inv.purchase_invoice_item.map((item: any) => ({
+        sku: item.product?.sku,
+        name: item.product?.name,
+        unit_price_local: item.unit_price_local,
+        quantity: item.quantity,
+        stock_transactions: (item.stock_transaction || [])
+          .filter((st: any) => !st.is_voided)
+          .map((st: any) => ({
+            type: st.type,
+            quantity: st.quantity,
+          })),
+      })),
+    }));
+
     return {
       id: order.id,
       purchase_order_no: order.purchase_order_no,
@@ -349,6 +382,7 @@ export async function GET(
       amount_local: Number(amount_local.toFixed(3)),
       amount_usd: Number(amount_usd.toFixed(3)),
       supplier: order.supplier.name,
+      region: order.region.name,
       invoiced_amount: Number(invoicedAmountUsd.toFixed(3)),
       remaining_invoiced_amount: Number(remainingInvoicedAmount.toFixed(3)),
       invoiced_percentage:
@@ -360,6 +394,8 @@ export async function GET(
         0.0,
       purchase_order_smart_status:
         order.purchase_order_smart_status?.status ?? "Error",
+      invoices,
+      quantity: invoice_quantity,
     };
   });
 

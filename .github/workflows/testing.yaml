@@ -1,4 +1,4 @@
-name: Deploy Migrations to Testing(new-feature branch)
+name: Deploy Migrations to Testing (new-feature)
 
 on:
   push:

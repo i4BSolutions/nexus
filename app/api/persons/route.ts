@@ -1,27 +1,79 @@
 import { error, success } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
-import { PersonInterface } from "@/types/person/person.type";
+import { PersonInterface, PersonResponse } from "@/types/person/person.type";
 import { ApiResponse } from "@/types/shared/api-response-type";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest
-): Promise<NextResponse<ApiResponse<PersonInterface[]> | ApiResponse<null>>> {
+): Promise<NextResponse<ApiResponse<PersonResponse> | ApiResponse<null>>> {
   const supabase = await createClient();
-  const { data, error: dbError } = await supabase.from("person").select("*");
 
-  if (dbError) {
-    return NextResponse.json(
-      error(`Failed to retrieve persons: ${dbError.message}`),
-      {
-        status: 500,
-      }
-    );
+  const { searchParams } = new URL(req.url);
+
+  const search = searchParams.get("q")?.trim() || "";
+  const rank = searchParams.get("rank")?.trim() || "";
+  const page = Number(searchParams.get("page")) || 1;
+  const pageSizeParam = searchParams.get("pageSize") || "10";
+  const pageSize =
+    pageSizeParam === "all" ? "all" : parseInt(pageSizeParam, 10);
+  const statusParam = searchParams.get("status");
+
+  let query = supabase
+    .from("person")
+    .select("*, rank:rank_id(name), department:department_id(name)", {
+      count: "exact",
+    })
+    .order("id", { ascending: false });
+
+  // Filter by status
+  if (statusParam === "true" || statusParam === "false") {
+    query = query.eq("status", statusParam === "true");
   }
 
-  return NextResponse.json(success(data, "Persons retrieved successfully"), {
-    status: 200,
-  });
+  if (search) {
+    query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+  }
+
+  if (rank !== "") {
+    query = query.eq("rank_id", rank);
+  }
+
+  if (pageSize !== "all") {
+    query = query.range((page - 1) * pageSize, page * pageSize - 1);
+  }
+
+  const { data: items, error: dbError, count } = await query;
+
+  if (dbError) {
+    console.log(dbError);
+    return NextResponse.json(error("Failed to fetch contact person", 500), {
+      status: 500,
+    });
+  }
+
+  const formattedItems = items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    email: item.email,
+    rank: item.rank?.name || "N/A",
+    department: item.department?.name || "N/A",
+    status: item.status,
+  }));
+
+  const response: PersonResponse = {
+    items: formattedItems,
+    total: count || 0,
+    page,
+    pageSize: pageSize === "all" ? count || 0 : pageSize,
+  };
+
+  return NextResponse.json(
+    success(response, "Persons retrieved successfully"),
+    {
+      status: 200,
+    }
+  );
 }
 
 export async function POST(
@@ -30,7 +82,7 @@ export async function POST(
   const supabase = await createClient();
   const body = await req.json();
 
-  const { name } = body;
+  const { name, email, rank, department } = body;
 
   if (!name) {
     return NextResponse.json(error("Name is required"), { status: 400 });
@@ -38,7 +90,14 @@ export async function POST(
 
   const { data, error: dbError } = await supabase
     .from("person")
-    .insert([{ name }])
+    .insert([
+      {
+        name: name.trim(),
+        email: email.trim(),
+        rank_id: rank,
+        department_id: department,
+      },
+    ])
     .select()
     .single();
 
