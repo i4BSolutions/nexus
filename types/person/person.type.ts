@@ -1,7 +1,7 @@
 export interface PersonInterface {
   id: number;
   name: string;
-  email?: string;
+  email: string;
   department?: string;
   rank?: string;
   status: boolean;
