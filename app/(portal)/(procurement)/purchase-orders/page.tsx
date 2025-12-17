@@ -23,57 +23,19 @@ import { StatItem } from "@/types/shared/stat-item.type";
 import { Badge, Button, Flex, Segmented, Select, Spin, Typography } from "antd";
 import Input, { SearchProps } from "antd/es/input";
 // import { SortOrder } from "antd/es/table/interface";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import PurchaseOrderExportCSVModal, {
   FlattenedPurchaseOrderDto,
 } from "@/components/purchase-orders/PurchaseOrderExportCSVModal";
 import { exportPOToCsv } from "@/utils/exportPOCSV";
+import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import isBetween from "dayjs/plugin/isBetween";
-import { formatWithThousandSeparator } from "@/utils/thousandSeparator";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
-
-// function flattenForExport(
-//   data: PurchaseOrderDto[]
-// ): FlattenedPurchaseOrderDto[] {
-//   return data.flatMap((po) => {
-//     if (!po.invoices?.length) {
-//       return [
-//         {
-//           ...po,
-//           inv_number: "",
-//           inv_currency: "",
-//           inv_amount: 0,
-//           inv_quantity: 0,
-//           inv_sku: "",
-//           inv_name: "",
-//           inv_price: 0,
-//           stock_type: "",
-//           stock_qty: 0,
-//         },
-//       ];
-//     }
-
-//     return po.invoices.flatMap((inv) =>
-//       (inv.items ?? []).map((item) => ({
-//         ...po,
-//         inv_number: inv.purchase_invoice_number ?? "",
-//         inv_currency: inv.purchase_invoice_currency ?? "",
-//         inv_amount: (item.unit_price_local || 0) * (item.quantity || 0),
-//         inv_quantity: item.quantity ?? 0,
-//         inv_sku: item.sku ?? "",
-//         inv_name: item.name ?? "",
-//         inv_price: item.unit_price_local ?? 0,
-//         stock_type: item.stock_type ?? "",
-//         stock_qty: item.stock_qty ?? 0,
-//       }))
-//     );
-//   });
-// }
 
 function flattenForExport(
   data: PurchaseOrderDto[]
@@ -487,6 +449,7 @@ export default function PurchaseOrdersPage() {
           }}
         />
       )}
+
 
       {/* Create Options Modal */}
       <CreateOptionsModal
