@@ -1,6 +1,6 @@
 import { useCreate } from "@/hooks/react-query/useCreate";
-import { useGetAll } from "@/hooks/react-query/useGetAll";
-import { UserInterface, UsersResponse } from "@/types/user/user.type";
+import { useGetWithParams } from "@/hooks/react-query/useGetWithParams";
+import { PersonInterface, PersonResponse } from "@/types/person/person.type";
 import getAvatarUrl from "@/utils/getAvatarUrl";
 import { MailFilled, SendOutlined } from "@ant-design/icons";
 import {
@@ -23,10 +23,10 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-type UserOptionType = {
+type ContactPersonOptionType = {
+  id: number;
   value: string;
   full_name: string;
-  username: string;
 };
 
 type EmailFieldType = {
@@ -48,28 +48,39 @@ export default function PoEmailModal({
 }) {
   const { message } = App.useApp();
   const router = useRouter();
-  const [userOptions, setUserOptions] = useState<UserOptionType[]>([]);
+  const [contactPersonOptions, setContactPersonOptions] = useState<
+    ContactPersonOptionType[]
+  >([]);
   const [isFailed, setIsFailed] = useState(false);
 
-  const { data: users } = useGetAll<UsersResponse>("/users", ["users"]);
   const { mutate: sendEmail } = useCreate("/purchase-orders/send-email");
+  const { data: contactPersons } = useGetWithParams<
+    PersonResponse,
+    { pageSize: string }
+  >("persons", {
+    pageSize: "all",
+  });
 
   useEffect(() => {
-    if (users) {
-      const options = users.dto.map((user: UserInterface) => ({
-        value: user.email,
-        full_name: user.full_name,
-        username: user.username,
-      }));
-      setUserOptions(options);
+    if (contactPersons) {
+      const options = contactPersons.items
+        .filter((person: PersonInterface) => person.email)
+        .map((person: PersonInterface) => ({
+          id: person.id,
+          value: person.email,
+          full_name: person.name,
+        }));
+      setContactPersonOptions(options);
     }
-  }, [users]);
+  }, [contactPersons]);
 
   const optionByValue = useMemo(() => {
-    const optionMap = new Map<string, UserOptionType>();
-    userOptions.forEach((option) => optionMap.set(option.value, option));
+    const optionMap = new Map<string, ContactPersonOptionType>();
+    contactPersonOptions.forEach((option) =>
+      optionMap.set(option.value, option)
+    );
     return optionMap;
-  }, [userOptions]);
+  }, [contactPersonOptions]);
 
   type TagRender = SelectProps["tagRender"];
 
@@ -90,7 +101,7 @@ export default function PoEmailModal({
         onClose={onClose}
       >
         <img
-          src={getAvatarUrl(opt?.username || "")}
+          src={getAvatarUrl(opt?.value || "")}
           className="rounded-full size-3"
         />
         {opt?.full_name} ({value})
@@ -123,7 +134,7 @@ export default function PoEmailModal({
     );
   };
 
-  if (!users) return <Spin fullscreen />;
+  if (!contactPersons) return <Spin fullscreen />;
 
   return (
     <Modal
@@ -223,12 +234,16 @@ export default function PoEmailModal({
                   mode={"multiple"}
                   style={{ width: "100%" }}
                   tagRender={tagRender}
-                  options={userOptions}
-                  optionRender={({ data }: { data: UserOptionType }) => {
+                  options={contactPersonOptions}
+                  optionRender={({
+                    data,
+                  }: {
+                    data: ContactPersonOptionType;
+                  }) => {
                     return (
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4" key={data.id}>
                         <img
-                          src={getAvatarUrl(data.username)}
+                          src={getAvatarUrl(data.value)}
                           className="rounded-full size-8"
                         />
                         <div>
@@ -250,12 +265,16 @@ export default function PoEmailModal({
                   mode={"multiple"}
                   style={{ width: "100%" }}
                   tagRender={tagRender}
-                  options={userOptions}
-                  optionRender={({ data }: { data: UserOptionType }) => {
+                  options={contactPersonOptions}
+                  optionRender={({
+                    data,
+                  }: {
+                    data: ContactPersonOptionType;
+                  }) => {
                     return (
                       <div className="flex items-center gap-4">
                         <img
-                          src={getAvatarUrl(data.username)}
+                          src={getAvatarUrl(data.value)}
                           className="rounded-full size-8"
                         />
                         <div>
@@ -277,12 +296,16 @@ export default function PoEmailModal({
                   mode={"multiple"}
                   style={{ width: "100%" }}
                   tagRender={tagRender}
-                  options={userOptions}
-                  optionRender={({ data }: { data: UserOptionType }) => {
+                  options={contactPersonOptions}
+                  optionRender={({
+                    data,
+                  }: {
+                    data: ContactPersonOptionType;
+                  }) => {
                     return (
                       <div className="flex items-center gap-4">
                         <img
-                          src={getAvatarUrl(data.username)}
+                          src={getAvatarUrl(data.value)}
                           className="rounded-full size-8"
                         />
                         <div>
