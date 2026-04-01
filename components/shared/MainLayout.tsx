@@ -1,6 +1,6 @@
 "use client";
 
-import { getAuthenticatedUser } from "@/helper/getUser";
+import { useUserContext } from "@/contexts/UserContext";
 import { createClient } from "@/lib/supabase/client";
 import getAvatarUrl from "@/utils/getAvatarUrl";
 import {
@@ -12,7 +12,6 @@ import {
   SettingOutlined,
   ShoppingOutlined,
 } from "@ant-design/icons";
-import { User } from "@supabase/supabase-js";
 import {
   Button,
   Dropdown,
@@ -54,18 +53,8 @@ export default function MainLayout({
 
   const router = useRouter();
   const pathname = usePathname();
-  const [userPermissions, setUserPermissions] = React.useState<any>({});
-  const [user, setUser] = React.useState<User>();
+  const { user, permissions: userPermissions, isLoading } = useUserContext();
   const [openKeys, setOpenKeys] = React.useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const authenticatedUser = await getAuthenticatedUser(createClient());
-      setUserPermissions(authenticatedUser.user_metadata.permissions || {});
-      setUser(authenticatedUser);
-    };
-    fetchUser();
-  }, []);
 
   const pathSegments = pathname.split("/").filter(Boolean);
   const selectedKey = pathSegments[0] || "home";
@@ -78,6 +67,24 @@ export default function MainLayout({
       setOpenKeys([]);
     }
   }, [selectedKey]);
+
+  // Prefetch all sidebar routes for instant navigation
+  useEffect(() => {
+    const routes = [
+      "/",
+      "/purchase-orders",
+      "/invoices",
+      "/products",
+      "/suppliers",
+      "/stock-management",
+      "/warehouses",
+      "/budgets",
+      "/budget-allocations",
+      "/users",
+      "/contacts",
+    ];
+    routes.forEach((route) => router.prefetch(route));
+  }, [router]);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -241,7 +248,7 @@ export default function MainLayout({
     },
   ];
 
-  if (!userPermissions || Object.keys(userPermissions).length === 0) {
+  if (isLoading) {
     return (
       <Layout style={{ padding: "20px", background: colorBgContainer }}>
         <div className="h-screen grid place-items-center">
